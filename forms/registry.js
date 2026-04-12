@@ -92,23 +92,63 @@ const SNAP_PA = {
   },
 };
 
-// ── Medicaid Pennsylvania ──────────────────────────────────────────────────────
-// Field map not yet generated — add when tools/map-fields.js is run on that PDF
+// ── Medicaid Pennsylvania (Long-Term Care Financial Eligibility) ───────────────
+// Note: This is the nursing-home / long-term care Medicaid eligibility form,
+// not the standard family CHIP/Medicaid application. It covers asset tests
+// (real estate, life insurance, burial arrangements, vehicles) in addition to
+// income. We fill the applicant info, household members, and income sections;
+// the asset sections (pages 5-6) require data we don't collect conversationally.
 const MEDICAID_PA = {
   id: 'medicaid-pa',
   name: 'Pennsylvania Medicaid Financial Eligibility',
-  programs: ['Medicaid', 'CHIP'],
+  programs: ['Medicaid'],
   pdfFile: path.resolve(__dirname, '../pdf_files/Medicaid Financial Eligibility_form.pdf'),
-  fieldsFile: null, // TODO: run tools/map-fields.js on the Medicaid PDF
+  fieldsFile: path.resolve(__dirname, 'medicaid-pa-fields.json'),
 
   applies: (data) => {
     const d = data || {};
-    return !!(d.hasChildrenUnder5 || d.isPregnant || d.isPostpartum || d.isBreastfeeding);
+    // Apply to anyone who might need long-term care support or has expressed
+    // Medicaid interest; for families focus on SNAP — Medicaid via COMPASS
+    return !!(d.isPregnant || d.isPostpartum || d.isBreastfeeding || d.hasChildrenUnder5);
   },
 
-  adapt(_data) {
-    // Placeholder until fieldsFile is generated
-    return {};
+  adapt(data) {
+    const d = data || {};
+    const members = d.householdMembers || [];
+    const income  = d.monthlyIncome    || [];
+    const exp     = d.expenses         || {};
+
+    const flat = {};
+
+    // ── Page 2: Applicant info ────────────────────────────────────────────────
+    const fullName = [d.firstName, d.lastName].filter(Boolean).join(' ');
+    flat.applicant_name  = fullName;
+    flat.current_address = d.address  || '';
+    flat.phone_number    = d.phone    || '';
+    flat.county_code     = d.county   || '';
+
+    // ── Page 3: Household members ─────────────────────────────────────────────
+    members.slice(0, 4).forEach((m, i) => {
+      const n = i + 1;
+      flat[`member${n}_name`]         = m.name         || '';
+      flat[`member${n}_birth_date`]   = m.dob          || '';
+      flat[`member${n}_relationship`] = m.relationship || '';
+    });
+
+    // ── Page 7: Income ────────────────────────────────────────────────────────
+    income.slice(0, 3).forEach((inc, i) => {
+      const n = i + 1;
+      flat[`income_row${n}_whose`]       = inc.person || d.firstName || '';
+      flat[`income_row${n}_source`]      = inc.source    || '';
+      flat[`income_row${n}_frequency`]   = normalizeFreq(inc.frequency);
+      flat[`income_row${n}_gross_amount`] = inc.amount ? `$${inc.amount}` : '';
+    });
+
+    // ── Page 7: Shelter expenses ──────────────────────────────────────────────
+    if (exp.rent)      flat.shelter_rent      = `$${exp.rent}`;
+    if (exp.utilities) flat.shelter_utilities = `$${exp.utilities}`;
+
+    return flat;
   },
 };
 
