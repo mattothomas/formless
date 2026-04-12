@@ -1,0 +1,26 @@
+{
+  "name": "formless",
+  "version": "1.0.0",
+  "description": "turn a simple voice message about your situation into fully completed government assistance applications",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mattothomas/formless.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/mattothomas/formless/issues"
+  },
+  "homepage": "https://github.com/mattothomas/formless#readme",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.88.0",
+    "pdf-lib": "^1.17.1",
+    "pdf2pic": "^3.2.0"
+  }
+}
