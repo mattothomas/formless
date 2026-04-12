@@ -136,13 +136,14 @@ const MEDICAID_PA = {
     });
 
     // ── Page 7: Income ────────────────────────────────────────────────────────
-    income.slice(0, 3).forEach((inc, i) => {
-      const n = i + 1;
-      flat[`income_row${n}_whose`]       = inc.person || d.firstName || '';
-      flat[`income_row${n}_source`]      = inc.source    || '';
-      flat[`income_row${n}_frequency`]   = normalizeFreq(inc.frequency);
-      flat[`income_row${n}_gross_amount`] = inc.amount ? `$${inc.amount}` : '';
-    });
+    // Combine all income sources onto one line (row1) since the user wants
+    // them on the same line; list sources/amounts as comma-separated values.
+    if (income.length > 0) {
+      flat.income_row1_whose       = d.firstName || '';
+      flat.income_row1_source      = income.map(i => i.source).filter(Boolean).join(', ');
+      flat.income_row1_frequency   = income.map(i => normalizeFreq(i.frequency)).join(', ');
+      flat.income_row1_gross_amount = income.map(i => i.amount ? `$${i.amount}` : '').filter(Boolean).join(', ');
+    }
 
     // ── Page 7: Shelter expenses ──────────────────────────────────────────────
     if (exp.rent)      flat.shelter_rent      = `$${exp.rent}`;

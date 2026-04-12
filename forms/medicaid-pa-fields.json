@@ -198,7 +198,7 @@
     {
       "key": "phone_number",
       "page": 2,
-      "x": 450,
+      "x": 350,
       "y": 320,
       "description": "Phone number"
     },
@@ -339,266 +339,266 @@
       "key": "member1_relationship",
       "page": 3,
       "x": 95,
-      "y": 718,
+      "y": 738,
       "description": "Relationship of first household member"
     },
     {
       "key": "member1_name",
       "page": 3,
       "x": 330,
-      "y": 718,
+      "y": 738,
       "description": "Full name of first household member"
     },
     {
       "key": "member1_alias_maiden_name",
       "page": 3,
       "x": 700,
-      "y": 718,
+      "y": 738,
       "description": "Alias/maiden name of first household member"
     },
     {
       "key": "member1_birth_date",
       "page": 3,
       "x": 95,
-      "y": 656,
+      "y": 676,
       "description": "Birth date of first household member"
     },
     {
       "key": "member1_sex",
       "page": 3,
       "x": 280,
-      "y": 656,
+      "y": 676,
       "description": "Sex of first household member"
     },
     {
       "key": "member1_race",
       "page": 3,
       "x": 470,
-      "y": 656,
+      "y": 676,
       "description": "Race of first household member"
     },
     {
       "key": "member1_ssn",
       "page": 3,
       "x": 700,
-      "y": 656,
+      "y": 676,
       "description": "SSN of first household member"
     },
     {
       "key": "member2_relationship",
       "page": 3,
       "x": 95,
-      "y": 642,
+      "y": 662,
       "description": "Relationship of second household member"
     },
     {
       "key": "member2_name",
       "page": 3,
       "x": 330,
-      "y": 642,
+      "y": 662,
       "description": "Full name of second household member"
     },
     {
       "key": "member2_alias_maiden_name",
       "page": 3,
       "x": 700,
-      "y": 642,
+      "y": 662,
       "description": "Alias/maiden name of second household member"
     },
     {
       "key": "member2_birth_date",
       "page": 3,
       "x": 95,
-      "y": 580,
+      "y": 600,
       "description": "Birth date of second household member"
     },
     {
       "key": "member2_sex",
       "page": 3,
       "x": 280,
-      "y": 580,
+      "y": 600,
       "description": "Sex of second household member"
     },
     {
       "key": "member2_race",
       "page": 3,
       "x": 470,
-      "y": 580,
+      "y": 600,
       "description": "Race of second household member"
     },
     {
       "key": "member2_ssn",
       "page": 3,
       "x": 700,
-      "y": 580,
+      "y": 600,
       "description": "SSN of second household member"
     },
     {
       "key": "member3_relationship",
       "page": 3,
       "x": 95,
-      "y": 567,
+      "y": 587,
       "description": "Relationship of third household member"
     },
     {
       "key": "member3_name",
       "page": 3,
       "x": 330,
-      "y": 567,
+      "y": 587,
       "description": "Full name of third household member"
     },
     {
       "key": "member3_alias_maiden_name",
       "page": 3,
       "x": 700,
-      "y": 567,
+      "y": 587,
       "description": "Alias/maiden name of third household member"
     },
     {
       "key": "member3_birth_date",
       "page": 3,
       "x": 95,
-      "y": 505,
+      "y": 525,
       "description": "Birth date of third household member"
     },
     {
       "key": "member3_sex",
       "page": 3,
       "x": 280,
-      "y": 505,
+      "y": 525,
       "description": "Sex of third household member"
     },
     {
       "key": "member3_race",
       "page": 3,
       "x": 470,
-      "y": 505,
+      "y": 525,
       "description": "Race of third household member"
     },
     {
       "key": "member3_ssn",
       "page": 3,
       "x": 700,
-      "y": 505,
+      "y": 525,
       "description": "SSN of third household member"
     },
     {
       "key": "member4_relationship",
       "page": 3,
       "x": 95,
-      "y": 491,
+      "y": 511,
       "description": "Relationship of fourth household member"
     },
     {
       "key": "member4_name",
       "page": 3,
       "x": 330,
-      "y": 491,
+      "y": 511,
       "description": "Full name of fourth household member"
     },
     {
       "key": "member4_alias_maiden_name",
       "page": 3,
       "x": 700,
-      "y": 491,
+      "y": 511,
       "description": "Alias/maiden name of fourth household member"
     },
     {
       "key": "member4_birth_date",
       "page": 3,
       "x": 95,
-      "y": 429,
+      "y": 449,
       "description": "Birth date of fourth household member"
     },
     {
       "key": "member4_sex",
       "page": 3,
       "x": 280,
-      "y": 429,
+      "y": 449,
       "description": "Sex of fourth household member"
     },
     {
       "key": "member4_race",
       "page": 3,
       "x": 470,
-      "y": 429,
+      "y": 449,
       "description": "Race of fourth household member"
     },
     {
       "key": "member4_ssn",
       "page": 3,
       "x": 700,
-      "y": 429,
+      "y": 449,
       "description": "SSN of fourth household member"
     },
     {
       "key": "military_branch_of_service",
       "page": 3,
       "x": 95,
-      "y": 318,
+      "y": 338,
       "description": "Branch of military service"
     },
     {
       "key": "military_date_entered",
       "page": 3,
       "x": 370,
-      "y": 318,
+      "y": 338,
       "description": "Date entered military service"
     },
     {
       "key": "military_date_left",
       "page": 3,
       "x": 540,
-      "y": 318,
+      "y": 338,
       "description": "Date left military service"
     },
     {
       "key": "military_claim_no",
       "page": 3,
       "x": 700,
-      "y": 318,
+      "y": 338,
       "description": "Military claim number"
     },
     {
       "key": "voter_registration_given_to_client_date",
       "page": 3,
       "x": 130,
-      "y": 95,
+      "y": 115,
       "description": "Date voter registration given to client"
     },
     {
       "key": "voter_registration_sent_date",
       "page": 3,
       "x": 370,
-      "y": 95,
+      "y": 115,
       "description": "Date sent to voter registration"
     },
     {
       "key": "voter_registration_mailed_to_client_date",
       "page": 3,
       "x": 580,
-      "y": 95,
+      "y": 115,
       "description": "Date voter registration mailed to client"
     },
     {
       "key": "voter_registration_declined_date",
       "page": 3,
       "x": 130,
-      "y": 68,
+      "y": 88,
       "description": "Date client declined voter registration"
     },
     {
       "key": "voter_registration_not_us_citizen_date",
       "page": 3,
       "x": 370,
-      "y": 68,
+      "y": 88,
       "description": "Date noted not a US citizen"
     },
     {
       "key": "voter_registration_already_registered_date",
       "page": 3,
       "x": 580,
-      "y": 68,
+      "y": 88,
       "description": "Date noted already registered to vote"
     },
     {
@@ -1123,7 +1123,7 @@
       "key": "income_row1_whose",
       "page": 7,
       "x": 45,
-      "y": 560,
+      "y": 500,
       "description": "Whose income row 1"
     },
     {
@@ -1158,42 +1158,42 @@
       "key": "income_row2_whose",
       "page": 7,
       "x": 45,
-      "y": 530,
+      "y": 470,
       "description": "Whose income row 2"
     },
     {
       "key": "income_row2_type",
       "page": 7,
       "x": 170,
-      "y": 530,
+      "y": 560,
       "description": "Type of income row 2"
     },
     {
       "key": "income_row2_source",
       "page": 7,
       "x": 290,
-      "y": 530,
+      "y": 560,
       "description": "Source of income row 2"
     },
     {
       "key": "income_row2_frequency",
       "page": 7,
       "x": 430,
-      "y": 530,
+      "y": 560,
       "description": "Frequency row 2"
     },
     {
       "key": "income_row2_gross_amount",
       "page": 7,
       "x": 545,
-      "y": 530,
+      "y": 560,
       "description": "Gross amount row 2"
     },
     {
       "key": "income_row3_whose",
       "page": 7,
       "x": 45,
-      "y": 500,
+      "y": 440,
       "description": "Whose income row 3"
     },
     {
