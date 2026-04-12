@@ -66,24 +66,12 @@ let pageNum = 1;
 
 for (let i = 1; i <= pageCount; i++) {
   console.log(`\nPage ${i}/${pageCount} — rendering…`);
-  let result;
-  try {
-    result = await convert(i);
-  } catch (e) {
-    console.warn(`  Skipping page ${i}: ${e.message}`);
-    continue;
-  }
-
-  const imagePath = result.path ?? result.name ?? path.join(tmpDir, `page.${i}.png`);
+  const imagePath = pageImagePath(i);
   if (!fs.existsSync(imagePath)) {
-    console.warn(`  Image not found at ${imagePath}, skipping page ${i}`);
+    console.warn(`  Image not found for page ${i}, skipping`);
     continue;
   }
   const imageBuffer = fs.readFileSync(imagePath);
-  if (!imageBuffer.length) {
-    console.warn(`  Empty image for page ${i}, skipping`);
-    continue;
-  }
   const base64 = imageBuffer.toString('base64');
 
   console.log(`  Sending to Claude vision…`);
