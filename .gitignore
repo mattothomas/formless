@@ -8,3 +8,6 @@ dist/
 build/
 .venv/
 venv/
+pdf/node_modules/
+pdf/output/
+pdf/snap-template.pdf

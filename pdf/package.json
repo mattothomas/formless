@@ -1,0 +1,13 @@
+{
+  "name": "formless-pdf",
+  "version": "1.0.0",
+  "description": "SNAP application PDF generation",
+  "main": "fill.js",
+  "scripts": {
+    "setup": "node create-template.js",
+    "test": "node fill.js"
+  },
+  "dependencies": {
+    "pdf-lib": "^1.17.1"
+  }
+}
