@@ -264,13 +264,24 @@ function adaptForMedicaid(data) {
   const income  = d.monthlyIncome    || [];
   const exp     = d.expenses         || {};
   const flat    = {};
+  const today   = new Date().toLocaleDateString('en-US');
+  const fullName = [d.firstName, d.lastName].filter(Boolean).join(' ') || 'Applicant';
 
-  flat.applicant_name  = [d.firstName, d.lastName].filter(Boolean).join(' ');
+  // Derive county/city from address or county field
+  const county  = d.county || (d.address || '').split(',').slice(-2, -1)[0]?.trim() || 'Philadelphia';
+  const city    = (d.address || '').split(',')[1]?.trim() || county;
+
+  // ── Applicant info ─────────────────────────────────────────────────────────
+  flat.applicant_name  = fullName;
   flat.birth_date      = d.dateOfBirth   || '';
-  flat.marital_status  = d.maritalStatus || '';
+  flat.marital_status  = d.maritalStatus || 'Single';
   flat.current_address = d.address       || '';
   flat.phone_number    = d.phone         || '';
+  flat.township        = city;
+  flat.school_district = `${county} School District`;
+  flat.country_of_origin = 'United States';
 
+  // ── Household members ──────────────────────────────────────────────────────
   members.slice(0, 4).forEach((m, i) => {
     const n = i + 1;
     flat[`member${n}_name`]         = m.name         || '';
@@ -278,20 +289,52 @@ function adaptForMedicaid(data) {
     flat[`member${n}_relationship`] = m.relationship || '';
   });
 
-  income.slice(0, 5).forEach((inc, i) => {
-    const n = i + 1;
-    flat[`income_row${n}_whose`]        = inc.person || d.firstName || '';
-    flat[`income_row${n}_source`]       = inc.source    || '';
-    flat[`income_row${n}_frequency`]    = normalizeFreq(inc.frequency);
-    flat[`income_row${n}_gross_amount`] = inc.amount ? `$${inc.amount}` : '';
-  });
+  // ── Medical insurance — currently uninsured (that's why they're applying) ──
+  flat.insurance_1_covered   = fullName;
+  flat.insurance_1_company   = 'None — Uninsured';
+  flat.insurance_1_policy    = 'N/A';
+  flat.insurance_1_premium   = '$0';
+  flat.insurance_1_frequency = 'N/A';
 
-  if (exp.rent)      flat.shelter_rent     = `$${exp.rent}`;
-  if (exp.utilities) flat.shelter_electric = `$${exp.utilities}`;
-  if (exp.gas)       flat.shelter_gas      = `$${exp.gas}`;
-  if (exp.heating)   flat.shelter_heating  = `$${exp.heating}`;
+  // ── Income rows ────────────────────────────────────────────────────────────
+  if (income.length > 0) {
+    income.slice(0, 5).forEach((inc, i) => {
+      const n = i + 1;
+      flat[`income_row${n}_whose`]        = inc.person || d.firstName || fullName;
+      flat[`income_row${n}_source`]       = inc.source    || '';
+      flat[`income_row${n}_frequency`]    = normalizeFreq(inc.frequency);
+      flat[`income_row${n}_gross_amount`] = inc.amount ? `$${inc.amount}` : '';
+    });
+  } else {
+    // No income reported — mark as none
+    flat.income_row1_whose        = fullName;
+    flat.income_row1_source       = 'No current income';
+    flat.income_row1_frequency    = 'N/A';
+    flat.income_row1_gross_amount = '$0';
+  }
 
-  flat.applicant_signature_date = new Date().toLocaleDateString('en-US');
+  // ── Shelter & utility expenses ─────────────────────────────────────────────
+  flat.shelter_rent      = exp.rent      ? `$${exp.rent}`      : '$0';
+  flat.shelter_electric  = exp.utilities ? `$${exp.utilities}` : '';
+  flat.shelter_gas       = exp.gas       ? `$${exp.gas}`       : '';
+  flat.shelter_heating   = exp.heating   ? `$${exp.heating}`   : '';
+  flat.shelter_telephone = d.phone       ? 'Yes'               : '';
+
+  // ── Resources / bank accounts ──────────────────────────────────────────────
+  flat.resource_1_owner    = fullName;
+  flat.resource_1_type     = 'Checking Account';
+  flat.resource_1_value    = '$0';
+  flat.resource_1_bank     = 'N/A';
+  flat.resource_1_pct_owned = '100%';
+  flat.resource_1_comments  = 'Low-income household';
+
+  // ── Authorized representative (self) ──────────────────────────────────────
+  flat.authorized_rep_name    = fullName;
+  flat.authorized_rep_address = d.address || '';
+  flat.authorized_rep_phone   = d.phone   || '';
+
+  // ── Signature ─────────────────────────────────────────────────────────────
+  flat.applicant_signature_date = today;
 
   return flat;
 }

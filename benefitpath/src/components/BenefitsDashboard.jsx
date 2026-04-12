@@ -109,19 +109,14 @@ export default function BenefitsDashboard({ results, extractedData, onReset }) {
         </div>
 
         <button
-          className={`btn-download ${generatingSnap ? 'btn-loading' : ''}`}
-          onClick={handleDownloadSnap}
-          disabled={generatingSnap}
+          className="btn-download"
+          disabled={true}
+          style={{ opacity: 0.45, cursor: 'not-allowed' }}
+          title="SNAP PDF coming soon"
         >
-          {generatingSnap ? (
-            <><span className="spinner" /> Generating…</>
-          ) : (
-            <>📥 Download My SNAP Application</>
-          )}
+          📥 Download My SNAP Application
         </button>
-        {snapSuccess && (
-          <p className="pdf-success">✅ SNAP application downloaded! Review, sign, and submit to your county office.</p>
-        )}
+        <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.25rem' }}>SNAP form available at your county office</p>
 
         {showMedicaid && (
           <>
