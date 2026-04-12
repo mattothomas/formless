@@ -70,13 +70,6 @@
       "description": "Requested effective date"
     },
     {
-      "key": "county_code",
-      "page": 2,
-      "x": 35,
-      "y": 672,
-      "description": "County code (CO.)"
-    },
-    {
       "key": "district",
       "page": 2,
       "x": 75,
@@ -143,7 +136,7 @@
       "key": "applicant_name",
       "page": 2,
       "x": 45,
-      "y": 492,
+      "y": 472,
       "description": "Name (first, middle initial, last, suffix)"
     },
     {
@@ -338,15 +331,15 @@
     {
       "key": "member1_relationship",
       "page": 3,
-      "x": 95,
-      "y": 738,
+      "x": 65,
+      "y": 718,
       "description": "Relationship of first household member"
     },
     {
       "key": "member1_name",
       "page": 3,
-      "x": 330,
-      "y": 738,
+      "x": 130,
+      "y": 638,
       "description": "Full name of first household member"
     },
     {
@@ -359,7 +352,7 @@
     {
       "key": "member1_birth_date",
       "page": 3,
-      "x": 95,
+      "x": 45,
       "y": 676,
       "description": "Birth date of first household member"
     },
@@ -387,15 +380,15 @@
     {
       "key": "member2_relationship",
       "page": 3,
-      "x": 95,
-      "y": 662,
+      "x": 45,
+      "y": 652,
       "description": "Relationship of second household member"
     },
     {
       "key": "member2_name",
       "page": 3,
-      "x": 330,
-      "y": 662,
+      "x": 130,
+      "y": 647,
       "description": "Full name of second household member"
     },
     {
@@ -408,8 +401,8 @@
     {
       "key": "member2_birth_date",
       "page": 3,
-      "x": 95,
-      "y": 600,
+      "x": 45,
+      "y": 570,
       "description": "Birth date of second household member"
     },
     {
@@ -436,15 +429,15 @@
     {
       "key": "member3_relationship",
       "page": 3,
-      "x": 95,
+      "x": 45,
       "y": 587,
       "description": "Relationship of third household member"
     },
     {
       "key": "member3_name",
       "page": 3,
-      "x": 330,
-      "y": 587,
+      "x": 130,
+      "y": 487,
       "description": "Full name of third household member"
     },
     {
@@ -457,8 +450,8 @@
     {
       "key": "member3_birth_date",
       "page": 3,
-      "x": 95,
-      "y": 525,
+      "x": 45,
+      "y": 510,
       "description": "Birth date of third household member"
     },
     {
@@ -1123,7 +1116,7 @@
       "key": "income_row1_whose",
       "page": 7,
       "x": 45,
-      "y": 500,
+      "y": 520,
       "description": "Whose income row 1"
     },
     {
@@ -1136,22 +1129,22 @@
     {
       "key": "income_row1_source",
       "page": 7,
-      "x": 290,
-      "y": 560,
+      "x": 190,
+      "y": 460,
       "description": "Source of income row 1"
     },
     {
       "key": "income_row1_frequency",
       "page": 7,
-      "x": 430,
-      "y": 560,
+      "x": 330,
+      "y": 460,
       "description": "Frequency row 1"
     },
     {
       "key": "income_row1_gross_amount",
       "page": 7,
-      "x": 545,
-      "y": 560,
+      "x": 345,
+      "y": 460,
       "description": "Gross amount row 1"
     },
     {
