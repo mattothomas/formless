@@ -121,18 +121,24 @@ export async function sendToGemini(messages, apiKey) {
   const parts = data?.candidates?.[0]?.content?.parts || [];
   const rawText = parts.find(p => !p.thought)?.text || parts[0]?.text;
 
+  console.log('[Gemini raw]', rawText);
+
   if (!rawText) {
     throw new Error('Empty response from Gemini');
   }
 
-  try {
-    return JSON.parse(rawText);
-  } catch {
-    // Strip markdown code fences if present
-    const match = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (match) return JSON.parse(match[1]);
-    throw new Error('Could not parse Gemini response as JSON');
-  }
+  // 1. Try direct parse
+  try { return JSON.parse(rawText); } catch {}
+
+  // 2. Strip markdown code fences
+  const fenced = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fenced) try { return JSON.parse(fenced[1]); } catch {}
+
+  // 3. Extract the first {...} block from the text
+  const braceMatch = rawText.match(/\{[\s\S]*\}/);
+  if (braceMatch) try { return JSON.parse(braceMatch[0]); } catch {}
+
+  throw new Error('Could not parse Gemini response as JSON');
 }
 
 // Merge extracted data — accumulate, never overwrite with null

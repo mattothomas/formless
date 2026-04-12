@@ -50,8 +50,8 @@ export default function App() {
       <header className="app-header">
         <div className="header-inner">
           <div className="logo">
-            <svg viewBox="0 0 32 32" width="32" height="32">
-              <rect width="32" height="32" rx="8" fill="#2563eb"/>
+            <svg viewBox="0 0 32 32" width="26" height="26">
+              <rect width="32" height="32" rx="7" fill="#1a4fce"/>
               <path d="M8 10h16M8 16h10M8 22h12" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
               <circle cx="24" cy="22" r="5" fill="#22c55e"/>
               <path d="M21.5 22l1.5 1.5 3-3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
