@@ -339,21 +339,21 @@
       "key": "member1_relationship",
       "page": 3,
       "x": 95,
-      "y": 688,
+      "y": 718,
       "description": "Relationship of first household member"
     },
     {
       "key": "member1_name",
       "page": 3,
       "x": 330,
-      "y": 688,
+      "y": 718,
       "description": "Full name of first household member"
     },
     {
       "key": "member1_alias_maiden_name",
       "page": 3,
       "x": 700,
-      "y": 688,
+      "y": 718,
       "description": "Alias/maiden name of first household member"
     },
     {
@@ -388,21 +388,21 @@
       "key": "member2_relationship",
       "page": 3,
       "x": 95,
-      "y": 612,
+      "y": 642,
       "description": "Relationship of second household member"
     },
     {
       "key": "member2_name",
       "page": 3,
       "x": 330,
-      "y": 612,
+      "y": 642,
       "description": "Full name of second household member"
     },
     {
       "key": "member2_alias_maiden_name",
       "page": 3,
       "x": 700,
-      "y": 612,
+      "y": 642,
       "description": "Alias/maiden name of second household member"
     },
     {
@@ -437,21 +437,21 @@
       "key": "member3_relationship",
       "page": 3,
       "x": 95,
-      "y": 537,
+      "y": 567,
       "description": "Relationship of third household member"
     },
     {
       "key": "member3_name",
       "page": 3,
       "x": 330,
-      "y": 537,
+      "y": 567,
       "description": "Full name of third household member"
     },
     {
       "key": "member3_alias_maiden_name",
       "page": 3,
       "x": 700,
-      "y": 537,
+      "y": 567,
       "description": "Alias/maiden name of third household member"
     },
     {
@@ -486,21 +486,21 @@
       "key": "member4_relationship",
       "page": 3,
       "x": 95,
-      "y": 461,
+      "y": 491,
       "description": "Relationship of fourth household member"
     },
     {
       "key": "member4_name",
       "page": 3,
       "x": 330,
-      "y": 461,
+      "y": 491,
       "description": "Full name of fourth household member"
     },
     {
       "key": "member4_alias_maiden_name",
       "page": 3,
       "x": 700,
-      "y": 461,
+      "y": 491,
       "description": "Alias/maiden name of fourth household member"
     },
     {
