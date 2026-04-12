@@ -228,6 +228,25 @@ function Intake({
   const exchangeCount = messages.filter(m => m.role === 'user').length;
   const showReview = exchangeCount >= 3 && !isTyping;
 
+  // Calculate form fill percentage based on key fields collected
+  const fillPct = (() => {
+    const d = extractedData || {};
+    const checks = [
+      !!d.firstName,
+      !!d.lastName,
+      !!d.address,
+      !!d.county,
+      !!d.phone,
+      !!d.dateOfBirth,
+      !!d.maritalStatus,
+      !!(d.householdMembers && d.householdMembers.length > 0),
+      !!(d.monthlyIncome && d.monthlyIncome.length > 0),
+      !!(d.expenses && (d.expenses.rent || d.expenses.utilities || d.expenses.heating)),
+    ];
+    const filled = checks.filter(Boolean).length;
+    return Math.round((filled / checks.length) * 100);
+  })();
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -345,10 +364,10 @@ function Intake({
             >
               <div>
                 <p style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#A8C4B0', margin: '0 0 0.3rem' }}>
-                  Ready to see your application?
+                  Your form is {fillPct}% filled
                 </p>
                 <p style={{ fontSize: '13px', color: '#D4E6DA', margin: 0, lineHeight: 1.5 }}>
-                  I have enough to prepare your forms. Keep talking to add more details, or review now.
+                  Preview now or keep talking to complete the remaining fields.
                 </p>
               </div>
               <button onClick={onReview} style={c.reviewBtn}>
