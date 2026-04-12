@@ -243,12 +243,31 @@ const MEDICAID_PA = {
     shelter_water:     'text_129lkxt',
     shelter_sewer:     'text_130nzvc',
     shelter_garbage:   'text_131dtoq',
+
+    // ── Rep payee (page 7) ────────────────────────────────────────────────────
+    rep_payee_name:    'text_167jvng',
+    rep_payee_address: 'text_168dzaa',
+
+    // ── Authorized representative (page 8) ───────────────────────────────────
+    authorized_rep_name:    'text_106qgcb',
+    authorized_rep_address: 'text_107sbfj',
+    authorized_rep_phone:   'text_108mrvk',
+
+    // ── Applicant signature (page 8) ─────────────────────────────────────────
+    applicant_signature_date: 'text_109xuv',
+
+    // ── Power of attorney (page 8) ───────────────────────────────────────────
+    poa_name:         'text_76usxc',
+    poa_relationship: 'text_79bwsp',
+    poa_address:      'text_77rjij',
+    poa_city:         'text_78ephy',
+    poa_state:        'text_82gpsd',
+    poa_zip:          'text_81zhqf',
+    poa_phone:        'text_80eufk',
   },
 
-  applies: (data) => {
-    const d = data || {};
-    return !!(d.isPregnant || d.isPostpartum || d.isBreastfeeding || d.hasChildrenUnder5);
-  },
+  // Medicaid applies broadly — income below ~138% FPL, or pregnant, elderly, disabled
+  applies: (_data) => true,
 
   adapt(data) {
     const d = data || {};
@@ -259,8 +278,10 @@ const MEDICAID_PA = {
 
     // Applicant
     flat.applicant_name  = [d.firstName, d.lastName].filter(Boolean).join(' ');
-    flat.current_address = d.address || '';
-    flat.phone_number    = d.phone   || '';
+    flat.birth_date      = d.dateOfBirth   || '';
+    flat.marital_status  = d.maritalStatus || '';
+    flat.current_address = d.address       || '';
+    flat.phone_number    = d.phone         || '';
 
     // Household members (up to 4)
     members.slice(0, 4).forEach((m, i) => {
@@ -282,6 +303,11 @@ const MEDICAID_PA = {
     // Shelter expenses
     if (exp.rent)      flat.shelter_rent     = `$${exp.rent}`;
     if (exp.utilities) flat.shelter_electric = `$${exp.utilities}`;
+    if (exp.gas)       flat.shelter_gas      = `$${exp.gas}`;
+    if (exp.heating)   flat.shelter_heating  = `$${exp.heating}`;
+
+    // Signature date (auto-filled)
+    flat.applicant_signature_date = new Date().toLocaleDateString('en-US');
 
     return flat;
   },

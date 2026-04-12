@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { generateSnapPDF, downloadPDF } from '../utils/pdfGenerator.js';
+import { generateSnapPDF, generateMedicaidPDF, downloadPDF } from '../utils/pdfGenerator.js';
 
 const STATUS_CONFIG = {
   yes: { label: 'Likely Eligible', cls: 'status-yes', dot: '●' },
@@ -8,26 +8,49 @@ const STATUS_CONFIG = {
 };
 
 export default function BenefitsDashboard({ results, extractedData, onReset }) {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [pdfError, setPdfError] = useState(null);
-  const [pdfSuccess, setPdfSuccess] = useState(false);
+  const [generatingSnap, setGeneratingSnap]         = useState(false);
+  const [generatingMedicaid, setGeneratingMedicaid] = useState(false);
+  const [pdfError, setPdfError]                     = useState(null);
+  const [snapSuccess, setSnapSuccess]               = useState(false);
+  const [medicaidSuccess, setMedicaidSuccess]       = useState(false);
 
   const eligibleCount = results.filter(r => r.eligible === 'yes').length;
-  const maybeCount = results.filter(r => r.eligible === 'maybe').length;
+  const maybeCount    = results.filter(r => r.eligible === 'maybe').length;
 
-  async function handleDownloadPDF() {
-    setIsGenerating(true);
+  const medicaidResult = results.find(r =>
+    r.program === 'Medicaid' || r.program === 'CHIP' || r.programName?.toLowerCase().includes('medicaid')
+  );
+  const showMedicaid = medicaidResult && medicaidResult.eligible !== 'no';
+
+  async function handleDownloadSnap() {
+    setGeneratingSnap(true);
     setPdfError(null);
-    setPdfSuccess(false);
+    setSnapSuccess(false);
     try {
       const bytes = await generateSnapPDF(extractedData);
-      downloadPDF(bytes);
-      setPdfSuccess(true);
+      downloadPDF(bytes, 'PA-SNAP-Application.pdf');
+      setSnapSuccess(true);
     } catch (err) {
-      console.error('PDF generation failed:', err);
-      setPdfError('Could not generate PDF. Please try again.');
+      console.error('SNAP PDF failed:', err);
+      setPdfError('Could not generate SNAP PDF. Please try again.');
     } finally {
-      setIsGenerating(false);
+      setGeneratingSnap(false);
+    }
+  }
+
+  async function handleDownloadMedicaid() {
+    setGeneratingMedicaid(true);
+    setPdfError(null);
+    setMedicaidSuccess(false);
+    try {
+      const bytes = await generateMedicaidPDF(extractedData);
+      downloadPDF(bytes, 'PA-Medicaid-Application.pdf');
+      setMedicaidSuccess(true);
+    } catch (err) {
+      console.error('Medicaid PDF failed:', err);
+      setPdfError('Could not generate Medicaid PDF. Please try again.');
+    } finally {
+      setGeneratingMedicaid(false);
     }
   }
 
@@ -80,24 +103,46 @@ export default function BenefitsDashboard({ results, extractedData, onReset }) {
         <div className="pdf-box">
           <div className="pdf-icon">📄</div>
           <div className="pdf-text">
-            <h3>Ready to apply for SNAP food assistance?</h3>
-            <p>We've pre-filled a Pennsylvania SNAP application (PA 600 FS) with your information. Download it, review it, sign it, and bring or mail it to your county assistance office.</p>
+            <h3>Download your pre-filled applications</h3>
+            <p>We've pre-filled your Pennsylvania benefit applications with your information. Download, review, sign, and submit to your county assistance office.</p>
           </div>
         </div>
+
         <button
-          className={`btn-download ${isGenerating ? 'btn-loading' : ''}`}
-          onClick={handleDownloadPDF}
-          disabled={isGenerating}
+          className={`btn-download ${generatingSnap ? 'btn-loading' : ''}`}
+          onClick={handleDownloadSnap}
+          disabled={generatingSnap}
         >
-          {isGenerating ? (
-            <><span className="spinner" /> Generating your PDF…</>
+          {generatingSnap ? (
+            <><span className="spinner" /> Generating…</>
           ) : (
             <>📥 Download My SNAP Application</>
           )}
         </button>
-        {pdfSuccess && (
-          <p className="pdf-success">✅ Your PDF was generated and downloaded! Review, sign, and submit it to your county office.</p>
+        {snapSuccess && (
+          <p className="pdf-success">✅ SNAP application downloaded! Review, sign, and submit to your county office.</p>
         )}
+
+        {showMedicaid && (
+          <>
+            <button
+              className={`btn-download btn-download-medicaid ${generatingMedicaid ? 'btn-loading' : ''}`}
+              onClick={handleDownloadMedicaid}
+              disabled={generatingMedicaid}
+              style={{ marginTop: '0.75rem' }}
+            >
+              {generatingMedicaid ? (
+                <><span className="spinner" /> Generating…</>
+              ) : (
+                <>📥 Download My Medicaid Application</>
+              )}
+            </button>
+            {medicaidSuccess && (
+              <p className="pdf-success">✅ Medicaid application downloaded! Review, sign, and submit to your county office.</p>
+            )}
+          </>
+        )}
+
         {pdfError && (
           <p className="pdf-error">⚠️ {pdfError}</p>
         )}

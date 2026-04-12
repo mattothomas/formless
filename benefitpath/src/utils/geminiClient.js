@@ -14,12 +14,14 @@ IMPORTANT RULES:
 
 REQUIRED FIELDS to collect:
 - firstName, lastName (can be first name only if they prefer)
+- dateOfBirth (for Medicaid form)
+- maritalStatus (single, married, divorced, widowed, separated — for Medicaid form)
 - address (street, city, state, zip)
 - county (PA county)
 - phone
 - householdMembers: [{name, dob, relationship}] — for each person living with them
-- monthlyIncome: [{source, amount, frequency}] — wages, child support, SSI, etc.
-- expenses: {rent/mortgage, utilities}
+- monthlyIncome: [{source, amount, frequency, person}] — wages, child support, SSI, etc.
+- expenses: {rent, mortgage, utilities, gas, heating}
 - hasChildrenUnder5 (for WIC)
 - isPregnant (for WIC)
 
@@ -31,6 +33,8 @@ Always respond with valid JSON in this exact structure:
   "extractedData": {
     "firstName": null,
     "lastName": null,
+    "dateOfBirth": null,
+    "maritalStatus": null,
     "address": null,
     "county": null,
     "phone": null,
