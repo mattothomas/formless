@@ -1,19 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mic, Square, Send, ArrowLeft, FileText, RotateCcw } from 'lucide-react';
+import { Mic, Square, Send } from 'lucide-react';
 import { sendToGemini, mergeExtractedData } from '../utils/geminiClient.js';
 import { calculateEligibility } from '../utils/eligibility.js';
 import { generateMedicaidPDF, generateSnapPDF, downloadPDF } from '../utils/pdfGenerator.js';
 import { useSpeech } from '../hooks/useSpeech.js';
 import { useSession } from '../hooks/useSession.js';
 
-const WELCOME = {
-  id: 'welcome',
-  role: 'system',
-  content: "Hi — I'm Freeform. Tell me what's going on in your life right now. I'll figure out what benefits you qualify for and fill out the forms for you.",
-};
+const EXAMPLE_TEXT =
+  "I just lost my job at the warehouse. I have a 4-year-old daughter and I can't pay rent next month. I live in Philadelphia.";
 
-const EXAMPLE_TEXT = "I just lost my job at the warehouse. I have a 4-year-old daughter and I can't pay rent next month. I live in Philadelphia.";
+// ── Root ─────────────────────────────────────────────────────────────────────
 
 export default function FreeformApp({ onSwitchDesign }) {
   const {
@@ -28,33 +25,151 @@ export default function FreeformApp({ onSwitchDesign }) {
     resetSession,
   } = useSession();
 
-  const [screen, setScreen] = useState('conversation');
+  const [screen, setScreen] = useState('landing'); // landing | intake | document
+
+  // Jump straight to document if session already has results
+  useEffect(() => {
+    if (isLoaded && eligibilityResults && eligibilityResults.length > 0) {
+      setScreen('document');
+    } else if (isLoaded && savedMessages.length > 0) {
+      setScreen('intake');
+    }
+  }, [isLoaded]); // eslint-disable-line
+
+  function handleBegin() { setScreen('intake'); }
+  function handleReview() { setScreen('document'); }
+  function handleReturn() { setScreen('intake'); }
+  function handleReset() { resetSession(); setScreen('landing'); }
+
+  return (
+    <div style={c.root}>
+      <AnimatePresence mode="wait">
+        {screen === 'landing' && (
+          <Landing key="landing" onBegin={handleBegin} onSwitchDesign={onSwitchDesign} />
+        )}
+        {screen === 'intake' && (
+          <Intake
+            key="intake"
+            savedMessages={savedMessages}
+            setMessages={setMessages}
+            extractedData={extractedData}
+            setExtractedData={setExtractedData}
+            eligibilityResults={eligibilityResults}
+            setEligibilityResults={setEligibilityResults}
+            persist={persist}
+            onReview={handleReview}
+            onSwitchDesign={onSwitchDesign}
+          />
+        )}
+        {screen === 'document' && (
+          <Document
+            key="document"
+            extractedData={extractedData}
+            eligibilityResults={eligibilityResults}
+            onReturn={handleReturn}
+            onReset={handleReset}
+            onSwitchDesign={onSwitchDesign}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Landing ──────────────────────────────────────────────────────────────────
+
+function Landing({ onBegin, onSwitchDesign }) {
+  return (
+    <motion.div
+      key="landing-inner"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      style={{ ...c.screen, display: 'flex', flexDirection: 'column' }}
+    >
+      {/* Top bar */}
+      <div style={c.topBar}>
+        <span style={c.wordmark}>FREEFORM</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <span style={c.topBarRight}>Pennsylvania · 2026</span>
+          <button onClick={onSwitchDesign} style={c.ghostSmall}>Classic View</button>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div style={c.landingBody}>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.1 }}
+        >
+          <p style={c.landingEyebrow}>Government Benefits · Free · Private</p>
+          <h1 style={c.landingHeadline}>
+            You talk.<br />
+            We fill<br />
+            the forms.
+          </h1>
+          <p style={c.landingBody2}>
+            Describe your situation in plain language — in English, Spanish, or both.
+            Freeform determines what you qualify for and prepares your applications automatically.
+            No paperwork. No confusion. No cost.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.35 }}
+          style={{ marginTop: '3rem' }}
+        >
+          <button onClick={onBegin} style={c.beginBtn}>
+            Begin your application
+          </button>
+          <div style={c.programStrip}>
+            {['SNAP', 'Medicaid', 'LIHEAP', 'WIC', 'TANF'].map((p, i) => (
+              <span key={p} style={c.programTag}>
+                {p}
+                {i < 4 && <span style={{ color: '#C0BAB0', marginLeft: '0.75rem' }}>·</span>}
+              </span>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Bottom rule */}
+      <div style={c.landingFooter}>
+        <span style={c.footerText}>
+          Not an official government service. For official applications, visit compass.state.pa.us
+        </span>
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Intake ───────────────────────────────────────────────────────────────────
+
+const SYSTEM_SEED = {
+  id: 'seed',
+  role: 'system',
+  content: 'Describe your situation in your own words — what\'s going on for you right now?',
+};
+
+function Intake({
+  savedMessages, setMessages, extractedData, setExtractedData,
+  eligibilityResults, setEligibilityResults, persist, onReview, onSwitchDesign,
+}) {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [snapWarned, setSnapWarned] = useState(false);
-  const [generatingMedicaid, setGeneratingMedicaid] = useState(false);
-  const [generatingSnap, setGeneratingSnap] = useState(false);
-  const [medicaidDone, setMedicaidDone] = useState(false);
-  const [snapDone, setSnapDone] = useState(false);
-  const [pdfError, setPdfError] = useState(null);
-
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
-  const messages = (savedMessages.length === 0 && isLoaded)
-    ? [WELCOME]
-    : (savedMessages.length > 0 ? savedMessages : [WELCOME]);
+  const messages = savedMessages.length > 0 ? savedMessages : [SYSTEM_SEED];
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
-
-  useEffect(() => {
-    if (isLoaded && eligibilityResults && eligibilityResults.length > 0) {
-      setScreen('form-preview');
-    }
-  }, [isLoaded]); // eslint-disable-line
 
   const handleTranscript = useCallback((text) => {
     setInputText(prev => prev ? prev + ' ' + text : text);
@@ -69,7 +184,8 @@ export default function FreeformApp({ onSwitchDesign }) {
     setInputText('');
 
     const userMsg = { id: Date.now().toString(), role: 'user', content: text.trim() };
-    const nextMessages = [...messages.filter(m => m.id !== 'welcome'), userMsg];
+    const base = messages.filter(m => m.id !== 'seed');
+    const nextMessages = [...base, userMsg];
     setMessages(nextMessages);
     setIsTyping(true);
 
@@ -80,21 +196,21 @@ export default function FreeformApp({ onSwitchDesign }) {
       }));
       const response = await sendToGemini(apiMessages, apiKey);
       const assistantMsg = { id: (Date.now() + 1).toString(), role: 'system', content: response.message };
-      const updatedMessages = [...nextMessages, assistantMsg];
-      setMessages(updatedMessages);
+      const updated = [...nextMessages, assistantMsg];
+      setMessages(updated);
 
-      const mergedData = mergeExtractedData(extractedData, response.extractedData);
-      setExtractedData(mergedData);
+      const merged = mergeExtractedData(extractedData, response.extractedData);
+      setExtractedData(merged);
 
       if (response.readyForResults || response.isComplete) {
-        const results = calculateEligibility(mergedData);
+        const results = calculateEligibility(merged);
         setEligibilityResults(results);
-        await persist(updatedMessages, mergedData, results);
-        setTimeout(() => setScreen('form-preview'), 500);
+        await persist(updated, merged, results);
+        setTimeout(() => onReview(), 400);
       } else {
-        await persist(updatedMessages, mergedData, null);
+        await persist(updated, merged, null);
       }
-    } catch (err) {
+    } catch {
       const errMsg = { id: (Date.now() + 1).toString(), role: 'system', content: 'Something went wrong. Please try again.' };
       setMessages(prev => [...prev, errMsg]);
     } finally {
@@ -107,444 +223,655 @@ export default function FreeformApp({ onSwitchDesign }) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputText); }
   }
 
-  async function handleDownloadMedicaid() {
-    setGeneratingMedicaid(true);
-    setPdfError(null);
-    try {
-      const bytes = await generateMedicaidPDF(extractedData);
-      downloadPDF(bytes, 'PA-Medicaid-Application.pdf');
-      setMedicaidDone(true);
-    } catch (err) {
-      setPdfError('Could not generate Medicaid PDF. Please try again.');
-    } finally {
-      setGeneratingMedicaid(false);
-    }
-  }
-
-  async function handleDownloadSnap() {
-    if (!snapWarned) { setSnapWarned(true); return; }
-    setGeneratingSnap(true);
-    try {
-      const bytes = await generateSnapPDF(extractedData);
-      downloadPDF(bytes, 'PA-SNAP-Application.pdf');
-      setSnapDone(true);
-    } catch (err) {
-      setPdfError('Could not generate SNAP PDF.');
-    } finally {
-      setGeneratingSnap(false);
-    }
-  }
-
-  const d = extractedData || {};
-  const fullName = [d.firstName, d.lastName].filter(Boolean).join(' ') || '—';
-  const totalIncome = (d.monthlyIncome || []).reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
-  const householdSize = (d.householdMembers || []).length + 1;
-  const results = eligibilityResults || [];
-  const eligible = results.filter(r => r.eligible === 'yes');
-  const maybe = results.filter(r => r.eligible === 'maybe');
-  const canReview = messages.filter(m => m.role === 'user').length >= 1;
+  const exchangeCount = messages.filter(m => m.role === 'user').length;
+  const showReview = exchangeCount >= 1 && !isTyping;
 
   return (
-    <div style={s.root}>
-      <AnimatePresence mode="wait">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      style={{ ...c.screen, display: 'flex', flexDirection: 'column' }}
+    >
+      {/* Header */}
+      <div style={c.topBar}>
+        <span style={c.wordmark}>FREEFORM</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <span style={c.topBarRight}>Intake</span>
+          <button onClick={onSwitchDesign} style={c.ghostSmall}>Classic View</button>
+        </div>
+      </div>
 
-        {/* ── CONVERSATION ──────────────────────────────────────────────────── */}
-        {screen === 'conversation' && (
-          <motion.div key="conversation"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
-          >
-            <header style={s.header}>
-              <div style={s.headerBrand}>
-                <span style={s.brandDot} />
-                <span style={s.brandName}>Freeform</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <span style={s.statusPill}>● Live</span>
-                <button onClick={onSwitchDesign} style={s.switchBtn}>Classic</button>
-              </div>
-            </header>
+      {/* Transcript */}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ padding: '0' }}>
+          {/* Section label */}
+          <div style={c.transcriptLabel}>TRANSCRIPT</div>
 
-            <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.25rem 0' }}>
-              {messages.map((msg, i) => (
-                <motion.div key={msg.id || i}
-                  initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.22, delay: Math.min(i * 0.04, 0.35) }}
-                  style={{ marginBottom: '1.25rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}
-                >
-                  <div style={{ ...s.roleChip, ...(msg.role === 'user' ? s.roleChipUser : {}) }}>
-                    {msg.role === 'system' ? 'AI' : 'You'}
-                  </div>
-                  <div style={{ ...s.bubble, ...(msg.role === 'user' ? s.bubbleUser : s.bubbleAI) }}>
+          {messages.map((msg, i) => {
+            const isUser = msg.role === 'user';
+            const lineNum = String(i + 1).padStart(2, '0');
+            return (
+              <motion.div
+                key={msg.id || i}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.25, delay: Math.min(i * 0.05, 0.4) }}
+                style={{
+                  ...c.transcriptRow,
+                  ...(isUser ? c.transcriptRowUser : {}),
+                }}
+              >
+                <span style={{ ...c.lineNum, ...(isUser ? { color: '#1C3A2A' } : {}) }}>
+                  {lineNum}
+                </span>
+                <div style={{ flex: 1 }}>
+                  <span style={{ ...c.speaker, ...(isUser ? c.speakerUser : {}) }}>
+                    {isUser ? 'YOU' : 'FREEFORM'}
+                  </span>
+                  <p style={{ ...c.transcriptText, ...(isUser ? c.transcriptTextUser : {}) }}>
                     {msg.content}
-                  </div>
-                </motion.div>
-              ))}
-
-              {isTyping && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                  style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', marginBottom: '1.25rem' }}
-                >
-                  <div style={s.roleChip}>AI</div>
-                  <div style={{ ...s.bubble, ...s.bubbleAI, padding: '0.6rem 0.9rem' }}>
-                    <span style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                      {[0, 1, 2].map(i => (
-                        <motion.span key={i}
-                          animate={{ opacity: [0.25, 1, 0.25] }}
-                          transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.18 }}
-                          style={{ display: 'block', width: 7, height: 7, borderRadius: '50%', background: '#94a3b8' }}
-                        />
-                      ))}
-                    </span>
-                  </div>
-                </motion.div>
-              )}
-
-              {interimText && (
-                <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-                  <div style={{ ...s.roleChip, background: '#fee2e2', color: '#dc2626' }}>Mic</div>
-                  <div style={{ fontSize: '14px', color: '#94a3b8', fontStyle: 'italic', paddingTop: '2px' }}>{interimText}…</div>
+                  </p>
                 </div>
-              )}
+              </motion.div>
+            );
+          })}
 
-              {messages.length <= 1 && !isTyping && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-                  style={{ marginLeft: '2.75rem', marginBottom: '1.25rem' }}
-                >
-                  <button onClick={() => sendMessage(EXAMPLE_TEXT)} style={s.exampleBtn}>
-                    Try an example →
-                  </button>
-                </motion.div>
-              )}
-
-              {canReview && !isTyping && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                  style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid #e2e8f0', marginBottom: '1.5rem' }}
-                >
-                  <button onClick={() => setScreen('form-preview')} style={s.reviewBtn}>
-                    <FileText size={15} />
-                    Review my application
-                  </button>
-                </motion.div>
-              )}
-
-              <div ref={bottomRef} style={{ height: '1rem' }} />
-            </div>
-
-            <div style={s.inputArea}>
-              <div style={s.inputRow}>
-                {isSupported && (
-                  <button onClick={toggleListening}
-                    style={{ ...s.iconBtn, background: isListening ? '#ef4444' : '#1e293b' }}
-                    title={isListening ? 'Stop recording' : 'Speak'}
-                  >
-                    {isListening ? <Square size={13} color="#fff" /> : <Mic size={13} color="#fff" />}
-                  </button>
-                )}
-                <textarea ref={inputRef} value={inputText}
-                  onChange={e => setInputText(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={isListening ? 'Listening…' : 'Describe your situation, or answer the question above…'}
-                  rows={2} disabled={isTyping || isListening}
-                  style={s.textarea}
-                />
-                <button onClick={() => sendMessage(inputText)}
-                  disabled={!inputText.trim() || isTyping}
-                  style={{ ...s.iconBtn, background: '#1e293b', opacity: (!inputText.trim() || isTyping) ? 0.35 : 1 }}
-                >
-                  <Send size={13} color="#fff" />
-                </button>
+          {/* Typing */}
+          {isTyping && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              style={c.transcriptRow}
+            >
+              <span style={c.lineNum}>—</span>
+              <div style={{ flex: 1 }}>
+                <span style={c.speaker}>FREEFORM</span>
+                <p style={c.transcriptText}>
+                  <span style={{ display: 'inline-flex', gap: '4px', alignItems: 'center', marginTop: '2px' }}>
+                    {[0, 1, 2].map(i => (
+                      <motion.span
+                        key={i}
+                        animate={{ opacity: [0.2, 1, 0.2] }}
+                        transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+                        style={{ display: 'block', width: 5, height: 5, background: '#888682' }}
+                      />
+                    ))}
+                  </span>
+                </p>
               </div>
-              <p style={s.inputHint}>Enter to send · Shift+Enter for new line{isListening ? ' · Recording…' : ''}</p>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
-        {/* ── FORM PREVIEW ──────────────────────────────────────────────────── */}
-        {screen === 'form-preview' && (
-          <motion.div key="form-preview"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
-          >
-            <header style={s.header}>
-              <button onClick={() => setScreen('conversation')} style={s.returnBtn}>
-                <ArrowLeft size={13} /> Back
+          {/* Interim speech */}
+          {interimText && (
+            <div style={{ ...c.transcriptRow, opacity: 0.5 }}>
+              <span style={c.lineNum}>·</span>
+              <div style={{ flex: 1 }}>
+                <span style={{ ...c.speaker, color: '#c0392b' }}>LISTENING</span>
+                <p style={{ ...c.transcriptText, fontStyle: 'italic' }}>{interimText}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Example */}
+          {messages.length <= 1 && !isTyping && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              style={{ padding: '0 1.5rem 1.5rem', borderBottom: '1px solid #E8E6DF' }}
+            >
+              <p style={{ fontSize: '11px', color: '#888682', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 0.6rem' }}>
+                Not sure where to start?
+              </p>
+              <button onClick={() => sendMessage(EXAMPLE_TEXT)} style={c.exampleBtn}>
+                Use example: single parent, recently unemployed, Philadelphia
               </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <span style={{ ...s.statusPill, background: '#fef9c3', color: '#854d0e', borderColor: '#fde68a' }}>Draft</span>
-                <button onClick={onSwitchDesign} style={s.switchBtn}>Classic</button>
+            </motion.div>
+          )}
+
+          {/* Review prompt */}
+          {showReview && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              style={c.reviewPrompt}
+            >
+              <div>
+                <p style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#888682', margin: '0 0 0.25rem' }}>
+                  Ready to see your application?
+                </p>
+                <p style={{ fontSize: '13px', color: '#555250', margin: 0 }}>
+                  I have enough information to prepare your forms. You can also keep talking to add more details.
+                </p>
               </div>
-            </header>
+              <button onClick={onReview} style={c.reviewBtn}>
+                View Application →
+              </button>
+            </motion.div>
+          )}
 
-            <div style={{ flex: 1, overflowY: 'auto', background: '#f8fafc', padding: '1.25rem' }}>
+          <div ref={bottomRef} style={{ height: '1px' }} />
+        </div>
+      </div>
 
-              {/* Eligibility strip */}
-              {results.length > 0 && (
-                <div style={s.eligStrip}>
-                  <span style={s.eligLabel}>Eligibility</span>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                    {eligible.map(r => <span key={r.program} style={s.badgeGreen}>{r.icon} {r.programName}</span>)}
-                    {maybe.map(r => <span key={r.program} style={s.badgeYellow}>{r.icon} {r.programName}</span>)}
-                  </div>
-                </div>
-              )}
-
-              {/* Document */}
-              <div style={s.doc}>
-                <div style={s.docHeader}>
-                  <div style={s.docFormId}>Pennsylvania Benefit Application · {new Date().toLocaleDateString('en-US')}</div>
-                  <h2 style={s.docTitle}>Medicaid Financial Eligibility &amp; SNAP</h2>
-                  <p style={s.docSub}>Pre-filled from your conversation · Review before submitting</p>
-                </div>
-
-                <div style={{ padding: '1.25rem' }}>
-                  <Section title="I. Applicant Information">
-                    <Row label="Full Name" value={fullName} />
-                    <Row label="Date of Birth" value={d.dateOfBirth || 'Not provided'} />
-                    <Row label="Marital Status" value={d.maritalStatus || 'Single'} />
-                    <Row label="Phone Number" value={d.phone || 'Not provided'} />
-                  </Section>
-
-                  <Section title="II. Residence">
-                    <Row label="Current Address" value={d.address || 'Not provided'} />
-                    <Row label="County" value={d.county || 'Not provided'} />
-                    <Row label="Housing Status" value={(d.expenses || {}).rent ? 'Renting' : 'Not specified'} />
-                  </Section>
-
-                  <Section title="III. Household Composition">
-                    <Row label="Total Members (incl. applicant)" value={String(householdSize)} />
-                    {(d.householdMembers || []).length > 0
-                      ? (d.householdMembers || []).map((m, i) => (
-                          <Row key={i} label={`Member ${i + 2}`} value={[m.name, m.relationship, m.dob ? `DOB ${m.dob}` : ''].filter(Boolean).join(' · ')} />
-                        ))
-                      : <Row label="Additional Members" value="None listed" />
-                    }
-                  </Section>
-
-                  <Section title="IV. Income &amp; Employment">
-                    <Row label="Employment Status" value={totalIncome === 0 ? 'Unemployed / No current income' : 'Employed'} />
-                    <Row label="Monthly Gross Income" value={totalIncome > 0 ? `$${totalIncome.toLocaleString()}` : '$0.00'} />
-                    {(d.monthlyIncome || []).length > 0
-                      ? (d.monthlyIncome || []).map((inc, i) => (
-                          <Row key={i} label={`Source ${i + 1}`} value={[inc.source, inc.amount ? `$${inc.amount}` : '', inc.frequency].filter(Boolean).join(' · ')} />
-                        ))
-                      : <Row label="Income Sources" value="None — recently unemployed" />
-                    }
-                  </Section>
-
-                  <Section title="V. Monthly Expenses">
-                    <Row label="Rent / Mortgage" value={(d.expenses || {}).rent ? `$${d.expenses.rent}/mo` : '$0'} />
-                    <Row label="Utilities" value={(d.expenses || {}).utilities ? `$${d.expenses.utilities}/mo` : '$0'} />
-                    <Row label="Heating" value={(d.expenses || {}).heating ? `$${d.expenses.heating}/mo` : '$0'} />
-                    <Row label="Childcare" value={(d.expenses || {}).childcare ? `$${d.expenses.childcare}/mo` : '$0'} />
-                  </Section>
-
-                  <Section title="VI. Medical Coverage">
-                    <Row label="Current Insurance" value="None — Uninsured" />
-                    <Row label="Applying For" value="Pennsylvania Medicaid / CHIP" />
-                  </Section>
-
-                  <Section title="VII. Certification" last>
-                    <p style={{ fontSize: '12px', lineHeight: 1.7, color: '#64748b', margin: '0 0 1rem' }}>
-                      I certify under penalty of perjury that the information provided is true and complete to the best
-                      of my knowledge. I understand that providing false information may result in disqualification and legal penalties.
-                    </p>
-                    <Row label="Signature" value={fullName !== '—' ? fullName : '[To be signed]'} />
-                    <Row label="Date" value={new Date().toLocaleDateString('en-US')} />
-                  </Section>
-                </div>
-              </div>
-
-              {/* Downloads */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1.25rem' }}>
-                <button onClick={handleDownloadMedicaid} disabled={generatingMedicaid} style={s.dlPrimary}>
-                  {generatingMedicaid ? 'Generating…' : medicaidDone ? '✓ Medicaid Application Downloaded' : '↓ Download Medicaid Application (PDF)'}
-                </button>
-                <button onClick={handleDownloadSnap} disabled={generatingSnap} style={s.dlSecondary}>
-                  {generatingSnap ? 'Generating…' : snapDone ? '✓ SNAP Application Downloaded' : '↓ Download SNAP Application (PDF)'}
-                </button>
-                {snapWarned && !snapDone && (
-                  <p style={s.snapNote}>We focused on Medicaid for this demo — SNAP form filling is still in progress. Click again to try anyway.</p>
-                )}
-                {pdfError && <p style={{ fontSize: '12px', color: '#dc2626', margin: 0 }}>{pdfError}</p>}
-                <button onClick={() => { resetSession(); setScreen('conversation'); }} style={s.dlGhost}>
-                  <RotateCcw size={12} /> Start New Application
-                </button>
-              </div>
-
-              {/* Next steps */}
-              <div style={s.nextSteps}>
-                <p style={s.nextStepsTitle}>Next Steps</p>
-                <ol style={{ margin: '0.5rem 0 0', padding: '0 0 0 1.3rem', color: '#475569', fontSize: '13px', lineHeight: 1.8 }}>
-                  <li>Download and review your pre-filled applications above</li>
-                  <li>Sign and date the last page of each form</li>
-                  <li>Submit at <strong>compass.state.pa.us</strong> or your county DHS office</li>
-                  <li>LIHEAP heating help — call <strong>1-800-692-7462</strong> before May 8, 2026</li>
-                  <li>WIC — call <strong>1-800-WIC-WINS</strong> to find your nearest clinic</li>
-                </ol>
-              </div>
-
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+      {/* Input */}
+      <div style={c.inputArea}>
+        <div style={c.inputRow}>
+          {isSupported && (
+            <button
+              onClick={toggleListening}
+              style={{ ...c.inputIconBtn, background: isListening ? '#c0392b' : '#1C3A2A' }}
+              title={isListening ? 'Stop' : 'Speak'}
+            >
+              {isListening ? <Square size={12} color="#fff" /> : <Mic size={12} color="#fff" />}
+            </button>
+          )}
+          <textarea
+            ref={inputRef}
+            value={inputText}
+            onChange={e => setInputText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={isListening ? 'Listening…' : 'Type your response here, or press the microphone to speak…'}
+            rows={2}
+            disabled={isTyping || isListening}
+            style={c.inputTextarea}
+          />
+          <button
+            onClick={() => sendMessage(inputText)}
+            disabled={!inputText.trim() || isTyping}
+            style={{ ...c.inputIconBtn, background: '#1C3A2A', opacity: !inputText.trim() || isTyping ? 0.3 : 1 }}
+          >
+            <Send size={12} color="#fff" />
+          </button>
+        </div>
+        <p style={c.inputHint}>
+          {isListening ? 'Recording — press to stop' : 'Enter ↵ to send · Shift+Enter for new line'}
+        </p>
+      </div>
+    </motion.div>
   );
 }
 
-function Section({ title, children, last = false }) {
+// ── Document ─────────────────────────────────────────────────────────────────
+
+function Document({ extractedData, eligibilityResults, onReturn, onReset, onSwitchDesign }) {
+  const [generatingMedicaid, setGeneratingMedicaid] = useState(false);
+  const [generatingSnap, setGeneratingSnap] = useState(false);
+  const [medicaidDone, setMedicaidDone] = useState(false);
+  const [snapDone, setSnapDone] = useState(false);
+  const [snapWarned, setSnapWarned] = useState(false);
+  const [pdfError, setPdfError] = useState(null);
+
+  const d = extractedData || {};
+  const results = eligibilityResults || [];
+  const fullName = [d.firstName, d.lastName].filter(Boolean).join(' ') || '—';
+  const totalIncome = (d.monthlyIncome || []).reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
+  const householdSize = (d.householdMembers || []).length + 1;
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const eligible = results.filter(r => r.eligible === 'yes');
+  const maybe = results.filter(r => r.eligible === 'maybe');
+
+  async function handleMedicaid() {
+    setGeneratingMedicaid(true); setPdfError(null);
+    try {
+      downloadPDF(await generateMedicaidPDF(d), 'PA-Medicaid-Application.pdf');
+      setMedicaidDone(true);
+    } catch { setPdfError('Could not generate Medicaid PDF. Please try again.'); }
+    finally { setGeneratingMedicaid(false); }
+  }
+
+  async function handleSnap() {
+    if (!snapWarned) { setSnapWarned(true); return; }
+    setGeneratingSnap(true);
+    try {
+      downloadPDF(await generateSnapPDF(d), 'PA-SNAP-Application.pdf');
+      setSnapDone(true);
+    } catch { setPdfError('Could not generate SNAP PDF.'); }
+    finally { setGeneratingSnap(false); }
+  }
+
   return (
-    <div style={{ marginBottom: last ? 0 : '1.5rem', paddingBottom: last ? 0 : '1.5rem', borderBottom: last ? 'none' : '1px solid #e2e8f0' }}>
-      <p style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#94a3b8', margin: '0 0 0.9rem' }}>{title}</p>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem 1.5rem' }}>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      style={{ ...c.screen, display: 'flex', flexDirection: 'column' }}
+    >
+      {/* Header */}
+      <div style={c.topBar}>
+        <button onClick={onReturn} style={c.returnLink}>← Return to intake</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <span style={{ ...c.topBarRight, color: '#888682' }}>DRAFT · {today}</span>
+          <button onClick={onSwitchDesign} style={c.ghostSmall}>Classic View</button>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', background: '#F0EDE6' }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto', padding: '2rem 1.25rem' }}>
+
+          {/* Eligibility finding */}
+          {results.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              style={c.eligBlock}
+            >
+              <div style={c.eligHeader}>
+                <span style={c.eligHeaderLabel}>ELIGIBILITY DETERMINATION</span>
+                <span style={c.eligHeaderSub}>{eligible.length} program{eligible.length !== 1 ? 's' : ''} confirmed · {maybe.length} to verify</span>
+              </div>
+              <div style={c.eligGrid}>
+                {results.map(r => (
+                  <div key={r.program} style={{ ...c.eligItem, ...(r.eligible === 'yes' ? c.eligYes : r.eligible === 'maybe' ? c.eligMaybe : c.eligNo) }}>
+                    <div style={c.eligItemTop}>
+                      <span style={c.eligIcon}>{r.icon}</span>
+                      <span style={c.eligName}>{r.programName}</span>
+                      <span style={c.eligStatus}>
+                        {r.eligible === 'yes' ? 'LIKELY ELIGIBLE' : r.eligible === 'maybe' ? 'MAY QUALIFY' : 'UNLIKELY'}
+                      </span>
+                    </div>
+                    {r.urgent && (
+                      <div style={c.urgentFlag}>⚡ Time-sensitive — apply immediately</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* The document */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.15 }}
+            style={c.docWrap}
+          >
+            {/* Document masthead */}
+            <div style={c.docMasthead}>
+              <div style={c.docFormRef}>FORM PA-BENEFIT-001</div>
+              <h1 style={c.docMainTitle}>Pennsylvania Benefit Application</h1>
+              <div style={c.docSubRow}>
+                <span>Medicaid Financial Eligibility · SNAP</span>
+                <span style={{ color: '#C0BAB0' }}>·</span>
+                <span>Prepared {today}</span>
+                <span style={{ color: '#C0BAB0' }}>·</span>
+                <span style={{ color: '#c0392b', fontWeight: 500 }}>Review before submitting</span>
+              </div>
+            </div>
+
+            {/* Sections */}
+            <div style={c.docBody}>
+              <FormSection number="I" title="Applicant Information">
+                <FieldRow label="Legal Name" value={fullName} />
+                <FieldRow label="Date of Birth" value={d.dateOfBirth || 'Not provided'} />
+                <FieldRow label="Marital Status" value={d.maritalStatus || 'Single'} />
+                <FieldRow label="Contact Phone" value={d.phone || 'Not provided'} />
+              </FormSection>
+
+              <FormSection number="II" title="Residence">
+                <FieldRow label="Current Address" value={d.address || 'Not provided'} span />
+                <FieldRow label="County" value={d.county || 'Not provided'} />
+                <FieldRow label="Housing Status" value={(d.expenses || {}).rent ? 'Renting' : 'Not specified'} />
+              </FormSection>
+
+              <FormSection number="III" title="Household Composition">
+                <FieldRow label="Total Members (incl. applicant)" value={String(householdSize)} />
+                <FieldRow label="Children Under 18" value={String((d.householdMembers || []).filter(m => m.relationship?.toLowerCase().includes('child') || m.relationship?.toLowerCase().includes('daughter') || m.relationship?.toLowerCase().includes('son')).length || '—')} />
+                {(d.householdMembers || []).map((m, i) => (
+                  <FieldRow
+                    key={i}
+                    label={`Member ${i + 2} — ${m.relationship || 'Household Member'}`}
+                    value={[m.name, m.dob ? `DOB ${m.dob}` : ''].filter(Boolean).join(' · ') || '—'}
+                    span
+                  />
+                ))}
+              </FormSection>
+
+              <FormSection number="IV" title="Income & Employment">
+                <FieldRow label="Employment Status" value={totalIncome === 0 ? 'Unemployed — No current income' : 'Employed'} />
+                <FieldRow label="Monthly Gross Income" value={totalIncome > 0 ? `$${totalIncome.toLocaleString()}/month` : '$0.00'} />
+                {(d.monthlyIncome || []).length > 0
+                  ? (d.monthlyIncome || []).map((inc, i) => (
+                      <FieldRow
+                        key={i}
+                        label={`Income Source ${i + 1}`}
+                        value={[inc.source, inc.amount ? `$${inc.amount}` : '', inc.frequency].filter(Boolean).join(' · ')}
+                        span
+                      />
+                    ))
+                  : <FieldRow label="Income Sources" value="None reported" span />
+                }
+              </FormSection>
+
+              <FormSection number="V" title="Monthly Expenses">
+                <FieldRow label="Rent / Mortgage" value={(d.expenses || {}).rent ? `$${d.expenses.rent}/month` : '$0'} />
+                <FieldRow label="Utilities" value={(d.expenses || {}).utilities ? `$${d.expenses.utilities}/month` : '$0'} />
+                <FieldRow label="Heating" value={(d.expenses || {}).heating ? `$${d.expenses.heating}/month` : '$0'} />
+                <FieldRow label="Childcare" value={(d.expenses || {}).childcare ? `$${d.expenses.childcare}/month` : '$0'} />
+              </FormSection>
+
+              <FormSection number="VI" title="Medical Coverage">
+                <FieldRow label="Current Health Insurance" value="None — Currently uninsured" />
+                <FieldRow label="Application For" value="Pennsylvania Medicaid / CHIP" />
+              </FormSection>
+
+              <FormSection number="VII" title="Certification" last>
+                <p style={c.certText}>
+                  I certify under penalty of perjury that the information provided in this application is true
+                  and complete to the best of my knowledge. I understand that providing false information may
+                  result in disqualification from benefits and applicable legal penalties.
+                </p>
+                <FieldRow label="Electronic Signature" value={fullName !== '—' ? fullName : '[To be signed upon submission]'} />
+                <FieldRow label="Date of Certification" value={today} />
+              </FormSection>
+            </div>
+          </motion.div>
+
+          {/* Action block */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            style={c.actionBlock}
+          >
+            <div style={c.actionHeader}>
+              <span style={c.actionHeaderLabel}>DOWNLOAD APPLICATIONS</span>
+              <span style={c.actionHeaderSub}>Review each form before signing and submitting</span>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <button onClick={handleMedicaid} disabled={generatingMedicaid} style={c.dlPrimary}>
+                {generatingMedicaid ? 'Generating…' : medicaidDone ? '✓  Medicaid Application Downloaded' : '↓  Medicaid Financial Eligibility (PA-Medicaid)'}
+              </button>
+              <button onClick={handleSnap} disabled={generatingSnap} style={c.dlSecondary}>
+                {generatingSnap ? 'Generating…' : snapDone ? '✓  SNAP Application Downloaded' : '↓  SNAP Food Assistance (PA-SNAP)'}
+              </button>
+              {snapWarned && !snapDone && (
+                <p style={c.snapNote}>
+                  SNAP form filling is still in progress for this demo. Click again to download a partially filled form.
+                </p>
+              )}
+              {pdfError && <p style={{ fontSize: '12px', color: '#c0392b', margin: 0 }}>{pdfError}</p>}
+            </div>
+
+            <div style={c.actionDivider} />
+
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button onClick={onReturn} style={{ ...c.dlGhost, flex: 1 }}>← Continue adding details</button>
+              <button onClick={onReset} style={{ ...c.dlGhost, flex: 1 }}>Start new application</button>
+            </div>
+          </motion.div>
+
+          {/* Next steps */}
+          <div style={c.nextSteps}>
+            <p style={c.nextStepsLabel}>NEXT STEPS</p>
+            <div style={c.nextStepsList}>
+              {[
+                ['Submit online', 'compass.state.pa.us — fastest processing'],
+                ['Submit in person', 'Bring signed forms to your county DHS office'],
+                ['LIHEAP heating', 'Call 1-800-692-7462 · Deadline May 8, 2026'],
+                ['WIC nutrition', 'Call 1-800-WIC-WINS to locate your nearest clinic'],
+              ].map(([title, detail], i) => (
+                <div key={i} style={c.nextStep}>
+                  <span style={c.nextStepNum}>{String(i + 1).padStart(2, '0')}</span>
+                  <div>
+                    <p style={c.nextStepTitle}>{title}</p>
+                    <p style={c.nextStepDetail}>{detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function FormSection({ number, title, children, last = false }) {
+  return (
+    <div style={{ borderBottom: last ? 'none' : '1px solid #E8E6DF', marginBottom: last ? 0 : '0', paddingBottom: 0 }}>
+      <div style={c.sectionHead}>
+        <span style={c.sectionNum}>{number}</span>
+        <span style={c.sectionTitle}>{title.toUpperCase()}</span>
+      </div>
+      <div style={c.sectionBody}>
         {children}
       </div>
     </div>
   );
 }
 
-function Row({ label, value }) {
+function FieldRow({ label, value, span = false }) {
   return (
-    <div>
-      <p style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#94a3b8', margin: '0 0 2px' }}>{label}</p>
-      <p style={{ fontSize: '13px', color: '#1e293b', margin: 0, fontWeight: 500, wordBreak: 'break-word' }}>{value}</p>
+    <div style={{ gridColumn: span ? '1 / -1' : 'auto', borderBottom: '1px solid #F0EDE6', paddingBottom: '0.7rem', marginBottom: '0' }}>
+      <p style={c.fieldLabel}>{label}</p>
+      <p style={c.fieldValue}>{value}</p>
     </div>
   );
 }
 
-// ── Styles ──────────────────────────────────────────────────────────────────
+// ── Design tokens ─────────────────────────────────────────────────────────────
 
-const s = {
+const c = {
   root: {
     height: '100vh',
     display: 'flex',
     flexDirection: 'column',
-    background: '#fff',
+    background: '#F7F6F3',
     fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
-    color: '#1e293b',
+    color: '#111110',
   },
-  header: {
+  screen: {
+    height: '100vh',
+    overflow: 'hidden',
+  },
+
+  // ── Top bar
+  topBar: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '0.75rem 1.25rem',
-    borderBottom: '1px solid #e2e8f0',
-    background: '#fff',
+    padding: '0.85rem 1.5rem',
+    borderBottom: '1px solid #D8D6CF',
+    background: '#F7F6F3',
     flexShrink: 0,
   },
-  headerBrand: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  brandDot: {
-    display: 'block',
-    width: 8,
-    height: 8,
-    borderRadius: '50%',
-    background: '#3b82f6',
-  },
-  brandName: {
-    fontSize: '14px',
-    fontWeight: 600,
-    letterSpacing: '-0.01em',
-    color: '#0f172a',
-  },
-  statusPill: {
+  wordmark: {
     fontSize: '11px',
-    fontWeight: 500,
-    padding: '2px 8px',
-    borderRadius: '99px',
-    background: '#dcfce7',
-    color: '#166534',
-    border: '1px solid #bbf7d0',
+    fontWeight: 700,
+    letterSpacing: '0.2em',
+    color: '#111110',
   },
-  switchBtn: {
+  topBarRight: {
     fontSize: '11px',
-    padding: '3px 10px',
-    border: '1px solid #e2e8f0',
-    borderRadius: '6px',
-    background: '#f8fafc',
-    color: '#64748b',
-    cursor: 'pointer',
-    fontFamily: 'inherit',
+    letterSpacing: '0.1em',
+    color: '#888682',
+    textTransform: 'uppercase',
   },
-  returnBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '5px',
-    fontSize: '13px',
-    color: '#64748b',
+  returnLink: {
+    fontSize: '12px',
+    color: '#555250',
     background: 'none',
     border: 'none',
     cursor: 'pointer',
     padding: 0,
     fontFamily: 'inherit',
+    letterSpacing: '0.02em',
   },
-  roleChip: {
-    flexShrink: 0,
-    fontSize: '10px',
-    fontWeight: 600,
-    padding: '2px 7px',
-    borderRadius: '4px',
-    background: '#f1f5f9',
-    color: '#64748b',
-    marginTop: '3px',
+  ghostSmall: {
+    fontSize: '11px',
+    color: '#888682',
+    background: 'none',
+    border: '1px solid #D8D6CF',
+    padding: '3px 10px',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    letterSpacing: '0.03em',
+  },
+
+  // ── Landing
+  landingBody: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    padding: '3rem 1.5rem 2rem',
+    maxWidth: '580px',
+  },
+  landingEyebrow: {
+    fontSize: '11px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.15em',
+    color: '#888682',
+    margin: '0 0 1.5rem',
+  },
+  landingHeadline: {
+    fontSize: 'clamp(2.8rem, 8vw, 4.5rem)',
+    fontWeight: 500,
+    lineHeight: 1.08,
+    letterSpacing: '-0.02em',
+    color: '#111110',
+    margin: '0 0 1.75rem',
+  },
+  landingBody2: {
+    fontSize: '15px',
+    lineHeight: 1.7,
+    color: '#555250',
+    margin: 0,
+    maxWidth: '480px',
+  },
+  beginBtn: {
+    display: 'inline-block',
+    padding: '0.85rem 2rem',
+    background: '#1C3A2A',
+    color: '#F7F6F3',
+    border: 'none',
+    fontSize: '13px',
+    fontWeight: 500,
+    letterSpacing: '0.04em',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    marginBottom: '2rem',
+  },
+  programStrip: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0',
+    alignItems: 'center',
+  },
+  programTag: {
+    fontSize: '12px',
+    color: '#888682',
     letterSpacing: '0.05em',
   },
-  roleChipUser: {
-    background: '#eff6ff',
-    color: '#2563eb',
+  landingFooter: {
+    padding: '1rem 1.5rem',
+    borderTop: '1px solid #D8D6CF',
+    flexShrink: 0,
   },
-  bubble: {
+  footerText: {
+    fontSize: '11px',
+    color: '#B0ADA6',
+  },
+
+  // ── Intake / transcript
+  transcriptLabel: {
+    fontSize: '10px',
+    fontWeight: 600,
+    letterSpacing: '0.15em',
+    color: '#C0BAB0',
+    padding: '1.25rem 1.5rem 0.75rem',
+    borderBottom: '1px solid #E8E6DF',
+    marginBottom: 0,
+  },
+  transcriptRow: {
+    display: 'flex',
+    gap: '1rem',
+    padding: '1.1rem 1.5rem',
+    borderBottom: '1px solid #E8E6DF',
+    alignItems: 'flex-start',
+  },
+  transcriptRowUser: {
+    background: '#EFEDE6',
+  },
+  lineNum: {
+    fontSize: '10px',
+    color: '#C0BAB0',
+    fontVariantNumeric: 'tabular-nums',
+    fontFeatureSettings: '"tnum"',
+    width: '1.4rem',
+    flexShrink: 0,
+    paddingTop: '2px',
+    letterSpacing: '0.05em',
+  },
+  speaker: {
+    display: 'block',
+    fontSize: '9px',
+    fontWeight: 700,
+    letterSpacing: '0.18em',
+    color: '#B0ADA6',
+    marginBottom: '0.3rem',
+    textTransform: 'uppercase',
+  },
+  speakerUser: {
+    color: '#1C3A2A',
+  },
+  transcriptText: {
     fontSize: '14px',
     lineHeight: 1.65,
-    borderRadius: '10px',
-    padding: '0.65rem 0.9rem',
-    maxWidth: 'calc(100% - 3rem)',
+    color: '#111110',
+    margin: 0,
   },
-  bubbleAI: {
-    background: '#f8fafc',
-    border: '1px solid #e2e8f0',
-    color: '#1e293b',
-  },
-  bubbleUser: {
-    background: '#eff6ff',
-    border: '1px solid #dbeafe',
-    color: '#1e293b',
+  transcriptTextUser: {
+    color: '#1A2E22',
   },
   exampleBtn: {
     fontSize: '12px',
-    color: '#3b82f6',
-    background: '#eff6ff',
-    border: '1px solid #bfdbfe',
-    borderRadius: '6px',
-    padding: '5px 12px',
+    color: '#555250',
+    background: 'transparent',
+    border: '1px solid #D8D6CF',
+    padding: '0.55rem 1rem',
     cursor: 'pointer',
     fontFamily: 'inherit',
+    letterSpacing: '0.01em',
   },
-  reviewBtn: {
+  reviewPrompt: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: '7px',
-    width: '100%',
-    padding: '0.75rem',
-    background: '#0f172a',
-    color: '#fff',
+    justifyContent: 'space-between',
+    gap: '1rem',
+    padding: '1.25rem 1.5rem',
+    background: '#1C3A2A',
+    flexWrap: 'wrap',
+  },
+  reviewBtn: {
+    padding: '0.6rem 1.25rem',
+    background: '#F7F6F3',
+    color: '#1C3A2A',
     border: 'none',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: 500,
+    fontSize: '12px',
+    fontWeight: 600,
+    letterSpacing: '0.04em',
     cursor: 'pointer',
     fontFamily: 'inherit',
+    whiteSpace: 'nowrap',
   },
+
+  // ── Input area
   inputArea: {
-    borderTop: '1px solid #e2e8f0',
-    padding: '0.9rem 1.25rem',
-    background: '#fff',
+    borderTop: '1px solid #D8D6CF',
+    padding: '0.85rem 1.5rem',
+    background: '#F7F6F3',
     flexShrink: 0,
   },
   inputRow: {
@@ -552,169 +879,319 @@ const s = {
     alignItems: 'flex-end',
     gap: '0.6rem',
   },
-  iconBtn: {
+  inputIconBtn: {
     flexShrink: 0,
-    width: '2.4rem',
-    height: '2.4rem',
-    borderRadius: '8px',
+    width: '2.2rem',
+    height: '2.2rem',
     border: 'none',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
-    transition: 'opacity 0.15s, background 0.15s',
+    transition: 'opacity 0.15s',
   },
-  textarea: {
+  inputTextarea: {
     flex: 1,
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    padding: '0.55rem 0.75rem',
+    border: '1px solid #D8D6CF',
+    padding: '0.55rem 0.8rem',
     fontSize: '14px',
-    lineHeight: 1.5,
+    lineHeight: 1.55,
     resize: 'none',
     fontFamily: 'inherit',
-    background: '#f8fafc',
-    color: '#1e293b',
+    background: '#fff',
+    color: '#111110',
     outline: 'none',
   },
   inputHint: {
     fontSize: '10px',
-    color: '#cbd5e1',
+    color: '#C0BAB0',
     margin: '0.4rem 0 0',
-    letterSpacing: '0.03em',
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase',
   },
 
-  // Form preview
-  eligStrip: {
+  // ── Document / eligibility
+  eligBlock: {
+    background: '#fff',
+    border: '1px solid #D8D6CF',
+    marginBottom: '1.5rem',
+  },
+  eligHeader: {
+    display: 'flex',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    padding: '0.85rem 1.25rem',
+    borderBottom: '1px solid #E8E6DF',
+  },
+  eligHeaderLabel: {
+    fontSize: '10px',
+    fontWeight: 700,
+    letterSpacing: '0.15em',
+    color: '#111110',
+  },
+  eligHeaderSub: {
+    fontSize: '11px',
+    color: '#888682',
+  },
+  eligGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+  },
+  eligItem: {
+    padding: '0.9rem 1.25rem',
+    borderRight: '1px solid #E8E6DF',
+    borderBottom: '1px solid #E8E6DF',
+  },
+  eligYes: {
+    background: '#F0F9F4',
+  },
+  eligMaybe: {
+    background: '#FEFCE8',
+  },
+  eligNo: {
+    background: '#fff',
+    opacity: 0.6,
+  },
+  eligItemTop: {
     display: 'flex',
     alignItems: 'center',
+    gap: '0.5rem',
     flexWrap: 'wrap',
-    gap: '0.6rem',
-    marginBottom: '1rem',
-    padding: '0.7rem 1rem',
-    background: '#fff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
   },
-  eligLabel: {
-    fontSize: '11px',
-    fontWeight: 600,
+  eligIcon: {
+    fontSize: '14px',
+  },
+  eligName: {
+    fontSize: '12px',
+    fontWeight: 500,
+    color: '#111110',
+    flex: 1,
+  },
+  eligStatus: {
+    fontSize: '9px',
+    fontWeight: 700,
+    letterSpacing: '0.12em',
+    color: '#1C3A2A',
     textTransform: 'uppercase',
-    letterSpacing: '0.08em',
-    color: '#94a3b8',
-    marginRight: '0.25rem',
+    display: 'block',
+    marginTop: '0.3rem',
+    width: '100%',
+    paddingLeft: '0',
   },
-  badgeGreen: {
-    fontSize: '11px',
-    fontWeight: 500,
-    padding: '3px 10px',
-    borderRadius: '99px',
-    background: '#f0fdf4',
-    border: '1px solid #bbf7d0',
-    color: '#166534',
+  urgentFlag: {
+    fontSize: '10px',
+    color: '#c0392b',
+    marginTop: '0.4rem',
+    letterSpacing: '0.02em',
   },
-  badgeYellow: {
-    fontSize: '11px',
-    fontWeight: 500,
-    padding: '3px 10px',
-    borderRadius: '99px',
-    background: '#fefce8',
-    border: '1px solid #fde68a',
-    color: '#854d0e',
-  },
-  doc: {
+
+  // ── Document
+  docWrap: {
     background: '#fff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '10px',
-    marginBottom: '1rem',
-    overflow: 'hidden',
+    border: '1px solid #D8D6CF',
+    marginBottom: '1.5rem',
   },
-  docHeader: {
-    borderBottom: '1px solid #e2e8f0',
-    padding: '1rem 1.25rem',
-    background: '#f8fafc',
+  docMasthead: {
+    padding: '1.5rem 1.5rem 1.25rem',
+    borderBottom: '2px solid #111110',
   },
-  docFormId: {
+  docFormRef: {
+    fontSize: '10px',
+    fontWeight: 600,
+    letterSpacing: '0.18em',
+    color: '#888682',
+    marginBottom: '0.5rem',
+    textTransform: 'uppercase',
+  },
+  docMainTitle: {
+    fontSize: '20px',
+    fontWeight: 600,
+    letterSpacing: '-0.01em',
+    margin: '0 0 0.4rem',
+    color: '#111110',
+  },
+  docSubRow: {
+    display: 'flex',
+    gap: '0.6rem',
+    alignItems: 'center',
+    fontSize: '12px',
+    color: '#888682',
+    flexWrap: 'wrap',
+  },
+  docBody: {
+    padding: '0',
+  },
+  sectionHead: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    padding: '0.85rem 1.5rem',
+    borderBottom: '1px solid #E8E6DF',
+    background: '#F7F6F3',
+  },
+  sectionNum: {
+    fontSize: '10px',
+    fontWeight: 700,
+    color: '#888682',
+    letterSpacing: '0.1em',
+    width: '1rem',
+    flexShrink: 0,
+  },
+  sectionTitle: {
+    fontSize: '10px',
+    fontWeight: 700,
+    letterSpacing: '0.15em',
+    color: '#111110',
+  },
+  sectionBody: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '0',
+    padding: '1rem 1.5rem',
+    rowGap: '0.85rem',
+    columnGap: '2rem',
+  },
+  fieldLabel: {
     fontSize: '10px',
     textTransform: 'uppercase',
     letterSpacing: '0.1em',
-    color: '#94a3b8',
-    marginBottom: '0.3rem',
+    color: '#888682',
+    margin: '0 0 3px',
     fontWeight: 500,
   },
-  docTitle: {
-    fontSize: '16px',
-    fontWeight: 600,
-    margin: '0 0 0.2rem',
-    color: '#0f172a',
-  },
-  docSub: {
-    fontSize: '12px',
-    color: '#64748b',
+  fieldValue: {
+    fontSize: '13px',
+    color: '#111110',
     margin: 0,
+    fontWeight: 400,
+    lineHeight: 1.4,
+  },
+  certText: {
+    gridColumn: '1 / -1',
+    fontSize: '12px',
+    lineHeight: 1.75,
+    color: '#555250',
+    margin: '0 0 1rem',
+    borderBottom: '1px solid #F0EDE6',
+    paddingBottom: '1rem',
+  },
+
+  // ── Action block
+  actionBlock: {
+    background: '#fff',
+    border: '1px solid #D8D6CF',
+    padding: '1.25rem 1.5rem',
+    marginBottom: '1.5rem',
+  },
+  actionHeader: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.2rem',
+    marginBottom: '1rem',
+  },
+  actionHeaderLabel: {
+    fontSize: '10px',
+    fontWeight: 700,
+    letterSpacing: '0.15em',
+    color: '#111110',
+  },
+  actionHeaderSub: {
+    fontSize: '12px',
+    color: '#888682',
   },
   dlPrimary: {
     width: '100%',
-    padding: '0.8rem',
-    background: '#0f172a',
-    color: '#fff',
+    padding: '0.85rem 1.25rem',
+    background: '#1C3A2A',
+    color: '#F7F6F3',
     border: 'none',
-    borderRadius: '8px',
     fontSize: '13px',
     fontWeight: 500,
+    letterSpacing: '0.02em',
     cursor: 'pointer',
     fontFamily: 'inherit',
+    textAlign: 'left',
   },
   dlSecondary: {
     width: '100%',
-    padding: '0.8rem',
-    background: '#fff',
-    color: '#0f172a',
-    border: '1px solid #0f172a',
-    borderRadius: '8px',
+    padding: '0.85rem 1.25rem',
+    background: 'transparent',
+    color: '#111110',
+    border: '1px solid #D8D6CF',
     fontSize: '13px',
     fontWeight: 500,
+    letterSpacing: '0.02em',
     cursor: 'pointer',
     fontFamily: 'inherit',
+    textAlign: 'left',
   },
   dlGhost: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px',
-    width: '100%',
-    padding: '0.8rem',
+    padding: '0.75rem 0',
     background: 'transparent',
-    color: '#64748b',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: 500,
+    color: '#888682',
+    border: '1px solid #E8E6DF',
+    fontSize: '12px',
     cursor: 'pointer',
     fontFamily: 'inherit',
+    letterSpacing: '0.02em',
+  },
+  actionDivider: {
+    height: '1px',
+    background: '#E8E6DF',
+    margin: '1rem 0',
   },
   snapNote: {
     fontSize: '12px',
-    color: '#92400e',
-    background: '#fef3c7',
-    border: '1px solid #fde68a',
-    borderRadius: '6px',
-    padding: '0.6rem 0.9rem',
+    color: '#7C3A00',
+    background: '#FEF3C7',
+    border: '1px solid #FDE68A',
+    padding: '0.6rem 0.85rem',
     margin: 0,
+    lineHeight: 1.5,
   },
+
+  // ── Next steps
   nextSteps: {
     background: '#fff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '10px',
-    padding: '1rem 1.25rem',
-    marginBottom: '1.5rem',
+    border: '1px solid #D8D6CF',
+    padding: '1.25rem 1.5rem',
+    marginBottom: '3rem',
   },
-  nextStepsTitle: {
+  nextStepsLabel: {
+    fontSize: '10px',
+    fontWeight: 700,
+    letterSpacing: '0.18em',
+    color: '#888682',
+    margin: '0 0 1rem',
+  },
+  nextStepsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.85rem',
+  },
+  nextStep: {
+    display: 'flex',
+    gap: '1rem',
+    alignItems: 'flex-start',
+  },
+  nextStepNum: {
+    fontSize: '10px',
+    fontWeight: 700,
+    color: '#C0BAB0',
+    letterSpacing: '0.05em',
+    flexShrink: 0,
+    paddingTop: '1px',
+    fontVariantNumeric: 'tabular-nums',
+  },
+  nextStepTitle: {
+    fontSize: '13px',
+    fontWeight: 500,
+    color: '#111110',
+    margin: '0 0 2px',
+  },
+  nextStepDetail: {
     fontSize: '12px',
-    fontWeight: 600,
-    textTransform: 'uppercase',
-    letterSpacing: '0.08em',
-    color: '#94a3b8',
+    color: '#888682',
     margin: 0,
   },
 };
