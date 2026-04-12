@@ -5,6 +5,11 @@ import { saveSession, loadSession } from '../firebase.js';
 const SESSION_KEY = 'benefitpath_session_id';
 
 function getOrCreateSessionId() {
+  // ?reset in the URL wipes the session and redirects clean
+  if (typeof window !== 'undefined' && window.location.search.includes('reset')) {
+    localStorage.removeItem(SESSION_KEY);
+    window.history.replaceState({}, '', window.location.pathname);
+  }
   let id = localStorage.getItem(SESSION_KEY);
   if (!id) {
     id = uuidv4();
