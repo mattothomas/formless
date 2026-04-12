@@ -5,7 +5,7 @@ function getPdfLib() {
   return window.PDFLib;
 }
 
-// ── SNAP — coordinate overlay ──────────────────────────────────────────────────
+// ── SNAP — coordinate overlay (coordinates probed from SNAP_FORM_c_257599.pdf) ─
 
 export async function generateSnapPDF(extractedData) {
   const { PDFDocument, rgb, StandardFonts } = getPdfLib();
@@ -21,50 +21,55 @@ export async function generateSnapPDF(extractedData) {
   const d      = extractedData;
   const today  = new Date().toLocaleDateString('en-US');
 
-  function draw(pageIndex, x, y, text, size = 9) {
-    if (pageIndex >= pages.length || !text) return;
-    pages[pageIndex].drawText(String(text), { x, y, size, font, color: BLACK });
+  // pageNum is 1-indexed (matching snap-pa-fields.json)
+  function draw(pageNum, x, y, text, size = 9) {
+    const idx = pageNum - 1;
+    if (idx < 0 || idx >= pages.length || !text) return;
+    pages[idx].drawText(String(text), { x, y, size, font, color: BLACK });
   }
 
-  // PAGE 1 — Applicant info
-  draw(0, 72,  648, d.lastName  || '', 10);
-  draw(0, 230, 648, d.firstName || '', 10);
-  draw(0, 72,  620, d.address   || '', 10);
-  draw(0, 72,  595, d.county    || '', 10);
-  draw(0, 280, 595, d.phone     || '', 10);
+  // PAGE 3 — Applicant info
+  draw(3, 50,  580, d.lastName  || '', 10);
+  draw(3, 310, 580, d.firstName || '', 10);
+  draw(3, 50,  543, d.address   || '', 10);
+  draw(3, 50,  505, d.county    || '', 10);
+  draw(3, 195, 505, d.phone     || '', 10);
 
-  // Household members — 6 rows, 20pt apart
+  // PAGE 3 — Household members (probed y positions)
   const members = d.householdMembers || [];
-  members.slice(0, 6).forEach((m, i) => {
-    const y = 540 - i * 20;
-    draw(0, 72,  y, m.name         || '', 9);
-    draw(0, 220, y, m.relationship || '', 9);
-    draw(0, 310, y, m.dob          || '', 9);
-    draw(0, 440, y, m.usCitizen ? 'Y' : 'N', 9);
+  const memberYs = [240, 215, 190, 164, 139, 114, 89, 64];
+  members.slice(0, 8).forEach((m, i) => {
+    const y = memberYs[i];
+    draw(3, 35,  y, m.name         || '', 9);
+    draw(3, 385, y, m.dob          || '', 9);
+    draw(3, 475, y, m.relationship || '', 9);
   });
 
-  // PAGE 2 — Income
+  // PAGE 3 — Applicant signature
+  draw(3, 150, 42, `${d.firstName || ''} ${d.lastName || ''}`.trim(), 10);
+  draw(3, 500, 42, today, 10);
+
+  // PAGE 4 — Income
   const incomes = d.monthlyIncome || [];
-  incomes.slice(0, 6).forEach((inc, i) => {
-    const y = 680 - i * 20;
-    draw(1, 72,  y, inc.source    || '', 9);
-    draw(1, 350, y, inc.amount ? `$${inc.amount}` : '', 9);
-    draw(1, 430, y, inc.frequency || '', 9);
+  const incomeYs = [438, 412, 386, 358, 332];
+  incomes.slice(0, 5).forEach((inc, i) => {
+    const y = incomeYs[i];
+    draw(4, 100, y, inc.person || d.firstName || '', 9);
+    draw(4, 310, y, inc.source    || '', 9);
+    draw(4, 430, y, inc.amount ? `$${inc.amount}` : '', 9);
+    draw(4, 530, y, inc.frequency || '', 9);
   });
 
-  // PAGE 3 — Expenses
-  if (d.expenses) {
-    draw(2, 150, 400, d.expenses.rent      ? `$${d.expenses.rent}`      : '', 9);
-    draw(2, 150, 380, d.expenses.mortgage  ? `$${d.expenses.mortgage}`  : '', 9);
-    draw(2, 150, 360, d.expenses.utilities ? `$${d.expenses.utilities}` : '', 9);
-    draw(2, 150, 340, d.expenses.childcare ? `$${d.expenses.childcare}` : '', 9);
-  }
+  // PAGE 5 — Expenses
+  const exp = d.expenses || {};
+  if (exp.rent)      draw(5, 120, 82,  `$${exp.rent}`,                  9);
+  if (exp.mortgage)  draw(5, 145, 56,  `$${exp.mortgage}`,              9);
+  if (exp.childcare) draw(5, 360, 155, `$${exp.childcare}`,             9);
+  if (exp.utilities) draw(5, 370, 218, `Utilities: $${exp.utilities}`,  9);
 
-  // Signature page (page 5, index 4)
-  const sigPage = Math.min(4, pages.length - 1);
-  const sigY    = pages.length > 4 ? 480 : 200;
-  draw(sigPage, 72,  sigY, `${d.firstName || ''} ${d.lastName || ''}`.trim(), 10);
-  draw(sigPage, 350, sigY, today, 10);
+  // PAGE 7 — Final signature
+  draw(7, 120, 282, `${d.firstName || ''} ${d.lastName || ''}`.trim(), 10);
+  draw(7, 390, 282, today, 10);
 
   return pdfDoc.save();
 }
