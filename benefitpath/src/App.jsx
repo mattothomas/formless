@@ -60,7 +60,7 @@ export default function App() {
               <circle cx="24" cy="22" r="5" fill="#22c55e"/>
               <path d="M21.5 22l1.5 1.5 3-3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span className="logo-text">BenefitPath</span>
+            <span className="logo-text">Freeform</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div className="header-tagline">Pennsylvania Benefits Navigator</div>
