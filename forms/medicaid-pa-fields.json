@@ -1118,6 +1118,154 @@
       "x": 490,
       "y": 90,
       "description": "Withdrawal date"
+    },
+    {
+      "key": "income_row1_whose",
+      "page": 7,
+      "x": 45,
+      "y": 560,
+      "description": "Whose income row 1"
+    },
+    {
+      "key": "income_row1_type",
+      "page": 7,
+      "x": 170,
+      "y": 560,
+      "description": "Type of income row 1"
+    },
+    {
+      "key": "income_row1_source",
+      "page": 7,
+      "x": 290,
+      "y": 560,
+      "description": "Source of income row 1"
+    },
+    {
+      "key": "income_row1_frequency",
+      "page": 7,
+      "x": 430,
+      "y": 560,
+      "description": "Frequency row 1"
+    },
+    {
+      "key": "income_row1_gross_amount",
+      "page": 7,
+      "x": 545,
+      "y": 560,
+      "description": "Gross amount row 1"
+    },
+    {
+      "key": "income_row2_whose",
+      "page": 7,
+      "x": 45,
+      "y": 530,
+      "description": "Whose income row 2"
+    },
+    {
+      "key": "income_row2_type",
+      "page": 7,
+      "x": 170,
+      "y": 530,
+      "description": "Type of income row 2"
+    },
+    {
+      "key": "income_row2_source",
+      "page": 7,
+      "x": 290,
+      "y": 530,
+      "description": "Source of income row 2"
+    },
+    {
+      "key": "income_row2_frequency",
+      "page": 7,
+      "x": 430,
+      "y": 530,
+      "description": "Frequency row 2"
+    },
+    {
+      "key": "income_row2_gross_amount",
+      "page": 7,
+      "x": 545,
+      "y": 530,
+      "description": "Gross amount row 2"
+    },
+    {
+      "key": "income_row3_whose",
+      "page": 7,
+      "x": 45,
+      "y": 500,
+      "description": "Whose income row 3"
+    },
+    {
+      "key": "income_row3_type",
+      "page": 7,
+      "x": 170,
+      "y": 500,
+      "description": "Type of income row 3"
+    },
+    {
+      "key": "income_row3_source",
+      "page": 7,
+      "x": 290,
+      "y": 500,
+      "description": "Source of income row 3"
+    },
+    {
+      "key": "income_row3_frequency",
+      "page": 7,
+      "x": 430,
+      "y": 500,
+      "description": "Frequency row 3"
+    },
+    {
+      "key": "income_row3_gross_amount",
+      "page": 7,
+      "x": 545,
+      "y": 500,
+      "description": "Gross amount row 3"
+    },
+    {
+      "key": "checks_sent_to_name",
+      "page": 7,
+      "x": 45,
+      "y": 400,
+      "description": "Name checks are sent to"
+    },
+    {
+      "key": "checks_sent_to_address",
+      "page": 7,
+      "x": 300,
+      "y": 400,
+      "description": "Address checks are sent to"
+    },
+    {
+      "key": "shelter_rent",
+      "page": 7,
+      "x": 200,
+      "y": 300,
+      "description": "Monthly rent amount"
+    },
+    {
+      "key": "shelter_utilities",
+      "page": 7,
+      "x": 200,
+      "y": 260,
+      "description": "Monthly utilities amount"
+    },
+    {
+      "key": "shelter_taxes",
+      "page": 7,
+      "x": 200,
+      "y": 240,
+      "description": "Monthly property taxes"
+    },
+    {
+      "key": "shelter_insurance",
+      "page": 7,
+      "x": 200,
+      "y": 220,
+      "description": "Monthly homeowners insurance"
     }
-  ]
+  ],
+  "note": "Page 7 fields added manually from Gemini vision analysis; pages 5-6 (assets/insurance/vehicles) omitted as not fillable from conversational data"
 }
