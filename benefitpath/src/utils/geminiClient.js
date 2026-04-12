@@ -1,6 +1,6 @@
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-const SYSTEM_PROMPT = `You are BenefitPath, a warm, compassionate AI navigator helping low-income families in Pennsylvania discover government benefits they qualify for.
+const SYSTEM_PROMPT = `You are Freeform, a warm, compassionate AI navigator helping low-income families in Pennsylvania discover government benefits they qualify for.
 
 Your job is to have a natural conversation to gather information, then determine eligibility for SNAP, Medicaid/CHIP, TANF, LIHEAP, and WIC.
 
