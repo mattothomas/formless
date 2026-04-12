@@ -13,6 +13,7 @@ export default function BenefitsDashboard({ results, extractedData, onReset }) {
   const [pdfError, setPdfError]                     = useState(null);
   const [snapSuccess, setSnapSuccess]               = useState(false);
   const [medicaidSuccess, setMedicaidSuccess]       = useState(false);
+  const [snapWarned, setSnapWarned]                 = useState(false);
 
   const eligibleCount = results.filter(r => r.eligible === 'yes').length;
   const maybeCount    = results.filter(r => r.eligible === 'maybe').length;
@@ -109,14 +110,24 @@ export default function BenefitsDashboard({ results, extractedData, onReset }) {
         </div>
 
         <button
-          className="btn-download"
-          disabled={true}
-          style={{ opacity: 0.45, cursor: 'not-allowed' }}
-          title="SNAP PDF coming soon"
+          className={`btn-download ${generatingSnap ? 'btn-loading' : ''}`}
+          onClick={() => {
+            if (!snapWarned) {
+              setSnapWarned(true);
+            } else {
+              handleDownloadSnap();
+            }
+          }}
+          disabled={generatingSnap}
         >
-          📥 Download My SNAP Application
+          {generatingSnap ? <><span className="spinner" /> Generating…</> : <>📥 Download My SNAP Application</>}
         </button>
-        <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.25rem' }}>SNAP form available at your county office</p>
+        {snapWarned && !snapSuccess && (
+          <p style={{ fontSize: '0.85rem', color: '#b45309', background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '8px', padding: '0.6rem 0.9rem', marginTop: '0.5rem' }}>
+            We focused on Medicaid for this demo — SNAP PDF filling is still in progress. If you're curious, click again to try anyway.
+          </p>
+        )}
+        {snapSuccess && <p className="pdf-success">✅ SNAP application downloaded!</p>}
 
         {showMedicaid && (
           <>
