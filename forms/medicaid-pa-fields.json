@@ -1,0 +1,1123 @@
+{
+  "source": "Medicaid Financial Eligibility_form.pdf",
+  "pdfSize": {
+    "width": 612,
+    "height": 792
+  },
+  "generatedAt": "2026-04-12T05:15:07.018Z",
+  "fields": [
+    {
+      "key": "home_community_waiver_type",
+      "page": 1,
+      "x": 370,
+      "y": 546,
+      "description": "Type/Name of Waiver/Service for Home and Community Waiver Services"
+    },
+    {
+      "key": "other_service_type",
+      "page": 1,
+      "x": 100,
+      "y": 524,
+      "description": "Other type of service applying for"
+    },
+    {
+      "key": "provider_name",
+      "page": 2,
+      "x": 45,
+      "y": 756,
+      "description": "Provider name"
+    },
+    {
+      "key": "provider_number",
+      "page": 2,
+      "x": 420,
+      "y": 756,
+      "description": "Provider number"
+    },
+    {
+      "key": "provider_address",
+      "page": 2,
+      "x": 45,
+      "y": 733,
+      "description": "Provider address"
+    },
+    {
+      "key": "contact_name_telephone",
+      "page": 2,
+      "x": 420,
+      "y": 733,
+      "description": "Contact name/telephone number"
+    },
+    {
+      "key": "date_of_admission",
+      "page": 2,
+      "x": 45,
+      "y": 710,
+      "description": "Date of admission"
+    },
+    {
+      "key": "date_of_level_of_care_determination",
+      "page": 2,
+      "x": 250,
+      "y": 710,
+      "description": "Date of level of care determination"
+    },
+    {
+      "key": "requested_effective_date",
+      "page": 2,
+      "x": 500,
+      "y": 710,
+      "description": "Requested effective date"
+    },
+    {
+      "key": "county_code",
+      "page": 2,
+      "x": 35,
+      "y": 672,
+      "description": "County code (CO.)"
+    },
+    {
+      "key": "district",
+      "page": 2,
+      "x": 75,
+      "y": 672,
+      "description": "District (DIST)"
+    },
+    {
+      "key": "record_number",
+      "page": 2,
+      "x": 150,
+      "y": 672,
+      "description": "Record number"
+    },
+    {
+      "key": "file_cleared_by",
+      "page": 2,
+      "x": 300,
+      "y": 672,
+      "description": "File cleared by"
+    },
+    {
+      "key": "appl_reg_no",
+      "page": 2,
+      "x": 420,
+      "y": 672,
+      "description": "Application registration number"
+    },
+    {
+      "key": "worker_id",
+      "page": 2,
+      "x": 530,
+      "y": 672,
+      "description": "Worker I.D."
+    },
+    {
+      "key": "caseload",
+      "page": 2,
+      "x": 575,
+      "y": 672,
+      "description": "Caseload"
+    },
+    {
+      "key": "category",
+      "page": 2,
+      "x": 470,
+      "y": 640,
+      "description": "Category"
+    },
+    {
+      "key": "authorized_date",
+      "page": 2,
+      "x": 470,
+      "y": 618,
+      "description": "Date"
+    },
+    {
+      "key": "interpreter_language",
+      "page": 2,
+      "x": 420,
+      "y": 548,
+      "description": "If yes, what language for interpreter"
+    },
+    {
+      "key": "applicant_name",
+      "page": 2,
+      "x": 45,
+      "y": 492,
+      "description": "Name (first, middle initial, last, suffix)"
+    },
+    {
+      "key": "social_security_number",
+      "page": 2,
+      "x": 370,
+      "y": 492,
+      "description": "Social Security Number"
+    },
+    {
+      "key": "birth_date",
+      "page": 2,
+      "x": 480,
+      "y": 492,
+      "description": "Birth date (MM/DD/YYYY)"
+    },
+    {
+      "key": "separation_date",
+      "page": 2,
+      "x": 480,
+      "y": 452,
+      "description": "Date of separation if separated"
+    },
+    {
+      "key": "spouse_death_date",
+      "page": 2,
+      "x": 45,
+      "y": 408,
+      "description": "Date of spouse's death if widowed"
+    },
+    {
+      "key": "spouse_name",
+      "page": 2,
+      "x": 420,
+      "y": 408,
+      "description": "Spouse's name"
+    },
+    {
+      "key": "race_other_specify",
+      "page": 2,
+      "x": 170,
+      "y": 348,
+      "description": "Other race specification"
+    },
+    {
+      "key": "current_address",
+      "page": 2,
+      "x": 45,
+      "y": 320,
+      "description": "Current address"
+    },
+    {
+      "key": "phone_number",
+      "page": 2,
+      "x": 450,
+      "y": 320,
+      "description": "Phone number"
+    },
+    {
+      "key": "date_moved_to_address",
+      "page": 2,
+      "x": 560,
+      "y": 320,
+      "description": "Date moved to this address"
+    },
+    {
+      "key": "township",
+      "page": 2,
+      "x": 45,
+      "y": 296,
+      "description": "Township"
+    },
+    {
+      "key": "school_district",
+      "page": 2,
+      "x": 140,
+      "y": 296,
+      "description": "School district"
+    },
+    {
+      "key": "previous_address",
+      "page": 2,
+      "x": 230,
+      "y": 296,
+      "description": "Previous address"
+    },
+    {
+      "key": "benefits_state",
+      "page": 2,
+      "x": 340,
+      "y": 252,
+      "description": "If yes received benefits, what state"
+    },
+    {
+      "key": "benefits_how_long",
+      "page": 2,
+      "x": 530,
+      "y": 252,
+      "description": "How long received benefits"
+    },
+    {
+      "key": "benefits_county",
+      "page": 2,
+      "x": 340,
+      "y": 232,
+      "description": "What county for benefits"
+    },
+    {
+      "key": "benefits_record_number",
+      "page": 2,
+      "x": 530,
+      "y": 232,
+      "description": "Benefits record number"
+    },
+    {
+      "key": "nursing_facility_name",
+      "page": 2,
+      "x": 280,
+      "y": 200,
+      "description": "Nursing facility name if previously lived in one"
+    },
+    {
+      "key": "nursing_facility_address",
+      "page": 2,
+      "x": 430,
+      "y": 200,
+      "description": "Nursing facility address"
+    },
+    {
+      "key": "nursing_facility_dates",
+      "page": 2,
+      "x": 560,
+      "y": 200,
+      "description": "Nursing facility dates"
+    },
+    {
+      "key": "immigration_document_type_and_id",
+      "page": 2,
+      "x": 230,
+      "y": 138,
+      "description": "Document type and ID number for immigration"
+    },
+    {
+      "key": "immigration_document_type",
+      "page": 2,
+      "x": 340,
+      "y": 138,
+      "description": "Document type"
+    },
+    {
+      "key": "document_id_number",
+      "page": 2,
+      "x": 470,
+      "y": 138,
+      "description": "Document ID number"
+    },
+    {
+      "key": "alien_number",
+      "page": 2,
+      "x": 560,
+      "y": 138,
+      "description": "Alien number"
+    },
+    {
+      "key": "country_of_origin",
+      "page": 2,
+      "x": 340,
+      "y": 108,
+      "description": "Country of origin"
+    },
+    {
+      "key": "sponsor_name_and_address",
+      "page": 2,
+      "x": 45,
+      "y": 82,
+      "description": "Sponsor name and address"
+    },
+    {
+      "key": "citizenship_signature",
+      "page": 2,
+      "x": 200,
+      "y": 32,
+      "description": "Signature declaring citizenship or alien status"
+    },
+    {
+      "key": "citizenship_signature_date",
+      "page": 2,
+      "x": 540,
+      "y": 32,
+      "description": "Date of citizenship declaration signature"
+    },
+    {
+      "key": "member1_relationship",
+      "page": 3,
+      "x": 95,
+      "y": 688,
+      "description": "Relationship of first household member"
+    },
+    {
+      "key": "member1_name",
+      "page": 3,
+      "x": 330,
+      "y": 688,
+      "description": "Full name of first household member"
+    },
+    {
+      "key": "member1_alias_maiden_name",
+      "page": 3,
+      "x": 700,
+      "y": 688,
+      "description": "Alias/maiden name of first household member"
+    },
+    {
+      "key": "member1_birth_date",
+      "page": 3,
+      "x": 95,
+      "y": 656,
+      "description": "Birth date of first household member"
+    },
+    {
+      "key": "member1_sex",
+      "page": 3,
+      "x": 280,
+      "y": 656,
+      "description": "Sex of first household member"
+    },
+    {
+      "key": "member1_race",
+      "page": 3,
+      "x": 470,
+      "y": 656,
+      "description": "Race of first household member"
+    },
+    {
+      "key": "member1_ssn",
+      "page": 3,
+      "x": 700,
+      "y": 656,
+      "description": "SSN of first household member"
+    },
+    {
+      "key": "member2_relationship",
+      "page": 3,
+      "x": 95,
+      "y": 612,
+      "description": "Relationship of second household member"
+    },
+    {
+      "key": "member2_name",
+      "page": 3,
+      "x": 330,
+      "y": 612,
+      "description": "Full name of second household member"
+    },
+    {
+      "key": "member2_alias_maiden_name",
+      "page": 3,
+      "x": 700,
+      "y": 612,
+      "description": "Alias/maiden name of second household member"
+    },
+    {
+      "key": "member2_birth_date",
+      "page": 3,
+      "x": 95,
+      "y": 580,
+      "description": "Birth date of second household member"
+    },
+    {
+      "key": "member2_sex",
+      "page": 3,
+      "x": 280,
+      "y": 580,
+      "description": "Sex of second household member"
+    },
+    {
+      "key": "member2_race",
+      "page": 3,
+      "x": 470,
+      "y": 580,
+      "description": "Race of second household member"
+    },
+    {
+      "key": "member2_ssn",
+      "page": 3,
+      "x": 700,
+      "y": 580,
+      "description": "SSN of second household member"
+    },
+    {
+      "key": "member3_relationship",
+      "page": 3,
+      "x": 95,
+      "y": 537,
+      "description": "Relationship of third household member"
+    },
+    {
+      "key": "member3_name",
+      "page": 3,
+      "x": 330,
+      "y": 537,
+      "description": "Full name of third household member"
+    },
+    {
+      "key": "member3_alias_maiden_name",
+      "page": 3,
+      "x": 700,
+      "y": 537,
+      "description": "Alias/maiden name of third household member"
+    },
+    {
+      "key": "member3_birth_date",
+      "page": 3,
+      "x": 95,
+      "y": 505,
+      "description": "Birth date of third household member"
+    },
+    {
+      "key": "member3_sex",
+      "page": 3,
+      "x": 280,
+      "y": 505,
+      "description": "Sex of third household member"
+    },
+    {
+      "key": "member3_race",
+      "page": 3,
+      "x": 470,
+      "y": 505,
+      "description": "Race of third household member"
+    },
+    {
+      "key": "member3_ssn",
+      "page": 3,
+      "x": 700,
+      "y": 505,
+      "description": "SSN of third household member"
+    },
+    {
+      "key": "member4_relationship",
+      "page": 3,
+      "x": 95,
+      "y": 461,
+      "description": "Relationship of fourth household member"
+    },
+    {
+      "key": "member4_name",
+      "page": 3,
+      "x": 330,
+      "y": 461,
+      "description": "Full name of fourth household member"
+    },
+    {
+      "key": "member4_alias_maiden_name",
+      "page": 3,
+      "x": 700,
+      "y": 461,
+      "description": "Alias/maiden name of fourth household member"
+    },
+    {
+      "key": "member4_birth_date",
+      "page": 3,
+      "x": 95,
+      "y": 429,
+      "description": "Birth date of fourth household member"
+    },
+    {
+      "key": "member4_sex",
+      "page": 3,
+      "x": 280,
+      "y": 429,
+      "description": "Sex of fourth household member"
+    },
+    {
+      "key": "member4_race",
+      "page": 3,
+      "x": 470,
+      "y": 429,
+      "description": "Race of fourth household member"
+    },
+    {
+      "key": "member4_ssn",
+      "page": 3,
+      "x": 700,
+      "y": 429,
+      "description": "SSN of fourth household member"
+    },
+    {
+      "key": "military_branch_of_service",
+      "page": 3,
+      "x": 95,
+      "y": 318,
+      "description": "Branch of military service"
+    },
+    {
+      "key": "military_date_entered",
+      "page": 3,
+      "x": 370,
+      "y": 318,
+      "description": "Date entered military service"
+    },
+    {
+      "key": "military_date_left",
+      "page": 3,
+      "x": 540,
+      "y": 318,
+      "description": "Date left military service"
+    },
+    {
+      "key": "military_claim_no",
+      "page": 3,
+      "x": 700,
+      "y": 318,
+      "description": "Military claim number"
+    },
+    {
+      "key": "voter_registration_given_to_client_date",
+      "page": 3,
+      "x": 130,
+      "y": 95,
+      "description": "Date voter registration given to client"
+    },
+    {
+      "key": "voter_registration_sent_date",
+      "page": 3,
+      "x": 370,
+      "y": 95,
+      "description": "Date sent to voter registration"
+    },
+    {
+      "key": "voter_registration_mailed_to_client_date",
+      "page": 3,
+      "x": 580,
+      "y": 95,
+      "description": "Date voter registration mailed to client"
+    },
+    {
+      "key": "voter_registration_declined_date",
+      "page": 3,
+      "x": 130,
+      "y": 68,
+      "description": "Date client declined voter registration"
+    },
+    {
+      "key": "voter_registration_not_us_citizen_date",
+      "page": 3,
+      "x": 370,
+      "y": 68,
+      "description": "Date noted not a US citizen"
+    },
+    {
+      "key": "voter_registration_already_registered_date",
+      "page": 3,
+      "x": 580,
+      "y": 68,
+      "description": "Date noted already registered to vote"
+    },
+    {
+      "key": "long_term_care_expenses_paid",
+      "page": 4,
+      "x": 30,
+      "y": 740,
+      "description": "How long term care expenses are/were being paid"
+    },
+    {
+      "key": "medical_insurance_1_who_covered",
+      "page": 4,
+      "x": 50,
+      "y": 528,
+      "description": "Medical insurance row 1 - who is covered"
+    },
+    {
+      "key": "medical_insurance_1_company",
+      "page": 4,
+      "x": 230,
+      "y": 528,
+      "description": "Medical insurance row 1 - insurance company"
+    },
+    {
+      "key": "medical_insurance_1_policy_number",
+      "page": 4,
+      "x": 400,
+      "y": 528,
+      "description": "Medical insurance row 1 - policy number"
+    },
+    {
+      "key": "medical_insurance_1_premium",
+      "page": 4,
+      "x": 545,
+      "y": 528,
+      "description": "Medical insurance row 1 - premium"
+    },
+    {
+      "key": "medical_insurance_1_how_often",
+      "page": 4,
+      "x": 680,
+      "y": 528,
+      "description": "Medical insurance row 1 - how often"
+    },
+    {
+      "key": "medical_insurance_2_who_covered",
+      "page": 4,
+      "x": 50,
+      "y": 496,
+      "description": "Medical insurance row 2 - who is covered"
+    },
+    {
+      "key": "medical_insurance_2_company",
+      "page": 4,
+      "x": 230,
+      "y": 496,
+      "description": "Medical insurance row 2 - insurance company"
+    },
+    {
+      "key": "medical_insurance_2_policy_number",
+      "page": 4,
+      "x": 400,
+      "y": 496,
+      "description": "Medical insurance row 2 - policy number"
+    },
+    {
+      "key": "medical_insurance_2_premium",
+      "page": 4,
+      "x": 545,
+      "y": 496,
+      "description": "Medical insurance row 2 - premium"
+    },
+    {
+      "key": "medical_insurance_2_how_often",
+      "page": 4,
+      "x": 680,
+      "y": 496,
+      "description": "Medical insurance row 2 - how often"
+    },
+    {
+      "key": "medical_insurance_3_who_covered",
+      "page": 4,
+      "x": 50,
+      "y": 464,
+      "description": "Medical insurance row 3 - who is covered"
+    },
+    {
+      "key": "medical_insurance_3_company",
+      "page": 4,
+      "x": 230,
+      "y": 464,
+      "description": "Medical insurance row 3 - insurance company"
+    },
+    {
+      "key": "medical_insurance_3_policy_number",
+      "page": 4,
+      "x": 400,
+      "y": 464,
+      "description": "Medical insurance row 3 - policy number"
+    },
+    {
+      "key": "medical_insurance_3_premium",
+      "page": 4,
+      "x": 545,
+      "y": 464,
+      "description": "Medical insurance row 3 - premium"
+    },
+    {
+      "key": "medical_insurance_3_how_often",
+      "page": 4,
+      "x": 680,
+      "y": 464,
+      "description": "Medical insurance row 3 - how often"
+    },
+    {
+      "key": "medical_insurance_4_who_covered",
+      "page": 4,
+      "x": 50,
+      "y": 432,
+      "description": "Medical insurance row 4 - who is covered"
+    },
+    {
+      "key": "medical_insurance_4_company",
+      "page": 4,
+      "x": 230,
+      "y": 432,
+      "description": "Medical insurance row 4 - insurance company"
+    },
+    {
+      "key": "medical_insurance_4_policy_number",
+      "page": 4,
+      "x": 400,
+      "y": 432,
+      "description": "Medical insurance row 4 - policy number"
+    },
+    {
+      "key": "medical_insurance_4_premium",
+      "page": 4,
+      "x": 545,
+      "y": 432,
+      "description": "Medical insurance row 4 - premium"
+    },
+    {
+      "key": "medical_insurance_4_how_often",
+      "page": 4,
+      "x": 680,
+      "y": 432,
+      "description": "Medical insurance row 4 - how often"
+    },
+    {
+      "key": "real_estate_1_location",
+      "page": 4,
+      "x": 30,
+      "y": 345,
+      "description": "Real estate 1 - location"
+    },
+    {
+      "key": "real_estate_1_owner",
+      "page": 4,
+      "x": 230,
+      "y": 345,
+      "description": "Real estate 1 - owner"
+    },
+    {
+      "key": "real_estate_1_value",
+      "page": 4,
+      "x": 415,
+      "y": 345,
+      "description": "Real estate 1 - value"
+    },
+    {
+      "key": "real_estate_1_who_lives",
+      "page": 4,
+      "x": 30,
+      "y": 315,
+      "description": "Real estate 1 - who lives in the property"
+    },
+    {
+      "key": "real_estate_1_realtor_info",
+      "page": 4,
+      "x": 170,
+      "y": 280,
+      "description": "Real estate 1 - realtor name and telephone if for sale"
+    },
+    {
+      "key": "real_estate_1_date_listed",
+      "page": 4,
+      "x": 740,
+      "y": 280,
+      "description": "Real estate 1 - date listed if for sale"
+    },
+    {
+      "key": "real_estate_2_location",
+      "page": 4,
+      "x": 30,
+      "y": 245,
+      "description": "Real estate 2 - location"
+    },
+    {
+      "key": "real_estate_2_owner",
+      "page": 4,
+      "x": 230,
+      "y": 245,
+      "description": "Real estate 2 - owner"
+    },
+    {
+      "key": "real_estate_2_value",
+      "page": 4,
+      "x": 415,
+      "y": 245,
+      "description": "Real estate 2 - value"
+    },
+    {
+      "key": "real_estate_2_who_lives",
+      "page": 4,
+      "x": 30,
+      "y": 215,
+      "description": "Real estate 2 - who lives in the property"
+    },
+    {
+      "key": "real_estate_2_realtor_info",
+      "page": 4,
+      "x": 170,
+      "y": 180,
+      "description": "Real estate 2 - realtor name and telephone if for sale"
+    },
+    {
+      "key": "real_estate_2_date_listed",
+      "page": 4,
+      "x": 740,
+      "y": 180,
+      "description": "Real estate 2 - date listed if for sale"
+    },
+    {
+      "key": "mobile_home_location",
+      "page": 4,
+      "x": 30,
+      "y": 140,
+      "description": "Mobile home - location"
+    },
+    {
+      "key": "mobile_home_owner",
+      "page": 4,
+      "x": 230,
+      "y": 140,
+      "description": "Mobile home - owner"
+    },
+    {
+      "key": "mobile_home_value",
+      "page": 4,
+      "x": 415,
+      "y": 140,
+      "description": "Mobile home - value"
+    },
+    {
+      "key": "mobile_home_year_model",
+      "page": 4,
+      "x": 30,
+      "y": 108,
+      "description": "Mobile home - year and model"
+    },
+    {
+      "key": "mobile_home_who_lives",
+      "page": 4,
+      "x": 415,
+      "y": 108,
+      "description": "Mobile home - who lives in the mobile home"
+    },
+    {
+      "key": "mobile_home_realtor_info",
+      "page": 4,
+      "x": 170,
+      "y": 72,
+      "description": "Mobile home - realtor name and telephone if for sale"
+    },
+    {
+      "key": "mobile_home_date_listed",
+      "page": 4,
+      "x": 740,
+      "y": 72,
+      "description": "Mobile home - date listed if for sale"
+    },
+    {
+      "key": "signature_applicant_or_representative",
+      "page": 9,
+      "x": 100,
+      "y": 168,
+      "description": "Signature of Applicant or Authorized Representative"
+    },
+    {
+      "key": "signature_date",
+      "page": 9,
+      "x": 480,
+      "y": 168,
+      "description": "Date of signature"
+    },
+    {
+      "key": "authorized_representative_name",
+      "page": 9,
+      "x": 130,
+      "y": 118,
+      "description": "Name of Authorized Representative"
+    },
+    {
+      "key": "authorized_representative_address",
+      "page": 9,
+      "x": 370,
+      "y": 118,
+      "description": "Address of Authorized Representative"
+    },
+    {
+      "key": "authorized_representative_phone",
+      "page": 9,
+      "x": 550,
+      "y": 118,
+      "description": "Phone Number of Authorized Representative"
+    },
+    {
+      "key": "cao_signature",
+      "page": 9,
+      "x": 250,
+      "y": 52,
+      "description": "CAO Signature"
+    },
+    {
+      "key": "cao_date",
+      "page": 9,
+      "x": 520,
+      "y": 52,
+      "description": "CAO Date"
+    },
+    {
+      "key": "applicant_or_authorized_representative_signature",
+      "page": 10,
+      "x": 50,
+      "y": 580,
+      "description": "Applicant or authorized representative signature"
+    },
+    {
+      "key": "applicant_signature_date",
+      "page": 10,
+      "x": 350,
+      "y": 580,
+      "description": "Date of applicant or authorized representative signature"
+    },
+    {
+      "key": "id_verified",
+      "page": 10,
+      "x": 480,
+      "y": 580,
+      "description": "I.D. verified"
+    },
+    {
+      "key": "relationship_to_applicant",
+      "page": 10,
+      "x": 620,
+      "y": 580,
+      "description": "Relationship to applicant"
+    },
+    {
+      "key": "address_of_representative",
+      "page": 10,
+      "x": 50,
+      "y": 530,
+      "description": "Address of representative"
+    },
+    {
+      "key": "representative_city_state_zip",
+      "page": 10,
+      "x": 480,
+      "y": 530,
+      "description": "Representative city, state, ZIP code +4"
+    },
+    {
+      "key": "representative_telephone_number",
+      "page": 10,
+      "x": 620,
+      "y": 530,
+      "description": "Representative telephone number"
+    },
+    {
+      "key": "witness_signature",
+      "page": 10,
+      "x": 50,
+      "y": 478,
+      "description": "Witness signature (if signed with an X above)"
+    },
+    {
+      "key": "witness_date",
+      "page": 10,
+      "x": 350,
+      "y": 478,
+      "description": "Witness signature date"
+    },
+    {
+      "key": "address_of_witness",
+      "page": 10,
+      "x": 50,
+      "y": 428,
+      "description": "Address of witness"
+    },
+    {
+      "key": "witness_city_state_zip",
+      "page": 10,
+      "x": 480,
+      "y": 428,
+      "description": "Witness city, state, ZIP code +4"
+    },
+    {
+      "key": "witness_telephone_number",
+      "page": 10,
+      "x": 620,
+      "y": 428,
+      "description": "Witness telephone number"
+    },
+    {
+      "key": "provider_signature",
+      "page": 10,
+      "x": 50,
+      "y": 370,
+      "description": "Provider signature (if submitted by provider)"
+    },
+    {
+      "key": "provider_date",
+      "page": 10,
+      "x": 350,
+      "y": 370,
+      "description": "Provider signature date"
+    },
+    {
+      "key": "face_to_face_interview_with",
+      "page": 10,
+      "x": 560,
+      "y": 370,
+      "description": "Face-to-face interview with"
+    },
+    {
+      "key": "telephone_interview_with",
+      "page": 10,
+      "x": 560,
+      "y": 345,
+      "description": "Telephone interview with"
+    },
+    {
+      "key": "cao_or_options",
+      "page": 10,
+      "x": 50,
+      "y": 318,
+      "description": "CAO or Options"
+    },
+    {
+      "key": "cao_date",
+      "page": 10,
+      "x": 350,
+      "y": 318,
+      "description": "CAO or Options date"
+    },
+    {
+      "key": "poa_last_name_first_name_middle_initial",
+      "page": 10,
+      "x": 50,
+      "y": 232,
+      "description": "Representative/POA last name, first name, middle initial"
+    },
+    {
+      "key": "poa_relationship_to_applicant",
+      "page": 10,
+      "x": 430,
+      "y": 232,
+      "description": "Representative/POA relationship to applicant"
+    },
+    {
+      "key": "poa_address",
+      "page": 10,
+      "x": 50,
+      "y": 198,
+      "description": "Representative/POA address"
+    },
+    {
+      "key": "poa_city",
+      "page": 10,
+      "x": 290,
+      "y": 198,
+      "description": "Representative/POA city"
+    },
+    {
+      "key": "poa_state",
+      "page": 10,
+      "x": 470,
+      "y": 198,
+      "description": "Representative/POA state"
+    },
+    {
+      "key": "poa_zip_code",
+      "page": 10,
+      "x": 530,
+      "y": 198,
+      "description": "Representative/POA ZIP code"
+    },
+    {
+      "key": "poa_telephone_number",
+      "page": 10,
+      "x": 600,
+      "y": 198,
+      "description": "Representative/POA telephone number"
+    },
+    {
+      "key": "withdraw_signature",
+      "page": 10,
+      "x": 170,
+      "y": 90,
+      "description": "Withdrawal signature"
+    },
+    {
+      "key": "withdraw_date",
+      "page": 10,
+      "x": 490,
+      "y": 90,
+      "description": "Withdrawal date"
+    }
+  ]
+}
