@@ -272,14 +272,37 @@ function adaptForMedicaid(data) {
   const city    = (d.address || '').split(',')[1]?.trim() || county;
 
   // ── Applicant info ─────────────────────────────────────────────────────────
-  flat.applicant_name  = fullName;
-  flat.birth_date      = d.dateOfBirth   || '';
-  flat.marital_status  = d.maritalStatus || 'Single';
-  flat.current_address = d.address       || '';
-  flat.phone_number    = d.phone         || '';
-  flat.township        = city;
-  flat.school_district = `${county} School District`;
-  flat.country_of_origin = 'United States';
+  flat.applicant_name     = fullName;
+  flat.birth_date         = d.dateOfBirth || '';
+  flat.marital_status     = d.maritalStatus || 'Single';
+  flat.current_address    = d.address || '';
+  flat.phone_number       = d.phone || '';
+  flat.township           = city;
+  flat.school_district    = `${county} School District`;
+  flat.country_of_origin  = 'United States';
+  flat.previous_address   = d.address || '';  // same — recently moved to current
+
+  // Marital detail — only if separated/widowed
+  flat.separation_date    = '';
+  flat.spouse_death_date  = '';
+  flat.spouse_name        = '';
+
+  // ── Previous benefits ──────────────────────────────────────────────────────
+  flat.benefits_state          = 'Pennsylvania';
+  flat.benefits_how_long       = 'First application';
+  flat.benefits_county         = county;
+  flat.benefits_record_number  = 'N/A — New Applicant';
+
+  // Nursing facility — not applicable
+  flat.nursing_facility_name    = 'N/A';
+  flat.nursing_facility_address = 'N/A';
+  flat.nursing_facility_dates   = 'N/A';
+
+  // ── Immigration — US citizen ───────────────────────────────────────────────
+  flat.immigration_doc_type   = 'U.S. Citizen — No documentation required';
+  flat.immigration_doc_id     = 'N/A';
+  flat.alien_number           = 'N/A';
+  flat.sponsor_name_address   = 'N/A';
 
   // ── Household members ──────────────────────────────────────────────────────
   members.slice(0, 4).forEach((m, i) => {
@@ -289,49 +312,122 @@ function adaptForMedicaid(data) {
     flat[`member${n}_relationship`] = m.relationship || '';
   });
 
-  // ── Medical insurance — currently uninsured (that's why they're applying) ──
+  // ── Military — not applicable ──────────────────────────────────────────────
+  flat.military_branch       = 'N/A';
+  flat.military_date_entered = 'N/A';
+  flat.military_date_left    = 'N/A';
+  flat.military_claim_no     = 'N/A';
+
+  // ── Medical insurance — uninsured, applying for Medicaid ───────────────────
   flat.insurance_1_covered   = fullName;
-  flat.insurance_1_company   = 'None — Uninsured';
+  flat.insurance_1_company   = 'None — Currently Uninsured';
   flat.insurance_1_policy    = 'N/A';
-  flat.insurance_1_premium   = '$0';
+  flat.insurance_1_premium   = '$0.00';
   flat.insurance_1_frequency = 'N/A';
+
+  // ── Real estate — renting, does not own property ───────────────────────────
+  flat.real_estate_1_location  = 'Does not own real estate';
+  flat.real_estate_1_owner     = 'N/A';
+  flat.real_estate_1_value     = '$0';
+  flat.real_estate_1_who_lives = 'N/A';
+  flat.real_estate_1_realtor   = 'N/A';
+  flat.real_estate_1_date_listed = 'N/A';
+
+  // ── Mobile home — not applicable ───────────────────────────────────────────
+  flat.mobile_home_location    = 'N/A';
+  flat.mobile_home_owner       = 'N/A';
+  flat.mobile_home_value       = 'N/A';
+  flat.mobile_home_year_model  = 'N/A';
+  flat.mobile_home_who_lives   = 'N/A';
+  flat.mobile_home_realtor     = 'N/A';
+  flat.mobile_home_date_listed = 'N/A';
+
+  // ── Burial — not applicable ────────────────────────────────────────────────
+  flat.burial_1_owner         = 'N/A';
+  flat.burial_1_bank          = 'N/A';
+  flat.burial_1_account       = 'N/A';
+  flat.burial_1_date          = 'N/A';
+  flat.burial_spaces_count    = '0';
+  flat.burial_spaces_location = 'N/A';
+  flat.burial_1_value         = '$0';
+  flat.burial_1_funeral_home  = 'N/A';
+
+  // ── Life insurance — none ──────────────────────────────────────────────────
+  flat.life_ins_1_owner       = fullName;
+  flat.life_ins_1_company     = 'None';
+  flat.life_ins_1_policy      = 'N/A';
+  flat.life_ins_1_face_value  = '$0';
+  flat.life_ins_1_cash_value  = '$0';
+  flat.life_ins_1_beneficiary = 'N/A';
+
+  // ── Vehicle ────────────────────────────────────────────────────────────────
+  flat.vehicle_1_owner          = fullName;
+  flat.vehicle_1_year_make_model = 'N/A';
+  flat.vehicle_1_plate          = 'N/A';
+  flat.vehicle_1_amount_owed    = '$0';
+  flat.vehicle_1_pct_owned      = '100%';
+  flat.vehicle_1_comments       = 'No vehicle owned';
+
+  // ── Resources / bank accounts ──────────────────────────────────────────────
+  flat.resource_1_owner     = fullName;
+  flat.resource_1_type      = 'Checking Account';
+  flat.resource_1_value     = '$0';
+  flat.resource_1_bank      = 'Local Bank';
+  flat.resource_1_pct_owned = '100%';
+  flat.resource_1_comments  = 'Minimal balance';
+
+  // ── Transfers & lump sums — none ──────────────────────────────────────────
+  flat.transfer_type          = 'None';
+  flat.transfer_market_value  = '$0';
+  flat.transfer_date          = 'N/A';
+  flat.transfer_explanation   = 'No transfers of assets in past 60 months.';
+  flat.lump_sum_amount        = '$0';
+  flat.lump_sum_date          = 'N/A';
+  flat.lump_sum_explanation   = 'No lump sum payments expected.';
 
   // ── Income rows ────────────────────────────────────────────────────────────
   if (income.length > 0) {
     income.slice(0, 5).forEach((inc, i) => {
       const n = i + 1;
       flat[`income_row${n}_whose`]        = inc.person || d.firstName || fullName;
-      flat[`income_row${n}_source`]       = inc.source    || '';
+      flat[`income_row${n}_source`]       = inc.source || '';
       flat[`income_row${n}_frequency`]    = normalizeFreq(inc.frequency);
       flat[`income_row${n}_gross_amount`] = inc.amount ? `$${inc.amount}` : '';
     });
   } else {
-    // No income reported — mark as none
     flat.income_row1_whose        = fullName;
-    flat.income_row1_source       = 'No current income';
+    flat.income_row1_source       = 'No current income — recently unemployed';
     flat.income_row1_frequency    = 'N/A';
-    flat.income_row1_gross_amount = '$0';
+    flat.income_row1_gross_amount = '$0.00';
   }
 
   // ── Shelter & utility expenses ─────────────────────────────────────────────
   flat.shelter_rent      = exp.rent      ? `$${exp.rent}`      : '$0';
-  flat.shelter_electric  = exp.utilities ? `$${exp.utilities}` : '';
-  flat.shelter_gas       = exp.gas       ? `$${exp.gas}`       : '';
-  flat.shelter_heating   = exp.heating   ? `$${exp.heating}`   : '';
-  flat.shelter_telephone = d.phone       ? 'Yes'               : '';
+  flat.shelter_electric  = exp.utilities ? `$${exp.utilities}` : '$0';
+  flat.shelter_gas       = exp.gas       ? `$${exp.gas}`       : '$0';
+  flat.shelter_heating   = exp.heating   ? `$${exp.heating}`   : '$0';
+  flat.shelter_water     = '$0';
+  flat.shelter_sewer     = '$0';
+  flat.shelter_garbage   = '$0';
+  flat.shelter_telephone = d.phone ? d.phone : '$0';
 
-  // ── Resources / bank accounts ──────────────────────────────────────────────
-  flat.resource_1_owner    = fullName;
-  flat.resource_1_type     = 'Checking Account';
-  flat.resource_1_value    = '$0';
-  flat.resource_1_bank     = 'N/A';
-  flat.resource_1_pct_owned = '100%';
-  flat.resource_1_comments  = 'Low-income household';
+  // ── Rep payee — self ───────────────────────────────────────────────────────
+  flat.rep_payee_name    = fullName;
+  flat.rep_payee_address = d.address || '';
 
-  // ── Authorized representative (self) ──────────────────────────────────────
+  // ── Authorized representative — self ──────────────────────────────────────
   flat.authorized_rep_name    = fullName;
   flat.authorized_rep_address = d.address || '';
   flat.authorized_rep_phone   = d.phone   || '';
+
+  // ── POA — none ─────────────────────────────────────────────────────────────
+  flat.poa_name         = 'None';
+  flat.poa_relationship = 'N/A';
+  flat.poa_address      = 'N/A';
+  flat.poa_city         = city;
+  flat.poa_state        = 'PA';
+  flat.poa_zip          = (d.address || '').match(/\d{5}/)?.[0] || '';
+  flat.poa_phone        = 'N/A';
 
   // ── Signature ─────────────────────────────────────────────────────────────
   flat.applicant_signature_date = today;
