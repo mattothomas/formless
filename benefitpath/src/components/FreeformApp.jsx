@@ -90,7 +90,9 @@ function Landing({ onBegin, onSwitchDesign }) {
     >
       {/* Top bar */}
       <div style={c.topBar}>
-        <span style={c.wordmark}>FREEFORM</span>
+        <button onClick={() => { window.location.href = '/?reset'; }} style={{ ...c.wordmark, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
+          FREEFORM
+        </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <span style={c.topBarRight}>Pennsylvania · 2026</span>
           <button onClick={onSwitchDesign} style={c.ghostSmall}>Classic View</button>
@@ -224,7 +226,7 @@ function Intake({
   }
 
   const exchangeCount = messages.filter(m => m.role === 'user').length;
-  const showReview = exchangeCount >= 1 && !isTyping;
+  const showReview = exchangeCount >= 3 && !isTyping;
 
   return (
     <motion.div
@@ -236,7 +238,9 @@ function Intake({
     >
       {/* Header */}
       <div style={c.topBar}>
-        <span style={c.wordmark}>FREEFORM</span>
+        <button onClick={() => { window.location.href = '/?reset'; }} style={{ ...c.wordmark, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
+          FREEFORM
+        </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <span style={c.topBarRight}>Intake</span>
           <button onClick={onSwitchDesign} style={c.ghostSmall}>Classic View</button>
@@ -340,11 +344,11 @@ function Intake({
               style={c.reviewPrompt}
             >
               <div>
-                <p style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#888682', margin: '0 0 0.25rem' }}>
+                <p style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#A8C4B0', margin: '0 0 0.3rem' }}>
                   Ready to see your application?
                 </p>
-                <p style={{ fontSize: '13px', color: '#555250', margin: 0 }}>
-                  I have enough information to prepare your forms. You can also keep talking to add more details.
+                <p style={{ fontSize: '13px', color: '#D4E6DA', margin: 0, lineHeight: 1.5 }}>
+                  I have enough to prepare your forms. Keep talking to add more details, or review now.
                 </p>
               </div>
               <button onClick={onReview} style={c.reviewBtn}>
@@ -360,15 +364,13 @@ function Intake({
       {/* Input */}
       <div style={c.inputArea}>
         <div style={c.inputRow}>
-          {isSupported && (
-            <button
-              onClick={toggleListening}
-              style={{ ...c.inputIconBtn, background: isListening ? '#c0392b' : '#1C3A2A' }}
-              title={isListening ? 'Stop' : 'Speak'}
-            >
-              {isListening ? <Square size={12} color="#fff" /> : <Mic size={12} color="#fff" />}
-            </button>
-          )}
+          <button
+            onClick={isSupported ? toggleListening : undefined}
+            style={{ ...c.inputIconBtn, background: isListening ? '#c0392b' : '#1C3A2A', opacity: isSupported ? 1 : 0.35, cursor: isSupported ? 'pointer' : 'default' }}
+            title={isListening ? 'Stop recording' : isSupported ? 'Speak' : 'Voice input not available in this browser'}
+          >
+            {isListening ? <Square size={12} color="#fff" /> : <Mic size={12} color="#fff" />}
+          </button>
           <textarea
             ref={inputRef}
             value={inputText}
