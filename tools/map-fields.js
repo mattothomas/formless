@@ -14,7 +14,7 @@
  *   node tools/map-fields.js pdf_files/SNAP_FORM_c_257599.pdf forms/snap-pa-fields.json
  */
 
-import { fromPath } from 'pdf2pic';
+import { execSync } from 'child_process';
 import Anthropic from '@anthropic-ai/sdk';
 import fs from 'fs';
 import path from 'path';
@@ -34,19 +34,21 @@ if (!process.env.ANTHROPIC_API_KEY) {
 
 const client = new Anthropic();
 
-// ── Render PDF pages to images ────────────────────────────────────────────────
+// ── Render PDF pages to images via Ghostscript ───────────────────────────────
 
 const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'formless-'));
 console.log(`Rendering pages → ${tmpDir}`);
 
-const convert = fromPath(inputPath, {
-  density: 150,           // 150 DPI — readable for vision, not too large
-  saveFilename: 'page',
-  savePath: tmpDir,
-  format: 'png',
-  width: 1275,            // 8.5" × 150 DPI
-  height: 1650,           // 11" × 150 DPI
-});
+// Render all pages at once: output files will be page-001.png, page-002.png, …
+execSync(
+  `gs -dNOPAUSE -dBATCH -sDEVICE=png16m -r150 -dTextAlphaBits=4 ` +
+  `-sOutputFile="${path.join(tmpDir, 'page-%03d.png')}" "${path.resolve(inputPath)}"`,
+  { stdio: 'pipe' }
+);
+
+function pageImagePath(i) {
+  return path.join(tmpDir, `page-${String(i).padStart(3, '0')}.png`);
+}
 
 // Get page count from pdf-lib (lighter than loading all pages)
 import { PDFDocument } from 'pdf-lib';
@@ -66,13 +68,22 @@ for (let i = 1; i <= pageCount; i++) {
   console.log(`\nPage ${i}/${pageCount} — rendering…`);
   let result;
   try {
-    result = await convert(i, { responseType: 'buffer' });
+    result = await convert(i);
   } catch (e) {
     console.warn(`  Skipping page ${i}: ${e.message}`);
     continue;
   }
 
-  const imageBuffer = result.buffer ?? fs.readFileSync(result.path);
+  const imagePath = result.path ?? result.name ?? path.join(tmpDir, `page.${i}.png`);
+  if (!fs.existsSync(imagePath)) {
+    console.warn(`  Image not found at ${imagePath}, skipping page ${i}`);
+    continue;
+  }
+  const imageBuffer = fs.readFileSync(imagePath);
+  if (!imageBuffer.length) {
+    console.warn(`  Empty image for page ${i}, skipping`);
+    continue;
+  }
   const base64 = imageBuffer.toString('base64');
 
   console.log(`  Sending to Claude vision…`);
