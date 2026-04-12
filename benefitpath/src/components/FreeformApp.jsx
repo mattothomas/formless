@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mic, Square, Send } from 'lucide-react';
+import { Mic, Square, Send, ArrowLeft, FileText, RotateCcw } from 'lucide-react';
 import { sendToGemini, mergeExtractedData } from '../utils/geminiClient.js';
 import { calculateEligibility } from '../utils/eligibility.js';
 import { generateMedicaidPDF, generateSnapPDF, downloadPDF } from '../utils/pdfGenerator.js';
@@ -10,7 +10,7 @@ import { useSession } from '../hooks/useSession.js';
 const WELCOME = {
   id: 'welcome',
   role: 'system',
-  content: 'Describe your situation in your own words — what\'s going on for you right now?',
+  content: "Hi — I'm Freeform. Tell me what's going on in your life right now. I'll figure out what benefits you qualify for and fill out the forms for you.",
 };
 
 const EXAMPLE_TEXT = "I just lost my job at the warehouse. I have a 4-year-old daughter and I can't pay rent next month. I live in Philadelphia.";
@@ -42,7 +42,6 @@ export default function FreeformApp({ onSwitchDesign }) {
   const inputRef = useRef(null);
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
-  // Messages — seed with welcome if empty
   const messages = (savedMessages.length === 0 && isLoaded)
     ? [WELCOME]
     : (savedMessages.length > 0 ? savedMessages : [WELCOME]);
@@ -51,7 +50,6 @@ export default function FreeformApp({ onSwitchDesign }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  // If session already had results, go to form view
   useEffect(() => {
     if (isLoaded && eligibilityResults && eligibilityResults.length > 0) {
       setScreen('form-preview');
@@ -76,9 +74,11 @@ export default function FreeformApp({ onSwitchDesign }) {
     setIsTyping(true);
 
     try {
-      const apiMessages = nextMessages.map(m => ({ role: m.role === 'system' ? 'assistant' : 'user', content: m.content }));
+      const apiMessages = nextMessages.map(m => ({
+        role: m.role === 'system' ? 'assistant' : 'user',
+        content: m.content,
+      }));
       const response = await sendToGemini(apiMessages, apiKey);
-
       const assistantMsg = { id: (Date.now() + 1).toString(), role: 'system', content: response.message };
       const updatedMessages = [...nextMessages, assistantMsg];
       setMessages(updatedMessages);
@@ -90,7 +90,7 @@ export default function FreeformApp({ onSwitchDesign }) {
         const results = calculateEligibility(mergedData);
         setEligibilityResults(results);
         await persist(updatedMessages, mergedData, results);
-        setTimeout(() => setScreen('form-preview'), 400);
+        setTimeout(() => setScreen('form-preview'), 500);
       } else {
         await persist(updatedMessages, mergedData, null);
       }
@@ -104,10 +104,7 @@ export default function FreeformApp({ onSwitchDesign }) {
   }
 
   function handleKeyDown(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage(inputText);
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputText); }
   }
 
   async function handleDownloadMedicaid() {
@@ -118,7 +115,7 @@ export default function FreeformApp({ onSwitchDesign }) {
       downloadPDF(bytes, 'PA-Medicaid-Application.pdf');
       setMedicaidDone(true);
     } catch (err) {
-      setPdfError('Could not generate PDF. Please try again.');
+      setPdfError('Could not generate Medicaid PDF. Please try again.');
     } finally {
       setGeneratingMedicaid(false);
     }
@@ -148,298 +145,247 @@ export default function FreeformApp({ onSwitchDesign }) {
   const canReview = messages.filter(m => m.role === 'user').length >= 1;
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#fff', fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div style={s.root}>
       <AnimatePresence mode="wait">
-        {screen === 'conversation' ? (
-          <motion.div
-            key="conversation"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+
+        {/* ── CONVERSATION ──────────────────────────────────────────────────── */}
+        {screen === 'conversation' && (
+          <motion.div key="conversation"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
             style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
           >
-            {/* Header */}
-            <header style={styles.header}>
-              <div style={styles.headerInner}>
-                <span style={styles.brandLabel}>Freeform</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <span style={styles.sessionLabel}>Session Active</span>
-                  <button onClick={onSwitchDesign} style={styles.switchBtn}>Classic View</button>
-                </div>
+            <header style={s.header}>
+              <div style={s.headerBrand}>
+                <span style={s.brandDot} />
+                <span style={s.brandName}>Freeform</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <span style={s.statusPill}>● Live</span>
+                <button onClick={onSwitchDesign} style={s.switchBtn}>Classic</button>
               </div>
             </header>
 
-            {/* Transcript */}
-            <div style={{ flex: 1, overflowY: 'auto' }}>
-              <div style={{ padding: '1.5rem 1rem' }}>
-                {messages.map((msg, i) => (
-                  <motion.div
-                    key={msg.id || i}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.2, delay: Math.min(i * 0.03, 0.3) }}
-                    style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.75rem' }}
-                  >
-                    <div style={{ width: '2.5rem', paddingTop: '2px', flexShrink: 0 }}>
-                      <span style={styles.roleLabel}>{msg.role === 'system' ? 'SYS' : 'YOU'}</span>
-                    </div>
-                    <div style={{ flex: 1, fontSize: '15px', lineHeight: '1.6', color: '#111' }}>
-                      {msg.content}
-                    </div>
-                  </motion.div>
-                ))}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.25rem 0' }}>
+              {messages.map((msg, i) => (
+                <motion.div key={msg.id || i}
+                  initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.22, delay: Math.min(i * 0.04, 0.35) }}
+                  style={{ marginBottom: '1.25rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}
+                >
+                  <div style={{ ...s.roleChip, ...(msg.role === 'user' ? s.roleChipUser : {}) }}>
+                    {msg.role === 'system' ? 'AI' : 'You'}
+                  </div>
+                  <div style={{ ...s.bubble, ...(msg.role === 'user' ? s.bubbleUser : s.bubbleAI) }}>
+                    {msg.content}
+                  </div>
+                </motion.div>
+              ))}
 
-                {isTyping && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}
-                  >
-                    <div style={{ width: '2.5rem', flexShrink: 0 }}>
-                      <span style={styles.roleLabel}>SYS</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center', paddingTop: '4px' }}>
+              {isTyping && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', marginBottom: '1.25rem' }}
+                >
+                  <div style={s.roleChip}>AI</div>
+                  <div style={{ ...s.bubble, ...s.bubbleAI, padding: '0.6rem 0.9rem' }}>
+                    <span style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
                       {[0, 1, 2].map(i => (
-                        <motion.div
-                          key={i}
-                          animate={{ opacity: [0.3, 1, 0.3] }}
-                          transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
-                          style={{ width: 6, height: 6, borderRadius: '50%', background: '#999' }}
+                        <motion.span key={i}
+                          animate={{ opacity: [0.25, 1, 0.25] }}
+                          transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.18 }}
+                          style={{ display: 'block', width: 7, height: 7, borderRadius: '50%', background: '#94a3b8' }}
                         />
                       ))}
-                    </div>
-                  </motion.div>
-                )}
-
-                {interimText && (
-                  <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
-                    <div style={{ width: '2.5rem', flexShrink: 0 }}>
-                      <span style={{ ...styles.roleLabel, color: '#c00' }}>MIC</span>
-                    </div>
-                    <div style={{ fontSize: '14px', color: '#999', fontStyle: 'italic' }}>{interimText}</div>
+                    </span>
                   </div>
-                )}
+                </motion.div>
+              )}
 
-                {/* Try example */}
-                {messages.length <= 1 && !isTyping && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ marginTop: '1rem', marginLeft: '3.25rem' }}>
-                    <button onClick={() => sendMessage(EXAMPLE_TEXT)} style={styles.exampleBtn}>
-                      Try example story →
-                    </button>
-                  </motion.div>
-                )}
+              {interimText && (
+                <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                  <div style={{ ...s.roleChip, background: '#fee2e2', color: '#dc2626' }}>Mic</div>
+                  <div style={{ fontSize: '14px', color: '#94a3b8', fontStyle: 'italic', paddingTop: '2px' }}>{interimText}…</div>
+                </div>
+              )}
 
-                {/* Review button */}
-                {canReview && !isTyping && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid #e5e5e5' }}
-                  >
-                    <button onClick={() => setScreen('form-preview')} style={styles.primaryBtn}>
-                      Review Application
-                    </button>
-                  </motion.div>
-                )}
+              {messages.length <= 1 && !isTyping && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+                  style={{ marginLeft: '2.75rem', marginBottom: '1.25rem' }}
+                >
+                  <button onClick={() => sendMessage(EXAMPLE_TEXT)} style={s.exampleBtn}>
+                    Try an example →
+                  </button>
+                </motion.div>
+              )}
 
-                <div ref={bottomRef} />
-              </div>
+              {canReview && !isTyping && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid #e2e8f0', marginBottom: '1.5rem' }}
+                >
+                  <button onClick={() => setScreen('form-preview')} style={s.reviewBtn}>
+                    <FileText size={15} />
+                    Review my application
+                  </button>
+                </motion.div>
+              )}
+
+              <div ref={bottomRef} style={{ height: '1rem' }} />
             </div>
 
-            {/* Input bar */}
-            <div style={styles.inputBar}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={s.inputArea}>
+              <div style={s.inputRow}>
                 {isSupported && (
-                  <button
-                    onClick={toggleListening}
-                    style={{ ...styles.micBtn, background: isListening ? '#dc2626' : '#111' }}
+                  <button onClick={toggleListening}
+                    style={{ ...s.iconBtn, background: isListening ? '#ef4444' : '#1e293b' }}
+                    title={isListening ? 'Stop recording' : 'Speak'}
                   >
-                    {isListening ? <Square size={14} color="#fff" /> : <Mic size={14} color="#fff" />}
+                    {isListening ? <Square size={13} color="#fff" /> : <Mic size={13} color="#fff" />}
                   </button>
                 )}
-                <textarea
-                  ref={inputRef}
-                  value={inputText}
+                <textarea ref={inputRef} value={inputText}
                   onChange={e => setInputText(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={isListening ? 'Listening…' : 'Type your answer, or press the mic…'}
-                  rows={1}
-                  disabled={isTyping || isListening}
-                  style={styles.textarea}
+                  placeholder={isListening ? 'Listening…' : 'Describe your situation, or answer the question above…'}
+                  rows={2} disabled={isTyping || isListening}
+                  style={s.textarea}
                 />
-                <button
-                  onClick={() => sendMessage(inputText)}
+                <button onClick={() => sendMessage(inputText)}
                   disabled={!inputText.trim() || isTyping}
-                  style={{ ...styles.sendBtn, opacity: (!inputText.trim() || isTyping) ? 0.4 : 1 }}
+                  style={{ ...s.iconBtn, background: '#1e293b', opacity: (!inputText.trim() || isTyping) ? 0.35 : 1 }}
                 >
-                  <Send size={14} color="#fff" />
+                  <Send size={13} color="#fff" />
                 </button>
               </div>
-              <div style={{ marginTop: '0.4rem', marginLeft: isSupported ? '3.25rem' : '0', fontSize: '10px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                {isListening ? 'Recording — press to stop' : 'Enter to send · Shift+Enter for new line'}
-              </div>
+              <p style={s.inputHint}>Enter to send · Shift+Enter for new line{isListening ? ' · Recording…' : ''}</p>
             </div>
           </motion.div>
-        ) : (
-          <motion.div
-            key="form-preview"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+        )}
+
+        {/* ── FORM PREVIEW ──────────────────────────────────────────────────── */}
+        {screen === 'form-preview' && (
+          <motion.div key="form-preview"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
             style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
           >
-            {/* Header */}
-            <header style={styles.header}>
-              <div style={styles.headerInner}>
-                <button onClick={() => setScreen('conversation')} style={styles.returnBtn}>← Return</button>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <span style={styles.sessionLabel}>Draft</span>
-                  <button onClick={onSwitchDesign} style={styles.switchBtn}>Classic View</button>
-                </div>
+            <header style={s.header}>
+              <button onClick={() => setScreen('conversation')} style={s.returnBtn}>
+                <ArrowLeft size={13} /> Back
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <span style={{ ...s.statusPill, background: '#fef9c3', color: '#854d0e', borderColor: '#fde68a' }}>Draft</span>
+                <button onClick={onSwitchDesign} style={s.switchBtn}>Classic</button>
               </div>
             </header>
 
-            {/* Document */}
-            <div style={{ flex: 1, overflowY: 'auto', background: '#f5f5f5' }}>
-              <div style={{ padding: '1rem' }}>
+            <div style={{ flex: 1, overflowY: 'auto', background: '#f8fafc', padding: '1.25rem' }}>
 
-                {/* Eligibility bar */}
-                {results.length > 0 && (
-                  <div style={styles.eligibilityBar}>
-                    <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#555', marginRight: '0.75rem' }}>Eligibility</span>
-                    {eligible.map(r => (
-                      <span key={r.program} style={styles.badgeYes}>{r.icon} {r.programName}</span>
-                    ))}
-                    {maybe.map(r => (
-                      <span key={r.program} style={styles.badgeMaybe}>{r.icon} {r.programName}</span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Document card */}
-                <div style={styles.docCard}>
-                  {/* Doc header */}
-                  <div style={{ borderBottom: '1px solid #111', padding: '1rem' }}>
-                    <div style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.15em', color: '#888', marginBottom: '0.4rem' }}>
-                      PA-MEDICAID / SNAP · {new Date().toLocaleDateString('en-US')}
-                    </div>
-                    <h1 style={{ fontSize: '17px', fontWeight: 500, margin: 0, lineHeight: 1.3 }}>
-                      Pennsylvania Benefit Application
-                    </h1>
-                    <div style={{ fontSize: '11px', color: '#666', marginTop: '0.25rem' }}>
-                      Medicaid Financial Eligibility · SNAP
-                    </div>
-                  </div>
-
-                  {/* Doc body */}
-                  <div style={{ padding: '1rem' }}>
-                    <DocSection title="I. Applicant Information">
-                      <DataField label="Full Name" value={fullName} />
-                      <DataField label="Date of Birth" value={d.dateOfBirth || '—'} />
-                      <DataField label="Marital Status" value={d.maritalStatus || 'Single'} />
-                      <DataField label="Phone" value={d.phone || '—'} />
-                    </DocSection>
-
-                    <DocSection title="II. Residence">
-                      <DataField label="Current Address" value={d.address || '—'} />
-                      <DataField label="County" value={d.county || '—'} />
-                      <DataField label="Housing Status" value={(d.expenses || {}).rent ? 'Renting' : '—'} />
-                    </DocSection>
-
-                    <DocSection title="III. Household Composition">
-                      <DataField label="Total Members (incl. applicant)" value={String(householdSize)} />
-                      {(d.householdMembers || []).map((m, i) => (
-                        <DataField key={i} label={`Member ${i + 1}`} value={`${m.name || '—'} · ${m.relationship || ''} · DOB ${m.dob || '—'}`} />
-                      ))}
-                      {(d.householdMembers || []).length === 0 && (
-                        <DataField label="Members" value="No additional members listed" />
-                      )}
-                    </DocSection>
-
-                    <DocSection title="IV. Income &amp; Employment">
-                      <DataField label="Employment Status" value={totalIncome === 0 ? 'Unemployed / No current income' : 'Employed'} />
-                      <DataField label="Monthly Gross Income" value={totalIncome > 0 ? `$${totalIncome.toLocaleString()}` : '$0.00'} />
-                      {(d.monthlyIncome || []).map((inc, i) => (
-                        <DataField key={i} label={`Income Source ${i + 1}`} value={`${inc.source || '—'} · $${inc.amount || 0} · ${inc.frequency || ''}`} />
-                      ))}
-                      {(d.monthlyIncome || []).length === 0 && (
-                        <DataField label="Income Sources" value="None reported — recently unemployed" />
-                      )}
-                    </DocSection>
-
-                    <DocSection title="V. Expenses">
-                      <DataField label="Monthly Rent" value={(d.expenses || {}).rent ? `$${d.expenses.rent}` : '$0'} />
-                      <DataField label="Utilities" value={(d.expenses || {}).utilities ? `$${d.expenses.utilities}` : '$0'} />
-                      <DataField label="Heating" value={(d.expenses || {}).heating ? `$${d.expenses.heating}` : '$0'} />
-                      <DataField label="Childcare" value={(d.expenses || {}).childcare ? `$${d.expenses.childcare}` : '$0'} />
-                    </DocSection>
-
-                    <DocSection title="VI. Medical Coverage">
-                      <DataField label="Current Insurance" value="None — Uninsured (applying for Medicaid)" />
-                      <DataField label="Applying For" value="Pennsylvania Medicaid / CHIP" />
-                    </DocSection>
-
-                    <DocSection title="VII. Certification" last>
-                      <div style={{ fontSize: '11px', lineHeight: 1.6, color: '#555' }}>
-                        I certify under penalty of perjury that the information provided is true and complete to
-                        the best of my knowledge. I understand that providing false information may result in
-                        disqualification and legal penalties.
-                      </div>
-                      <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid #e5e5e5' }}>
-                        <DataField label="Electronic Signature" value={fullName !== '—' ? fullName : '[TO BE SIGNED]'} />
-                        <DataField label="Date" value={new Date().toLocaleDateString('en-US')} />
-                      </div>
-                    </DocSection>
+              {/* Eligibility strip */}
+              {results.length > 0 && (
+                <div style={s.eligStrip}>
+                  <span style={s.eligLabel}>Eligibility</span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                    {eligible.map(r => <span key={r.program} style={s.badgeGreen}>{r.icon} {r.programName}</span>)}
+                    {maybe.map(r => <span key={r.program} style={s.badgeYellow}>{r.icon} {r.programName}</span>)}
                   </div>
                 </div>
+              )}
 
-                {/* Actions */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-                  <button onClick={handleDownloadMedicaid} disabled={generatingMedicaid} style={styles.primaryBtn}>
-                    {generatingMedicaid ? 'Generating…' : medicaidDone ? '✓ Medicaid PDF Downloaded' : '↓ Download Medicaid Application (PDF)'}
-                  </button>
-
-                  <button
-                    onClick={handleDownloadSnap}
-                    disabled={generatingSnap}
-                    style={{ ...styles.secondaryBtn, ...(generatingSnap ? { opacity: 0.6 } : {}) }}
-                  >
-                    {generatingSnap ? 'Generating…' : snapDone ? '✓ SNAP PDF Downloaded' : '↓ Download SNAP Application (PDF)'}
-                  </button>
-
-                  {snapWarned && !snapDone && (
-                    <div style={styles.warningNote}>
-                      We focused on Medicaid for this demo — SNAP form filling is still in progress. Click again to try anyway.
-                    </div>
-                  )}
-
-                  {pdfError && <div style={{ fontSize: '12px', color: '#c00', padding: '0.5rem' }}>{pdfError}</div>}
-
-                  <button onClick={() => setScreen('conversation')} style={styles.ghostBtn}>
-                    ← Continue Conversation
-                  </button>
-
-                  <button onClick={() => { resetSession(); setScreen('conversation'); }} style={styles.ghostBtn}>
-                    Start New Application
-                  </button>
+              {/* Document */}
+              <div style={s.doc}>
+                <div style={s.docHeader}>
+                  <div style={s.docFormId}>Pennsylvania Benefit Application · {new Date().toLocaleDateString('en-US')}</div>
+                  <h2 style={s.docTitle}>Medicaid Financial Eligibility &amp; SNAP</h2>
+                  <p style={s.docSub}>Pre-filled from your conversation · Review before submitting</p>
                 </div>
 
-                {/* Next steps */}
-                <div style={styles.nextSteps}>
-                  <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '0.75rem', fontWeight: 500 }}>
-                    Next Steps
-                  </div>
-                  <ol style={{ margin: 0, padding: '0 0 0 1.2rem', fontSize: '12px', lineHeight: 1.7, color: '#555' }}>
-                    <li>Download and review your pre-filled applications above</li>
-                    <li>Sign and date the last page of each form</li>
-                    <li>Submit at <strong>compass.state.pa.us</strong> or your county DHS office</li>
-                    <li>For LIHEAP heating help, call <strong>1-800-692-7462</strong> before May 8, 2026</li>
-                    <li>For WIC, call <strong>1-800-WIC-WINS</strong> to find your nearest clinic</li>
-                  </ol>
+                <div style={{ padding: '1.25rem' }}>
+                  <Section title="I. Applicant Information">
+                    <Row label="Full Name" value={fullName} />
+                    <Row label="Date of Birth" value={d.dateOfBirth || 'Not provided'} />
+                    <Row label="Marital Status" value={d.maritalStatus || 'Single'} />
+                    <Row label="Phone Number" value={d.phone || 'Not provided'} />
+                  </Section>
+
+                  <Section title="II. Residence">
+                    <Row label="Current Address" value={d.address || 'Not provided'} />
+                    <Row label="County" value={d.county || 'Not provided'} />
+                    <Row label="Housing Status" value={(d.expenses || {}).rent ? 'Renting' : 'Not specified'} />
+                  </Section>
+
+                  <Section title="III. Household Composition">
+                    <Row label="Total Members (incl. applicant)" value={String(householdSize)} />
+                    {(d.householdMembers || []).length > 0
+                      ? (d.householdMembers || []).map((m, i) => (
+                          <Row key={i} label={`Member ${i + 2}`} value={[m.name, m.relationship, m.dob ? `DOB ${m.dob}` : ''].filter(Boolean).join(' · ')} />
+                        ))
+                      : <Row label="Additional Members" value="None listed" />
+                    }
+                  </Section>
+
+                  <Section title="IV. Income &amp; Employment">
+                    <Row label="Employment Status" value={totalIncome === 0 ? 'Unemployed / No current income' : 'Employed'} />
+                    <Row label="Monthly Gross Income" value={totalIncome > 0 ? `$${totalIncome.toLocaleString()}` : '$0.00'} />
+                    {(d.monthlyIncome || []).length > 0
+                      ? (d.monthlyIncome || []).map((inc, i) => (
+                          <Row key={i} label={`Source ${i + 1}`} value={[inc.source, inc.amount ? `$${inc.amount}` : '', inc.frequency].filter(Boolean).join(' · ')} />
+                        ))
+                      : <Row label="Income Sources" value="None — recently unemployed" />
+                    }
+                  </Section>
+
+                  <Section title="V. Monthly Expenses">
+                    <Row label="Rent / Mortgage" value={(d.expenses || {}).rent ? `$${d.expenses.rent}/mo` : '$0'} />
+                    <Row label="Utilities" value={(d.expenses || {}).utilities ? `$${d.expenses.utilities}/mo` : '$0'} />
+                    <Row label="Heating" value={(d.expenses || {}).heating ? `$${d.expenses.heating}/mo` : '$0'} />
+                    <Row label="Childcare" value={(d.expenses || {}).childcare ? `$${d.expenses.childcare}/mo` : '$0'} />
+                  </Section>
+
+                  <Section title="VI. Medical Coverage">
+                    <Row label="Current Insurance" value="None — Uninsured" />
+                    <Row label="Applying For" value="Pennsylvania Medicaid / CHIP" />
+                  </Section>
+
+                  <Section title="VII. Certification" last>
+                    <p style={{ fontSize: '12px', lineHeight: 1.7, color: '#64748b', margin: '0 0 1rem' }}>
+                      I certify under penalty of perjury that the information provided is true and complete to the best
+                      of my knowledge. I understand that providing false information may result in disqualification and legal penalties.
+                    </p>
+                    <Row label="Signature" value={fullName !== '—' ? fullName : '[To be signed]'} />
+                    <Row label="Date" value={new Date().toLocaleDateString('en-US')} />
+                  </Section>
                 </div>
               </div>
+
+              {/* Downloads */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1.25rem' }}>
+                <button onClick={handleDownloadMedicaid} disabled={generatingMedicaid} style={s.dlPrimary}>
+                  {generatingMedicaid ? 'Generating…' : medicaidDone ? '✓ Medicaid Application Downloaded' : '↓ Download Medicaid Application (PDF)'}
+                </button>
+                <button onClick={handleDownloadSnap} disabled={generatingSnap} style={s.dlSecondary}>
+                  {generatingSnap ? 'Generating…' : snapDone ? '✓ SNAP Application Downloaded' : '↓ Download SNAP Application (PDF)'}
+                </button>
+                {snapWarned && !snapDone && (
+                  <p style={s.snapNote}>We focused on Medicaid for this demo — SNAP form filling is still in progress. Click again to try anyway.</p>
+                )}
+                {pdfError && <p style={{ fontSize: '12px', color: '#dc2626', margin: 0 }}>{pdfError}</p>}
+                <button onClick={() => { resetSession(); setScreen('conversation'); }} style={s.dlGhost}>
+                  <RotateCcw size={12} /> Start New Application
+                </button>
+              </div>
+
+              {/* Next steps */}
+              <div style={s.nextSteps}>
+                <p style={s.nextStepsTitle}>Next Steps</p>
+                <ol style={{ margin: '0.5rem 0 0', padding: '0 0 0 1.3rem', color: '#475569', fontSize: '13px', lineHeight: 1.8 }}>
+                  <li>Download and review your pre-filled applications above</li>
+                  <li>Sign and date the last page of each form</li>
+                  <li>Submit at <strong>compass.state.pa.us</strong> or your county DHS office</li>
+                  <li>LIHEAP heating help — call <strong>1-800-692-7462</strong> before May 8, 2026</li>
+                  <li>WIC — call <strong>1-800-WIC-WINS</strong> to find your nearest clinic</li>
+                </ol>
+              </div>
+
             </div>
           </motion.div>
         )}
@@ -448,205 +394,327 @@ export default function FreeformApp({ onSwitchDesign }) {
   );
 }
 
-function DocSection({ title, children, last = false }) {
+function Section({ title, children, last = false }) {
   return (
-    <div style={{ marginBottom: last ? 0 : '1.5rem', paddingBottom: last ? 0 : '1.5rem', borderBottom: last ? 'none' : '1px solid #e5e5e5' }}>
-      <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.15em', fontWeight: 500, color: '#111', marginBottom: '1rem' }}>
-        {title}
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+    <div style={{ marginBottom: last ? 0 : '1.5rem', paddingBottom: last ? 0 : '1.5rem', borderBottom: last ? 'none' : '1px solid #e2e8f0' }}>
+      <p style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#94a3b8', margin: '0 0 0.9rem' }}>{title}</p>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem 1.5rem' }}>
         {children}
       </div>
     </div>
   );
 }
 
-function DataField({ label, value }) {
+function Row({ label, value }) {
   return (
     <div>
-      <div style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#999', marginBottom: '2px' }}>{label}</div>
-      <div style={{ fontSize: '13px', lineHeight: 1.5, color: '#111', fontFamily: 'monospace' }}>{value}</div>
+      <p style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#94a3b8', margin: '0 0 2px' }}>{label}</p>
+      <p style={{ fontSize: '13px', color: '#1e293b', margin: 0, fontWeight: 500, wordBreak: 'break-word' }}>{value}</p>
     </div>
   );
 }
 
-const styles = {
-  header: {
-    borderBottom: '1px solid #111',
-    padding: '0.75rem 1rem',
+// ── Styles ──────────────────────────────────────────────────────────────────
+
+const s = {
+  root: {
+    height: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    background: '#fff',
+    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+    color: '#1e293b',
   },
-  headerInner: {
+  header: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
+    padding: '0.75rem 1.25rem',
+    borderBottom: '1px solid #e2e8f0',
+    background: '#fff',
+    flexShrink: 0,
   },
-  brandLabel: {
+  headerBrand: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  brandDot: {
+    display: 'block',
+    width: 8,
+    height: 8,
+    borderRadius: '50%',
+    background: '#3b82f6',
+  },
+  brandName: {
+    fontSize: '14px',
+    fontWeight: 600,
+    letterSpacing: '-0.01em',
+    color: '#0f172a',
+  },
+  statusPill: {
     fontSize: '11px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.15em',
     fontWeight: 500,
-    color: '#111',
-  },
-  sessionLabel: {
-    fontSize: '10px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.12em',
-    color: '#999',
-  },
-  roleLabel: {
-    fontSize: '9px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.12em',
-    color: '#bbb',
+    padding: '2px 8px',
+    borderRadius: '99px',
+    background: '#dcfce7',
+    color: '#166534',
+    border: '1px solid #bbf7d0',
   },
   switchBtn: {
-    fontSize: '10px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.1em',
-    color: '#888',
-    background: 'none',
-    border: '1px solid #ddd',
-    padding: '3px 8px',
+    fontSize: '11px',
+    padding: '3px 10px',
+    border: '1px solid #e2e8f0',
+    borderRadius: '6px',
+    background: '#f8fafc',
+    color: '#64748b',
     cursor: 'pointer',
+    fontFamily: 'inherit',
   },
   returnBtn: {
-    fontSize: '10px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.15em',
-    color: '#888',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '5px',
+    fontSize: '13px',
+    color: '#64748b',
     background: 'none',
     border: 'none',
     cursor: 'pointer',
     padding: 0,
+    fontFamily: 'inherit',
   },
-  inputBar: {
-    borderTop: '1px solid #111',
-    padding: '1rem',
-    background: '#fff',
-  },
-  micBtn: {
+  roleChip: {
     flexShrink: 0,
-    width: '2.75rem',
-    height: '2.75rem',
+    fontSize: '10px',
+    fontWeight: 600,
+    padding: '2px 7px',
+    borderRadius: '4px',
+    background: '#f1f5f9',
+    color: '#64748b',
+    marginTop: '3px',
+    letterSpacing: '0.05em',
+  },
+  roleChipUser: {
+    background: '#eff6ff',
+    color: '#2563eb',
+  },
+  bubble: {
+    fontSize: '14px',
+    lineHeight: 1.65,
+    borderRadius: '10px',
+    padding: '0.65rem 0.9rem',
+    maxWidth: 'calc(100% - 3rem)',
+  },
+  bubbleAI: {
+    background: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    color: '#1e293b',
+  },
+  bubbleUser: {
+    background: '#eff6ff',
+    border: '1px solid #dbeafe',
+    color: '#1e293b',
+  },
+  exampleBtn: {
+    fontSize: '12px',
+    color: '#3b82f6',
+    background: '#eff6ff',
+    border: '1px solid #bfdbfe',
+    borderRadius: '6px',
+    padding: '5px 12px',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  },
+  reviewBtn: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: '7px',
+    width: '100%',
+    padding: '0.75rem',
+    background: '#0f172a',
+    color: '#fff',
     border: 'none',
+    borderRadius: '8px',
+    fontSize: '13px',
+    fontWeight: 500,
     cursor: 'pointer',
-    transition: 'background 0.2s',
+    fontFamily: 'inherit',
+  },
+  inputArea: {
+    borderTop: '1px solid #e2e8f0',
+    padding: '0.9rem 1.25rem',
+    background: '#fff',
+    flexShrink: 0,
+  },
+  inputRow: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    gap: '0.6rem',
+  },
+  iconBtn: {
+    flexShrink: 0,
+    width: '2.4rem',
+    height: '2.4rem',
+    borderRadius: '8px',
+    border: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'opacity 0.15s, background 0.15s',
   },
   textarea: {
     flex: 1,
-    border: 'none',
-    outline: 'none',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    padding: '0.55rem 0.75rem',
     fontSize: '14px',
     lineHeight: 1.5,
     resize: 'none',
     fontFamily: 'inherit',
-    padding: '0.5rem 0',
-    background: 'transparent',
+    background: '#f8fafc',
+    color: '#1e293b',
+    outline: 'none',
   },
-  sendBtn: {
-    flexShrink: 0,
-    width: '2.75rem',
-    height: '2.75rem',
-    background: '#111',
-    border: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    transition: 'opacity 0.15s',
+  inputHint: {
+    fontSize: '10px',
+    color: '#cbd5e1',
+    margin: '0.4rem 0 0',
+    letterSpacing: '0.03em',
   },
-  exampleBtn: {
-    fontSize: '11px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.12em',
-    color: '#888',
-    background: 'none',
-    border: '1px solid #e5e5e5',
-    padding: '0.4rem 0.8rem',
-    cursor: 'pointer',
-  },
-  primaryBtn: {
-    width: '100%',
-    background: '#111',
-    color: '#fff',
-    border: 'none',
-    padding: '0.9rem',
-    fontSize: '11px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.15em',
-    fontWeight: 500,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    transition: 'background 0.2s',
-  },
-  secondaryBtn: {
-    width: '100%',
-    background: 'transparent',
-    color: '#111',
-    border: '1px solid #111',
-    padding: '0.9rem',
-    fontSize: '11px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.15em',
-    fontWeight: 500,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-  },
-  ghostBtn: {
-    width: '100%',
-    background: 'transparent',
-    color: '#888',
-    border: '1px solid #ddd',
-    padding: '0.9rem',
-    fontSize: '11px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.15em',
-    fontWeight: 500,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-  },
-  eligibilityBar: {
+
+  // Form preview
+  eligStrip: {
     display: 'flex',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: '0.4rem',
-    marginBottom: '0.75rem',
-    padding: '0.6rem 0.75rem',
+    gap: '0.6rem',
+    marginBottom: '1rem',
+    padding: '0.7rem 1rem',
     background: '#fff',
-    border: '1px solid #e5e5e5',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
   },
-  badgeYes: {
-    fontSize: '10px',
-    padding: '2px 8px',
+  eligLabel: {
+    fontSize: '11px',
+    fontWeight: 600,
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+    color: '#94a3b8',
+    marginRight: '0.25rem',
+  },
+  badgeGreen: {
+    fontSize: '11px',
+    fontWeight: 500,
+    padding: '3px 10px',
+    borderRadius: '99px',
     background: '#f0fdf4',
     border: '1px solid #bbf7d0',
     color: '#166534',
   },
-  badgeMaybe: {
-    fontSize: '10px',
-    padding: '2px 8px',
+  badgeYellow: {
+    fontSize: '11px',
+    fontWeight: 500,
+    padding: '3px 10px',
+    borderRadius: '99px',
     background: '#fefce8',
     border: '1px solid #fde68a',
     color: '#854d0e',
   },
-  docCard: {
+  doc: {
     background: '#fff',
-    border: '1px solid #111',
+    border: '1px solid #e2e8f0',
+    borderRadius: '10px',
     marginBottom: '1rem',
+    overflow: 'hidden',
   },
-  warningNote: {
+  docHeader: {
+    borderBottom: '1px solid #e2e8f0',
+    padding: '1rem 1.25rem',
+    background: '#f8fafc',
+  },
+  docFormId: {
+    fontSize: '10px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.1em',
+    color: '#94a3b8',
+    marginBottom: '0.3rem',
+    fontWeight: 500,
+  },
+  docTitle: {
+    fontSize: '16px',
+    fontWeight: 600,
+    margin: '0 0 0.2rem',
+    color: '#0f172a',
+  },
+  docSub: {
+    fontSize: '12px',
+    color: '#64748b',
+    margin: 0,
+  },
+  dlPrimary: {
+    width: '100%',
+    padding: '0.8rem',
+    background: '#0f172a',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '13px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  },
+  dlSecondary: {
+    width: '100%',
+    padding: '0.8rem',
+    background: '#fff',
+    color: '#0f172a',
+    border: '1px solid #0f172a',
+    borderRadius: '8px',
+    fontSize: '13px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  },
+  dlGhost: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    width: '100%',
+    padding: '0.8rem',
+    background: 'transparent',
+    color: '#64748b',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    fontSize: '13px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  },
+  snapNote: {
     fontSize: '12px',
     color: '#92400e',
     background: '#fef3c7',
     border: '1px solid #fde68a',
+    borderRadius: '6px',
     padding: '0.6rem 0.9rem',
+    margin: 0,
   },
   nextSteps: {
-    borderTop: '1px solid #e5e5e5',
-    paddingTop: '1rem',
-    marginBottom: '2rem',
+    background: '#fff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '10px',
+    padding: '1rem 1.25rem',
+    marginBottom: '1.5rem',
+  },
+  nextStepsTitle: {
+    fontSize: '12px',
+    fontWeight: 600,
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+    color: '#94a3b8',
+    margin: 0,
   },
 };
