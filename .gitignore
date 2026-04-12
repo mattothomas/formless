@@ -11,3 +11,5 @@ venv/
 pdf/node_modules/
 pdf/output/
 pdf/snap-template.pdf
+backend/node_modules/
+backend/tmp/
