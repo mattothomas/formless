@@ -92,9 +92,7 @@ export default function ChatInterface({
       }
     } catch (err) {
       console.error('Gemini error:', err);
-      const friendlyMsg = err.message.includes('API key')
-        ? "I'm having trouble connecting right now. Please make sure your Gemini API key is set up correctly."
-        : "I ran into a small hiccup — please try sending your message again. I'm still here!";
+      const friendlyMsg = `Something went wrong: ${err.message}`;
       setError(friendlyMsg);
       setMessages(prev => [...prev, {
         role: 'assistant',
