@@ -1,4 +1,4 @@
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 const SYSTEM_PROMPT = `You are BenefitPath, a warm, compassionate AI navigator helping low-income families in Pennsylvania discover government benefits they qualify for.
 
@@ -100,6 +100,7 @@ export async function sendToGemini(messages, apiKey) {
       temperature: 0.7,
       maxOutputTokens: 1024,
       responseMimeType: 'application/json',
+      thinkingConfig: { thinkingBudget: 0 },
     },
   };
 
@@ -115,7 +116,10 @@ export async function sendToGemini(messages, apiKey) {
   }
 
   const data = await res.json();
-  const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  // Gemini 2.5 thinking models return multiple parts; skip thought parts
+  const parts = data?.candidates?.[0]?.content?.parts || [];
+  const rawText = parts.find(p => !p.thought)?.text || parts[0]?.text;
 
   if (!rawText) {
     throw new Error('Empty response from Gemini');
@@ -124,7 +128,7 @@ export async function sendToGemini(messages, apiKey) {
   try {
     return JSON.parse(rawText);
   } catch {
-    // Gemini sometimes returns markdown-wrapped JSON
+    // Strip markdown code fences if present
     const match = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (match) return JSON.parse(match[1]);
     throw new Error('Could not parse Gemini response as JSON');
