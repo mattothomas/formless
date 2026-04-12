@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import ChatInterface from './components/ChatInterface.jsx';
 import BenefitsDashboard from './components/BenefitsDashboard.jsx';
+import FreeformApp from './components/FreeformApp.jsx';
 import { useSession } from './hooks/useSession.js';
 import { mergeExtractedData } from './utils/geminiClient.js';
 
 export default function App() {
+  const [design, setDesign] = useState('new'); // 'new' | 'old'
+
   const {
     messages,
     setMessages,
@@ -17,9 +20,8 @@ export default function App() {
     resetSession,
   } = useSession();
 
-  const [view, setView] = useState('chat'); // 'chat' | 'results'
+  const [view, setView] = useState('chat');
 
-  // If session already has results, go straight to results view
   useEffect(() => {
     if (isLoaded && eligibilityResults && eligibilityResults.length > 0) {
       setView('results');
@@ -32,10 +34,6 @@ export default function App() {
     setView('results');
   }
 
-  function handleReset() {
-    resetSession();
-  }
-
   if (!isLoaded) {
     return (
       <div className="loading-screen">
@@ -45,6 +43,12 @@ export default function App() {
     );
   }
 
+  // ── New Figma design ─────────────────────────────────────────────────────
+  if (design === 'new') {
+    return <FreeformApp onSwitchDesign={() => setDesign('old')} />;
+  }
+
+  // ── Classic design ───────────────────────────────────────────────────────
   return (
     <div className="app">
       <header className="app-header">
@@ -58,8 +62,14 @@ export default function App() {
             </svg>
             <span className="logo-text">BenefitPath</span>
           </div>
-          <div className="header-tagline">
-            Pennsylvania Benefits Navigator
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div className="header-tagline">Pennsylvania Benefits Navigator</div>
+            <button
+              onClick={() => setDesign('new')}
+              style={{ fontSize: '11px', padding: '4px 10px', border: '1px solid #ddd', background: 'none', cursor: 'pointer', borderRadius: '4px', color: '#555' }}
+            >
+              New Design
+            </button>
           </div>
         </div>
       </header>
@@ -89,7 +99,7 @@ export default function App() {
           <BenefitsDashboard
             results={eligibilityResults || []}
             extractedData={extractedData}
-            onReset={handleReset}
+            onReset={resetSession}
           />
         )}
       </main>
