@@ -1,0 +1,794 @@
+{
+  "source": "SNAP_FORM_c_257599.pdf",
+  "pdfSize": {
+    "width": 612,
+    "height": 792
+  },
+  "generatedAt": "2026-04-12T05:09:38.288Z",
+  "fields": [
+    {
+      "key": "other_language_specify",
+      "page": 3,
+      "x": 410,
+      "y": 641,
+      "description": "Other language specification"
+    },
+    {
+      "key": "interpreter_language",
+      "page": 3,
+      "x": 500,
+      "y": 618,
+      "description": "Interpreter language needed"
+    },
+    {
+      "key": "your_last_name",
+      "page": 3,
+      "x": 50,
+      "y": 580,
+      "description": "Applicant last name"
+    },
+    {
+      "key": "your_first_name",
+      "page": 3,
+      "x": 310,
+      "y": 580,
+      "description": "Applicant first name"
+    },
+    {
+      "key": "middle_initial",
+      "page": 3,
+      "x": 520,
+      "y": 580,
+      "description": "Applicant middle initial"
+    },
+    {
+      "key": "your_address",
+      "page": 3,
+      "x": 50,
+      "y": 543,
+      "description": "Address including city, state, and ZIP code"
+    },
+    {
+      "key": "county",
+      "page": 3,
+      "x": 50,
+      "y": 505,
+      "description": "County"
+    },
+    {
+      "key": "phone_number_home",
+      "page": 3,
+      "x": 195,
+      "y": 505,
+      "description": "Home phone number"
+    },
+    {
+      "key": "phone_number_other",
+      "page": 3,
+      "x": 370,
+      "y": 505,
+      "description": "Other phone number"
+    },
+    {
+      "key": "best_time_to_call",
+      "page": 3,
+      "x": 510,
+      "y": 505,
+      "description": "Best time to call"
+    },
+    {
+      "key": "household_member_1_name",
+      "page": 3,
+      "x": 35,
+      "y": 240,
+      "description": "Household member 1 last name, first name, middle initial"
+    },
+    {
+      "key": "household_member_1_birthdate",
+      "page": 3,
+      "x": 385,
+      "y": 240,
+      "description": "Household member 1 birthdate"
+    },
+    {
+      "key": "household_member_1_ssn",
+      "page": 3,
+      "x": 555,
+      "y": 240,
+      "description": "Household member 1 Social Security number"
+    },
+    {
+      "key": "household_member_2_name",
+      "page": 3,
+      "x": 35,
+      "y": 215,
+      "description": "Household member 2 last name, first name, middle initial"
+    },
+    {
+      "key": "household_member_2_birthdate",
+      "page": 3,
+      "x": 385,
+      "y": 215,
+      "description": "Household member 2 birthdate"
+    },
+    {
+      "key": "household_member_2_relationship",
+      "page": 3,
+      "x": 475,
+      "y": 215,
+      "description": "Household member 2 relationship to applicant"
+    },
+    {
+      "key": "household_member_2_ssn",
+      "page": 3,
+      "x": 555,
+      "y": 215,
+      "description": "Household member 2 Social Security number"
+    },
+    {
+      "key": "household_member_3_name",
+      "page": 3,
+      "x": 35,
+      "y": 190,
+      "description": "Household member 3 last name, first name, middle initial"
+    },
+    {
+      "key": "household_member_3_birthdate",
+      "page": 3,
+      "x": 385,
+      "y": 190,
+      "description": "Household member 3 birthdate"
+    },
+    {
+      "key": "household_member_3_relationship",
+      "page": 3,
+      "x": 475,
+      "y": 190,
+      "description": "Household member 3 relationship to applicant"
+    },
+    {
+      "key": "household_member_3_ssn",
+      "page": 3,
+      "x": 555,
+      "y": 190,
+      "description": "Household member 3 Social Security number"
+    },
+    {
+      "key": "household_member_4_name",
+      "page": 3,
+      "x": 35,
+      "y": 164,
+      "description": "Household member 4 last name, first name, middle initial"
+    },
+    {
+      "key": "household_member_4_birthdate",
+      "page": 3,
+      "x": 385,
+      "y": 164,
+      "description": "Household member 4 birthdate"
+    },
+    {
+      "key": "household_member_4_relationship",
+      "page": 3,
+      "x": 475,
+      "y": 164,
+      "description": "Household member 4 relationship to applicant"
+    },
+    {
+      "key": "household_member_4_ssn",
+      "page": 3,
+      "x": 555,
+      "y": 164,
+      "description": "Household member 4 Social Security number"
+    },
+    {
+      "key": "household_member_5_name",
+      "page": 3,
+      "x": 35,
+      "y": 139,
+      "description": "Household member 5 last name, first name, middle initial"
+    },
+    {
+      "key": "household_member_5_birthdate",
+      "page": 3,
+      "x": 385,
+      "y": 139,
+      "description": "Household member 5 birthdate"
+    },
+    {
+      "key": "household_member_5_relationship",
+      "page": 3,
+      "x": 475,
+      "y": 139,
+      "description": "Household member 5 relationship to applicant"
+    },
+    {
+      "key": "household_member_5_ssn",
+      "page": 3,
+      "x": 555,
+      "y": 139,
+      "description": "Household member 5 Social Security number"
+    },
+    {
+      "key": "household_member_6_name",
+      "page": 3,
+      "x": 35,
+      "y": 114,
+      "description": "Household member 6 last name, first name, middle initial"
+    },
+    {
+      "key": "household_member_6_birthdate",
+      "page": 3,
+      "x": 385,
+      "y": 114,
+      "description": "Household member 6 birthdate"
+    },
+    {
+      "key": "household_member_6_relationship",
+      "page": 3,
+      "x": 475,
+      "y": 114,
+      "description": "Household member 6 relationship to applicant"
+    },
+    {
+      "key": "household_member_6_ssn",
+      "page": 3,
+      "x": 555,
+      "y": 114,
+      "description": "Household member 6 Social Security number"
+    },
+    {
+      "key": "household_member_7_name",
+      "page": 3,
+      "x": 35,
+      "y": 89,
+      "description": "Household member 7 last name, first name, middle initial"
+    },
+    {
+      "key": "household_member_7_birthdate",
+      "page": 3,
+      "x": 385,
+      "y": 89,
+      "description": "Household member 7 birthdate"
+    },
+    {
+      "key": "household_member_7_relationship",
+      "page": 3,
+      "x": 475,
+      "y": 89,
+      "description": "Household member 7 relationship to applicant"
+    },
+    {
+      "key": "household_member_7_ssn",
+      "page": 3,
+      "x": 555,
+      "y": 89,
+      "description": "Household member 7 Social Security number"
+    },
+    {
+      "key": "household_member_8_name",
+      "page": 3,
+      "x": 35,
+      "y": 64,
+      "description": "Household member 8 last name, first name, middle initial"
+    },
+    {
+      "key": "household_member_8_birthdate",
+      "page": 3,
+      "x": 385,
+      "y": 64,
+      "description": "Household member 8 birthdate"
+    },
+    {
+      "key": "household_member_8_relationship",
+      "page": 3,
+      "x": 475,
+      "y": 64,
+      "description": "Household member 8 relationship to applicant"
+    },
+    {
+      "key": "household_member_8_ssn",
+      "page": 3,
+      "x": 555,
+      "y": 64,
+      "description": "Household member 8 Social Security number"
+    },
+    {
+      "key": "signature_of_applicant",
+      "page": 3,
+      "x": 150,
+      "y": 42,
+      "description": "Signature of applicant"
+    },
+    {
+      "key": "signature_date",
+      "page": 3,
+      "x": 500,
+      "y": 42,
+      "description": "Date of signature"
+    },
+    {
+      "key": "income_row1_person",
+      "page": 4,
+      "x": 100,
+      "y": 438,
+      "description": "Person with income row 1"
+    },
+    {
+      "key": "income_row1_type",
+      "page": 4,
+      "x": 310,
+      "y": 438,
+      "description": "Type/source of income row 1"
+    },
+    {
+      "key": "income_row1_amount",
+      "page": 4,
+      "x": 430,
+      "y": 438,
+      "description": "How much row 1"
+    },
+    {
+      "key": "income_row1_frequency",
+      "page": 4,
+      "x": 530,
+      "y": 438,
+      "description": "How often row 1"
+    },
+    {
+      "key": "income_row1_date_received",
+      "page": 4,
+      "x": 620,
+      "y": 438,
+      "description": "Date received row 1"
+    },
+    {
+      "key": "income_row2_person",
+      "page": 4,
+      "x": 100,
+      "y": 412,
+      "description": "Person with income row 2"
+    },
+    {
+      "key": "income_row2_type",
+      "page": 4,
+      "x": 310,
+      "y": 412,
+      "description": "Type/source of income row 2"
+    },
+    {
+      "key": "income_row2_amount",
+      "page": 4,
+      "x": 430,
+      "y": 412,
+      "description": "How much row 2"
+    },
+    {
+      "key": "income_row2_frequency",
+      "page": 4,
+      "x": 530,
+      "y": 412,
+      "description": "How often row 2"
+    },
+    {
+      "key": "income_row2_date_received",
+      "page": 4,
+      "x": 620,
+      "y": 412,
+      "description": "Date received row 2"
+    },
+    {
+      "key": "income_row3_person",
+      "page": 4,
+      "x": 100,
+      "y": 386,
+      "description": "Person with income row 3"
+    },
+    {
+      "key": "income_row3_type",
+      "page": 4,
+      "x": 310,
+      "y": 386,
+      "description": "Type/source of income row 3"
+    },
+    {
+      "key": "income_row3_amount",
+      "page": 4,
+      "x": 430,
+      "y": 386,
+      "description": "How much row 3"
+    },
+    {
+      "key": "income_row3_frequency",
+      "page": 4,
+      "x": 530,
+      "y": 386,
+      "description": "How often row 3"
+    },
+    {
+      "key": "income_row3_date_received",
+      "page": 4,
+      "x": 620,
+      "y": 386,
+      "description": "Date received row 3"
+    },
+    {
+      "key": "income_row4_person",
+      "page": 4,
+      "x": 100,
+      "y": 358,
+      "description": "Person with income row 4"
+    },
+    {
+      "key": "income_row4_type",
+      "page": 4,
+      "x": 310,
+      "y": 358,
+      "description": "Type/source of income row 4"
+    },
+    {
+      "key": "income_row4_amount",
+      "page": 4,
+      "x": 430,
+      "y": 358,
+      "description": "How much row 4"
+    },
+    {
+      "key": "income_row4_frequency",
+      "page": 4,
+      "x": 530,
+      "y": 358,
+      "description": "How often row 4"
+    },
+    {
+      "key": "income_row4_date_received",
+      "page": 4,
+      "x": 620,
+      "y": 358,
+      "description": "Date received row 4"
+    },
+    {
+      "key": "income_row5_person",
+      "page": 4,
+      "x": 100,
+      "y": 332,
+      "description": "Person with income row 5"
+    },
+    {
+      "key": "income_row5_type",
+      "page": 4,
+      "x": 310,
+      "y": 332,
+      "description": "Type/source of income row 5"
+    },
+    {
+      "key": "income_row5_amount",
+      "page": 4,
+      "x": 430,
+      "y": 332,
+      "description": "How much row 5"
+    },
+    {
+      "key": "income_row5_frequency",
+      "page": 4,
+      "x": 530,
+      "y": 332,
+      "description": "How often row 5"
+    },
+    {
+      "key": "income_row5_date_received",
+      "page": 4,
+      "x": 620,
+      "y": 332,
+      "description": "Date received row 5"
+    },
+    {
+      "key": "fleeing_felon_household_member_name",
+      "page": 4,
+      "x": 260,
+      "y": 218,
+      "description": "Name of household member who is fleeing felon"
+    },
+    {
+      "key": "fleeing_felon_date",
+      "page": 4,
+      "x": 215,
+      "y": 194,
+      "description": "Date related to fleeing felon inquiry"
+    },
+    {
+      "key": "fleeing_felon_state",
+      "page": 4,
+      "x": 380,
+      "y": 194,
+      "description": "State related to fleeing felon inquiry"
+    },
+    {
+      "key": "welfare_fraud_household_member_name",
+      "page": 4,
+      "x": 260,
+      "y": 122,
+      "description": "Name of household member convicted of welfare fraud"
+    },
+    {
+      "key": "welfare_fraud_date",
+      "page": 4,
+      "x": 215,
+      "y": 98,
+      "description": "Date related to welfare fraud conviction"
+    },
+    {
+      "key": "welfare_fraud_state",
+      "page": 4,
+      "x": 380,
+      "y": 98,
+      "description": "State related to welfare fraud conviction"
+    },
+    {
+      "key": "snap_disqualified_tell_us_who",
+      "page": 4,
+      "x": 230,
+      "y": 42,
+      "description": "Name of person disqualified for food stamps/SNAP in another state"
+    },
+    {
+      "key": "housing_assistance_kind",
+      "page": 5,
+      "x": 270,
+      "y": 430,
+      "description": "What kind of housing assistance"
+    },
+    {
+      "key": "outside_household_expenses_description",
+      "page": 5,
+      "x": 310,
+      "y": 359,
+      "description": "What expenses someone outside household pays"
+    },
+    {
+      "key": "outside_household_how_much",
+      "page": 5,
+      "x": 220,
+      "y": 333,
+      "description": "How much outside person pays"
+    },
+    {
+      "key": "outside_household_how_often",
+      "page": 5,
+      "x": 490,
+      "y": 333,
+      "description": "How often outside person pays"
+    },
+    {
+      "key": "outside_household_to_whom",
+      "page": 5,
+      "x": 200,
+      "y": 307,
+      "description": "To whom outside payments are made"
+    },
+    {
+      "key": "expenses_other",
+      "page": 5,
+      "x": 370,
+      "y": 218,
+      "description": "Other expenses paid each month"
+    },
+    {
+      "key": "childcare_amount_per_month",
+      "page": 5,
+      "x": 360,
+      "y": 155,
+      "description": "Childcare or disability care cost per month"
+    },
+    {
+      "key": "childcare_who_receives",
+      "page": 5,
+      "x": 270,
+      "y": 129,
+      "description": "Who receives childcare or disability care"
+    },
+    {
+      "key": "rent_amount",
+      "page": 5,
+      "x": 120,
+      "y": 82,
+      "description": "Monthly rent amount"
+    },
+    {
+      "key": "mortgage_amount",
+      "page": 5,
+      "x": 145,
+      "y": 56,
+      "description": "Monthly mortgage amount"
+    },
+    {
+      "key": "condo_fees_amount",
+      "page": 5,
+      "x": 395,
+      "y": 82,
+      "description": "Monthly condo fees amount"
+    },
+    {
+      "key": "property_fees_amount",
+      "page": 5,
+      "x": 405,
+      "y": 56,
+      "description": "Monthly property fees amount"
+    },
+    {
+      "key": "homeowners_insurance_amount",
+      "page": 5,
+      "x": 680,
+      "y": 56,
+      "description": "Monthly homeowners insurance amount"
+    },
+    {
+      "key": "medical_expenses_other",
+      "page": 5,
+      "x": 140,
+      "y": -152,
+      "description": "Other medical expenses description"
+    },
+    {
+      "key": "yourself_name",
+      "page": 6,
+      "x": 50,
+      "y": 620,
+      "description": "Name of yourself for racial/ethnic information"
+    },
+    {
+      "key": "person_2_name",
+      "page": 6,
+      "x": 50,
+      "y": 530,
+      "description": "Name of person 2 for racial/ethnic information"
+    },
+    {
+      "key": "person_3_name",
+      "page": 6,
+      "x": 50,
+      "y": 435,
+      "description": "Name of person 3 for racial/ethnic information"
+    },
+    {
+      "key": "person_4_name",
+      "page": 6,
+      "x": 50,
+      "y": 345,
+      "description": "Name of person 4 for racial/ethnic information"
+    },
+    {
+      "key": "person_5_name",
+      "page": 6,
+      "x": 50,
+      "y": 255,
+      "description": "Name of person 5 for racial/ethnic information"
+    },
+    {
+      "key": "person_6_name",
+      "page": 6,
+      "x": 50,
+      "y": 165,
+      "description": "Name of person 6 for racial/ethnic information"
+    },
+    {
+      "key": "given_to_client_date",
+      "page": 6,
+      "x": 175,
+      "y": 148,
+      "description": "Date given to client (MM/DD/YY)"
+    },
+    {
+      "key": "declined_not_interested_date",
+      "page": 6,
+      "x": 195,
+      "y": 133,
+      "description": "Date declined not interested (MM/DD/YY)"
+    },
+    {
+      "key": "sent_to_voter_registration_date",
+      "page": 6,
+      "x": 445,
+      "y": 148,
+      "description": "Date sent to voter registration (MM/DD/YY)"
+    },
+    {
+      "key": "not_a_us_citizen_date",
+      "page": 6,
+      "x": 425,
+      "y": 133,
+      "description": "Date not a US citizen noted (MM/DD/YY)"
+    },
+    {
+      "key": "mailed_to_client_date",
+      "page": 6,
+      "x": 680,
+      "y": 148,
+      "description": "Date mailed to client (MM/DD/YY)"
+    },
+    {
+      "key": "declined_already_registered_date",
+      "page": 6,
+      "x": 720,
+      "y": 133,
+      "description": "Date declined already registered (MM/DD/YY)"
+    },
+    {
+      "key": "cao_initials",
+      "page": 6,
+      "x": 755,
+      "y": 95,
+      "description": "CAO staff initials"
+    },
+    {
+      "key": "cao_date",
+      "page": 6,
+      "x": 810,
+      "y": 95,
+      "description": "CAO date"
+    },
+    {
+      "key": "reason_for_denial",
+      "page": 6,
+      "x": 640,
+      "y": 52,
+      "description": "Reason for denial of expedited review"
+    },
+    {
+      "key": "your_signature",
+      "page": 7,
+      "x": 120,
+      "y": 282,
+      "description": "Applicant's signature"
+    },
+    {
+      "key": "signature_date",
+      "page": 7,
+      "x": 390,
+      "y": 282,
+      "description": "Date of applicant's signature"
+    },
+    {
+      "key": "provider_employee_witness_signature",
+      "page": 7,
+      "x": 600,
+      "y": 282,
+      "description": "Provider/Employee/Witness signature"
+    },
+    {
+      "key": "authorized_representative_signature",
+      "page": 7,
+      "x": 200,
+      "y": 222,
+      "description": "Signature of authorized representative"
+    },
+    {
+      "key": "authorized_representative_signature_date",
+      "page": 7,
+      "x": 700,
+      "y": 222,
+      "description": "Date of authorized representative signature"
+    },
+    {
+      "key": "authorized_representative_name",
+      "page": 7,
+      "x": 100,
+      "y": 132,
+      "description": "Name of authorized representative"
+    },
+    {
+      "key": "authorized_representative_address",
+      "page": 7,
+      "x": 420,
+      "y": 132,
+      "description": "Address of authorized representative"
+    },
+    {
+      "key": "authorized_representative_phone",
+      "page": 7,
+      "x": 740,
+      "y": 132,
+      "description": "Phone number of authorized representative"
+    }
+  ]
+}
