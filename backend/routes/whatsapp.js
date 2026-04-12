@@ -21,7 +21,7 @@ import { getOrCreate } from '../sessions.js';
 import { sendToGemini, mergeExtractedData } from '../services/gemini.js';
 import { transcribe } from '../services/groq.js';
 import { downloadMedia, textReply, mediaReply } from '../services/twilio.js';
-import { generateSnapPdf, hasEnoughData } from '../services/pdf.js';
+import { generateForms, hasEnoughData } from '../services/pdf.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const router = Router();
@@ -97,35 +97,42 @@ router.post('/', async (req, res) => {
 
     if (geminiResult.readyForResults && hasEnoughData(session.extractedData)) {
       // Generate PDF only once
-      if (!session.pdfPath) {
-        const filename = `snap-${from.replace(/\W+/g, '')}-${Date.now()}.pdf`;
-        const outputPath = path.resolve(__dirname, '../tmp', filename);
-
-        console.log(`[${from}] Generating PDF → ${outputPath}`);
-        await generateSnapPdf(session.extractedData, outputPath);
-
-        session.pdfPath = outputPath;
+      if (!session.generatedForms) {
+        const outputDir = path.resolve(__dirname, '../tmp');
+        console.log(`[${from}] Generating forms…`);
+        const filled = await generateForms(session.extractedData, outputDir);
+        session.generatedForms = filled;
         session.isComplete = true;
 
-        const pdfUrl = `${PUBLIC_BASE_URL}/pdfs/${filename}`;
-        console.log(`[${from}] PDF ready at ${pdfUrl}`);
-
         const name = session.extractedData.firstName || 'there';
-        return res.send(
-          mediaReply(
-            `Great news, ${name}! Based on what you've shared, I've prepared your SNAP application. ` +
-            `Here's your filled form — please review it and bring it to your local CAO office. ` +
-            `Reply "start over" anytime to begin a new application.`,
-            pdfUrl
-          )
-        );
+
+        // Send one message per form (Twilio WhatsApp supports one <Media> per message)
+        // First form gets the greeting, subsequent forms get a brief label
+        for (let i = 0; i < filled.length; i++) {
+          const { name: formName, filename } = filled[i];
+          const pdfUrl = `${PUBLIC_BASE_URL}/pdfs/${filename}`;
+          console.log(`[${from}] ${formName} → ${pdfUrl}`);
+
+          const msg = i === 0
+            ? `Great news, ${name}! I've prepared your application(s). Here's your ${formName} — review it and bring it to your local CAO office. Reply "start over" to begin a new application.`
+            : `Here is your ${formName}:`;
+
+          res.write(mediaReply(msg, pdfUrl));
+        }
+
+        return res.end();
       } else {
-        // Already generated — resend the link
-        const filename = path.basename(session.pdfPath);
-        const pdfUrl = `${PUBLIC_BASE_URL}/pdfs/${filename}`;
-        return res.send(
-          mediaReply('Here is your previously generated SNAP application:', pdfUrl)
-        );
+        // Already generated — resend links
+        const name = session.extractedData.firstName || 'there';
+        for (let i = 0; i < session.generatedForms.length; i++) {
+          const { name: formName, filename } = session.generatedForms[i];
+          const pdfUrl = `${PUBLIC_BASE_URL}/pdfs/${filename}`;
+          const msg = i === 0
+            ? `Here are your previously generated forms, ${name}:`
+            : `${formName}:`;
+          res.write(mediaReply(msg, pdfUrl));
+        }
+        return res.end();
       }
     }
 

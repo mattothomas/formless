@@ -1,112 +1,50 @@
 /**
- * PDF generation service.
+ * PDF fill service.
  *
- * Adapts Gemini's rich nested extractedData schema into the flat field map
- * that the SNAP template expects, then overlays text onto snap-template.pdf
- * using pdf-lib.
+ * Loads real government PDFs from pdf_files/, applies the field coordinate map
+ * from forms/snap-pa-fields.json (and siblings), and draws the user's data at
+ * the correct positions using pdf-lib.
  *
- * The template lives at pdf/snap-template.pdf (created by pdf/create-template.js).
- * Run `cd ../pdf && node create-template.js` once if it doesn't exist yet.
+ * Entry points:
+ *   generateForms(extractedData, outputDir)  → array of { formId, name, outputPath, filename }
+ *   hasEnoughData(extractedData)             → boolean guard before generating
  */
 
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { applicableForms } from '../../forms/registry.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const TEMPLATE_PATH = path.resolve(__dirname, '../../pdf/snap-template.pdf');
-
-// Matches the coordinate map in pdf/fill.js exactly
-const FIELD_MAP = [
-  { key: 'full_name',         x: 72, y: 620 },
-  { key: 'address',           x: 72, y: 555 },
-  { key: 'zip_code',          x: 72, y: 490 },
-  { key: 'dependents',        x: 72, y: 425 },
-  { key: 'monthly_income',    x: 72, y: 360 },
-  { key: 'employment_status', x: 72, y: 295 },
-];
-
-const TEXT_PADDING_X = 8;
-const TEXT_PADDING_Y = 9;
-const FONT_SIZE = 12;
-
-// ── Schema adapter ──────────────────────────────────────────────────────────
-
-function extractZip(address) {
-  if (!address) return '';
-  const m = address.match(/\b(\d{5})(?:-\d{4})?\b/);
-  return m ? m[1] : '';
-}
-
-function deriveEmploymentStatus(monthlyIncome = []) {
-  const sources = monthlyIncome.map((i) => (i.source || '').toLowerCase()).join(' ');
-  if (!sources) return 'Unknown';
-  if (sources.includes('unemploy')) return 'Unemployed';
-  if (sources.includes('job') || sources.includes('wage') || sources.includes('employ') ||
-      sources.includes('work') || sources.includes('salary')) return 'Employed';
-  if (sources.includes('ssi') || sources.includes('disability')) return 'Receiving SSI/Disability';
-  if (sources.includes('child support')) return 'Not employed (child support)';
-  return 'Other';
-}
-
-function toFlatSchema(extractedData) {
-  const d = extractedData;
-
-  const firstName = d.firstName || '';
-  const lastName  = d.lastName  || '';
-  const fullName  = [firstName, lastName].filter(Boolean).join(' ') || '';
-
-  const dependents = String((d.householdMembers || []).length);
-
-  const totalMonthly = (d.monthlyIncome || []).reduce((sum, inc) => {
-    const amt  = parseFloat(inc.amount) || 0;
-    const freq = (inc.frequency || '').toLowerCase();
-    if (freq === 'weekly')               return sum + amt * 4.33;
-    if (freq === 'bi-weekly' || freq === 'biweekly') return sum + amt * 2.17;
-    if (freq === 'annual' || freq === 'yearly')      return sum + amt / 12;
-    return sum + amt; // assume monthly
-  }, 0);
-
-  return {
-    full_name:         fullName,
-    address:           d.address || '',
-    zip_code:          extractZip(d.address),
-    dependents,
-    monthly_income:    totalMonthly > 0 ? `$${Math.round(totalMonthly).toLocaleString()}` : '',
-    employment_status: deriveEmploymentStatus(d.monthlyIncome),
-  };
-}
-
-// ── PDF writer ──────────────────────────────────────────────────────────────
+const FONT_SIZE = 9; // Real government forms have tight fields — smaller than a blank template
 
 /**
- * Generate a filled SNAP PDF from a Gemini extractedData object.
- *
- * @param {object} extractedData   The Gemini session extractedData (nested)
- * @param {string} outputPath      Full path where the PDF should be written
- * @returns {Promise<void>}
+ * Fill a single form and write it to outputPath.
  */
-export async function generateSnapPdf(extractedData, outputPath) {
-  if (!fs.existsSync(TEMPLATE_PATH)) {
-    throw new Error(
-      `SNAP template not found at ${TEMPLATE_PATH}. Run: cd pdf && node create-template.js`
-    );
-  }
+async function fillForm(formDef, flatData, outputPath) {
+  const pdfBytes = fs.readFileSync(formDef.pdfFile);
+  const doc  = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const pages = doc.getPages();
 
-  const flatData = toFlatSchema(extractedData);
+  const fieldMap = JSON.parse(fs.readFileSync(formDef.fieldsFile, 'utf8')).fields;
 
-  const pdfDoc = await PDFDocument.load(fs.readFileSync(TEMPLATE_PATH));
-  const font   = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const page   = pdfDoc.getPages()[0];
-
-  for (const field of FIELD_MAP) {
+  for (const field of fieldMap) {
     const value = (flatData[field.key] ?? '').toString().trim();
     if (!value) continue;
 
+    // field.page is 1-indexed
+    const page = pages[field.page - 1];
+    if (!page) continue;
+
+    const { width } = page.getSize();
+    const x = Math.min(field.x, width - 10);
+    const y = Math.max(field.y, 5);
+
     page.drawText(value, {
-      x:    field.x + TEXT_PADDING_X,
-      y:    field.y + TEXT_PADDING_Y,
+      x,
+      y,
       size: FONT_SIZE,
       font,
       color: rgb(0, 0, 0),
@@ -114,14 +52,44 @@ export async function generateSnapPdf(extractedData, outputPath) {
   }
 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  fs.writeFileSync(outputPath, await pdfDoc.save());
+  fs.writeFileSync(outputPath, await doc.save());
 }
 
 /**
- * Check whether we have the minimum data needed to generate a meaningful PDF.
+ * Generate filled PDFs for all forms that apply to this user.
+ *
+ * @param {object} extractedData   Gemini session extractedData (nested schema)
+ * @param {string} outputDir       Directory to write the filled PDFs into
+ * @returns {Promise<Array<{formId, name, outputPath, filename}>>}
+ */
+export async function generateForms(extractedData, outputDir) {
+  const forms = applicableForms(extractedData);
+
+  if (forms.length === 0) {
+    throw new Error('No applicable forms found for this user\'s data.');
+  }
+
+  const results = [];
+
+  for (const formDef of forms) {
+    const flatData   = formDef.adapt(extractedData);
+    const filename   = `${formDef.id}-${Date.now()}.pdf`;
+    const outputPath = path.join(outputDir, filename);
+
+    console.log(`Filling "${formDef.name}" → ${filename}`);
+    await fillForm(formDef, flatData, outputPath);
+
+    results.push({ formId: formDef.id, name: formDef.name, outputPath, filename });
+  }
+
+  return results;
+}
+
+/**
+ * Check whether we have enough data to produce a meaningful filled form.
  * Gemini may set readyForResults: true while name is still null — guard here.
  */
 export function hasEnoughData(extractedData) {
-  const d = extractedData;
+  const d = extractedData || {};
   return !!(d.firstName && d.monthlyIncome && d.monthlyIncome.length > 0);
 }
