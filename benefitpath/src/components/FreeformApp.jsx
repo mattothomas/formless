@@ -8,7 +8,7 @@ import { useSpeech } from '../hooks/useSpeech.js';
 import { useSession } from '../hooks/useSession.js';
 
 const EXAMPLE_TEXT =
-  "I just lost my job at the warehouse. I have a 4-year-old daughter and I can't pay rent next month. I live in Philadelphia.";
+  "I just got laid off from my job last week. I have a 4-year-old daughter and I'm behind on rent — $950 a month in Philadelphia. She doesn't have health insurance and I don't know where to start.";
 
 // ── Root ─────────────────────────────────────────────────────────────────────
 
@@ -154,7 +154,7 @@ function Landing({ onBegin, onSwitchDesign }) {
 const SYSTEM_SEED = {
   id: 'seed',
   role: 'system',
-  content: 'Describe your situation in your own words — what\'s going on for you right now?',
+  content: 'Tell us what\'s going on — in your own words, at your own pace. There\'s no wrong place to start.',
 };
 
 function Intake({
