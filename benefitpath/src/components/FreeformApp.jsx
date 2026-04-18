@@ -81,7 +81,8 @@ export default function FreeformApp({ onSwitchDesign }) {
 
 // ── Landing ──────────────────────────────────────────────────────────────────
 
-function Landing({ onBegin, onSwitchDesign }) {
+function Landing({ onBegin, lang, setLang }) {
+  const headline = t(lang, 'landingHeadline');
   return (
     <motion.div
       key="landing-inner"
@@ -96,7 +97,15 @@ function Landing({ onBegin, onSwitchDesign }) {
         <button onClick={() => { window.location.href = '/?reset'; }} style={{ ...c.wordmark, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
           FREEFORM
         </button>
-        <span style={c.topBarRight}>Pennsylvania · 2026</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <button
+            onClick={() => setLang(l => l === 'en' ? 'es' : 'en')}
+            style={c.ghostSmall}
+          >
+            {t(lang, 'landingLangToggle')}
+          </button>
+          <span style={c.topBarRight}>Pennsylvania · 2026</span>
+        </div>
       </div>
 
       {/* Main content */}
@@ -106,17 +115,13 @@ function Landing({ onBegin, onSwitchDesign }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.1 }}
         >
-          <p style={c.landingEyebrow}>Government Benefits · Free · Private</p>
+          <p style={c.landingEyebrow}>{t(lang, 'landingEyebrow')}</p>
           <h1 style={c.landingHeadline}>
-            You talk.<br />
-            We fill<br />
-            the forms.
+            {headline[0]}<br />
+            {headline[1]}<br />
+            {headline[2]}
           </h1>
-          <p style={c.landingBody2}>
-            Just tell us what's going on — in your own words, in English or Spanish, at your own pace.
-            No forms to fill, no appointments, no jargon.
-            We'll figure out what you qualify for and prepare your applications automatically.
-          </p>
+          <p style={c.landingBody2}>{t(lang, 'landingBody')}</p>
         </motion.div>
 
         <motion.div
@@ -126,7 +131,7 @@ function Landing({ onBegin, onSwitchDesign }) {
           style={{ marginTop: '3rem' }}
         >
           <button onClick={onBegin} style={c.beginBtn}>
-            Begin your application
+            {t(lang, 'landingBegin')}
           </button>
           <div style={c.programStrip}>
             {['SNAP', 'Medicaid', 'LIHEAP', 'WIC', 'TANF'].map((p, i) => (
@@ -138,16 +143,14 @@ function Landing({ onBegin, onSwitchDesign }) {
           </div>
           <div style={c.trustRow}>
             <span style={c.trustLock}>🔒</span>
-            <span style={c.trustText}>End-to-end encrypted · Forms generated on your device · Nothing stored</span>
+            <span style={c.trustText}>{t(lang, 'landingTrust')}</span>
           </div>
         </motion.div>
       </div>
 
       {/* Bottom rule */}
       <div style={c.landingFooter}>
-        <span style={c.footerText}>
-          Not an official government service. For official applications, visit compass.state.pa.us
-        </span>
+        <span style={c.footerText}>{t(lang, 'landingFooter')}</span>
       </div>
     </motion.div>
   );
@@ -163,7 +166,7 @@ const SYSTEM_SEED = {
 
 function Intake({
   savedMessages, setMessages, extractedData, setExtractedData,
-  eligibilityResults, setEligibilityResults, persist, onReview, onSwitchDesign,
+  eligibilityResults, setEligibilityResults, persist, onReview, lang,
 }) {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -192,6 +195,7 @@ function Intake({
 
   const { isListening, isSupported, interimText, toggleListening } = useSpeech({
     onTranscript: handleTranscript,
+    lang,
   });
 
   async function sendMessage(text) {
@@ -281,11 +285,11 @@ function Intake({
             style={{ ...c.ghostSmall, display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '3px 8px' }}
           >
             {splitView ? <AlignLeft size={11} /> : <Columns2 size={11} />}
-            <span style={{ fontSize: '10px' }}>{splitView ? 'Single' : 'Live Form'}</span>
+            <span style={{ fontSize: '10px' }}>{splitView ? t(lang, 'intakeSingleToggle') : t(lang, 'intakeLiveFormToggle')}</span>
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <span style={{ fontSize: '10px', color: '#2D8C5A' }}>🔒</span>
-            <span style={c.topBarRight}>Session {sessionId} · Secure</span>
+            <span style={c.topBarRight}>Session {sessionId} · {t(lang, 'sessionLabel')}</span>
           </div>
         </div>
       </div>
@@ -312,7 +316,7 @@ function Intake({
           </AnimatePresence>
 
           {/* Section label */}
-          <div style={c.transcriptLabel}>TRANSCRIPT</div>
+          <div style={c.transcriptLabel}>{t(lang, 'intakeTranscriptLabel')}</div>
 
           {messages.map((msg, i) => {
             const isUser = msg.role === 'user';
@@ -333,7 +337,7 @@ function Intake({
                 </span>
                 <div style={{ flex: 1 }}>
                   <span style={{ ...c.speaker, ...(isUser ? c.speakerUser : {}) }}>
-                    {isUser ? 'YOU' : 'FREEFORM'}
+                    {isUser ? t(lang, 'intakeSpeakerUser') : t(lang, 'intakeSpeakerAI')}
                   </span>
                   <p style={{ ...c.transcriptText, ...(isUser ? c.transcriptTextUser : {}) }}>
                     {!isUser && msg.id === lastAiMsgId.current
@@ -376,7 +380,7 @@ function Intake({
             <div style={{ ...c.transcriptRow, opacity: 0.5 }}>
               <span style={c.lineNum}>·</span>
               <div style={{ flex: 1 }}>
-                <span style={{ ...c.speaker, color: '#c0392b' }}>LISTENING</span>
+                <span style={{ ...c.speaker, color: '#c0392b' }}>{t(lang, 'intakeSpeakerListening')}</span>
                 <p style={{ ...c.transcriptText, fontStyle: 'italic' }}>{interimText}</p>
               </div>
             </div>
@@ -391,10 +395,10 @@ function Intake({
               style={{ padding: '0 1.5rem 1.5rem', borderBottom: '1px solid #E8E6DF' }}
             >
               <p style={{ fontSize: '11px', color: '#888682', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 0.6rem' }}>
-                Not sure where to start?
+                {t(lang, 'intakeExamplePrompt')}
               </p>
               <button onClick={() => { sendMessage(EXAMPLE_TEXT); setShowPrivacyBanner(false); }} style={c.exampleBtn}>
-                Try: "I'm a single parent and things are really hard right now"
+                {t(lang, 'intakeExampleBtn')}
               </button>
             </motion.div>
           )}
@@ -408,14 +412,14 @@ function Intake({
             >
               <div>
                 <p style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#A8C4B0', margin: '0 0 0.3rem' }}>
-                  {fillPct >= 80 ? "We have nearly everything" : fillPct >= 50 ? "We're almost there" : "Building your applications"}
+                  {fillPct >= 80 ? t(lang, 'reviewNearlyDone') : fillPct >= 50 ? t(lang, 'reviewAlmostThere') : t(lang, 'reviewBuilding')}
                 </p>
                 <p style={{ fontSize: '13px', color: '#D4E6DA', margin: 0, lineHeight: 1.5 }}>
-                  Preview now, or keep talking to add more detail.
+                  {t(lang, 'reviewSubtext')}
                 </p>
               </div>
               <button onClick={onReview} style={c.reviewBtn}>
-                View Application →
+                {t(lang, 'reviewBtn')}
               </button>
             </motion.div>
           )}
@@ -447,7 +451,7 @@ function Intake({
             value={inputText}
             onChange={e => { setInputText(e.target.value); setShowPrivacyBanner(false); }}
             onKeyDown={handleKeyDown}
-            placeholder={isListening ? 'Listening…' : 'Type your response here, or press the microphone to speak…'}
+            placeholder={isListening ? t(lang, 'intakePlaceholderListening') : t(lang, 'intakePlaceholder')}
             rows={2}
             disabled={isTyping || isListening}
             style={c.inputTextarea}
@@ -461,7 +465,7 @@ function Intake({
           </button>
         </div>
         <p style={c.inputHint}>
-          {isListening ? 'Recording — press to stop' : 'Enter ↵ to send · Shift+Enter for new line'}
+          {isListening ? t(lang, 'intakeHintListening') : t(lang, 'intakeHint')}
         </p>
       </div>
     </motion.div>
@@ -470,7 +474,7 @@ function Intake({
 
 // ── Document ─────────────────────────────────────────────────────────────────
 
-function Document({ extractedData, eligibilityResults, onReturn, onReset, onSwitchDesign }) {
+function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }) {
   const [generatingMedicaid, setGeneratingMedicaid] = useState(false);
   const [generatingSnap, setGeneratingSnap] = useState(false);
   const [medicaidDone, setMedicaidDone] = useState(false);
@@ -517,8 +521,8 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, onSwit
     >
       {/* Header */}
       <div style={c.topBar}>
-        <button onClick={onReturn} style={c.returnLink}>← Return to intake</button>
-        <span style={{ ...c.topBarRight, color: '#888682' }}>DRAFT · {today}</span>
+        <button onClick={onReturn} style={c.returnLink}>{t(lang, 'docReturn')}</button>
+        <span style={{ ...c.topBarRight, color: '#888682' }}>{t(lang, 'docDraft')} · {today}</span>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', background: '#F0EDE6' }}>
@@ -533,8 +537,8 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, onSwit
               style={c.eligBlock}
             >
               <div style={c.eligHeader}>
-                <span style={c.eligHeaderLabel}>ELIGIBILITY DETERMINATION</span>
-                <span style={c.eligHeaderSub}>{eligible.length} program{eligible.length !== 1 ? 's' : ''} confirmed · {maybe.length} to verify</span>
+                <span style={c.eligHeaderLabel}>{t(lang, 'eligLabel')}</span>
+                <span style={c.eligHeaderSub}>{t(lang, 'eligConfirmed', eligible.length)} · {t(lang, 'eligVerify', maybe.length)}</span>
               </div>
               <div style={c.eligGrid}>
                 {results.map(r => (
@@ -543,11 +547,11 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, onSwit
                       <span style={c.eligIcon}>{r.icon}</span>
                       <span style={c.eligName}>{r.programName}</span>
                       <span style={c.eligStatus}>
-                        {r.eligible === 'yes' ? 'LIKELY ELIGIBLE' : r.eligible === 'maybe' ? 'MAY QUALIFY' : 'UNLIKELY'}
+                        {r.eligible === 'yes' ? t(lang, 'eligYes') : r.eligible === 'maybe' ? t(lang, 'eligMaybe') : t(lang, 'eligNo')}
                       </span>
                     </div>
                     {r.urgent && (
-                      <div style={c.urgentFlag}>⚡ Time-sensitive — apply immediately</div>
+                      <div style={c.urgentFlag}>{t(lang, 'urgentFlag')}</div>
                     )}
                   </div>
                 ))}
@@ -577,20 +581,20 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, onSwit
 
             {/* Sections */}
             <div style={c.docBody}>
-              <FormSection number="I" title="Applicant Information">
+              <FormSection number="I" title={t(lang, 'sectionI')}>
                 <FieldRow label="Legal Name" value={fullName} />
                 <FieldRow label="Date of Birth" value={d.dateOfBirth || 'Not provided'} />
                 <FieldRow label="Marital Status" value={d.maritalStatus || 'Single'} />
                 <FieldRow label="Contact Phone" value={d.phone || 'Not provided'} />
               </FormSection>
 
-              <FormSection number="II" title="Residence">
+              <FormSection number="II" title={t(lang, 'sectionII')}>
                 <FieldRow label="Current Address" value={d.address || 'Not provided'} span />
                 <FieldRow label="County" value={d.county || 'Not provided'} />
                 <FieldRow label="Housing Status" value={(d.expenses || {}).rent ? 'Renting' : 'Not specified'} />
               </FormSection>
 
-              <FormSection number="III" title="Household Composition">
+              <FormSection number="III" title={t(lang, 'sectionIII')}>
                 <FieldRow label="Total Members (incl. applicant)" value={String(householdSize)} />
                 <FieldRow label="Children Under 18" value={String((d.householdMembers || []).filter(m => m.relationship?.toLowerCase().includes('child') || m.relationship?.toLowerCase().includes('daughter') || m.relationship?.toLowerCase().includes('son')).length || '—')} />
                 {(d.householdMembers || []).map((m, i) => (
@@ -603,7 +607,7 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, onSwit
                 ))}
               </FormSection>
 
-              <FormSection number="IV" title="Income & Employment">
+              <FormSection number="IV" title={t(lang, 'sectionIV')}>
                 <FieldRow label="Employment Status" value={totalIncome === 0 ? 'Unemployed — No current income' : 'Employed'} />
                 <FieldRow label="Monthly Gross Income" value={totalIncome > 0 ? `$${totalIncome.toLocaleString()}/month` : '$0.00'} />
                 {(d.monthlyIncome || []).length > 0
@@ -619,19 +623,19 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, onSwit
                 }
               </FormSection>
 
-              <FormSection number="V" title="Monthly Expenses">
+              <FormSection number="V" title={t(lang, 'sectionV')}>
                 <FieldRow label="Rent / Mortgage" value={(d.expenses || {}).rent ? `$${d.expenses.rent}/month` : '$0'} />
                 <FieldRow label="Utilities" value={(d.expenses || {}).utilities ? `$${d.expenses.utilities}/month` : '$0'} />
                 <FieldRow label="Heating" value={(d.expenses || {}).heating ? `$${d.expenses.heating}/month` : '$0'} />
                 <FieldRow label="Childcare" value={(d.expenses || {}).childcare ? `$${d.expenses.childcare}/month` : '$0'} />
               </FormSection>
 
-              <FormSection number="VI" title="Medical Coverage">
+              <FormSection number="VI" title={t(lang, 'sectionVI')}>
                 <FieldRow label="Current Health Insurance" value="None — Currently uninsured" />
                 <FieldRow label="Application For" value="Pennsylvania Medicaid / CHIP" />
               </FormSection>
 
-              <FormSection number="VII" title="Certification" last>
+              <FormSection number="VII" title={t(lang, 'sectionVII')} last>
                 <p style={c.certText}>
                   I certify under penalty of perjury that the information provided in this application is true
                   and complete to the best of my knowledge. I understand that providing false information may
@@ -651,46 +655,37 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, onSwit
             style={c.actionBlock}
           >
             <div style={c.actionHeader}>
-              <span style={c.actionHeaderLabel}>DOWNLOAD APPLICATIONS</span>
-              <span style={c.actionHeaderSub}>Review each form before signing and submitting</span>
+              <span style={c.actionHeaderLabel}>{t(lang, 'downloadLabel')}</span>
+              <span style={c.actionHeaderSub}>{t(lang, 'downloadSub')}</span>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <button onClick={handleMedicaid} disabled={generatingMedicaid} style={c.dlPrimary}>
-                {generatingMedicaid ? 'Generating…' : medicaidDone ? '✓  Medicaid Application Downloaded' : '↓  Medicaid Financial Eligibility (PA-Medicaid)'}
+                {generatingMedicaid ? t(lang, 'generating') : medicaidDone ? t(lang, 'dlMedicaidDone') : t(lang, 'dlMedicaid')}
               </button>
               <button onClick={handleSnap} disabled={generatingSnap} style={c.dlSecondary}>
-                {generatingSnap ? 'Generating…' : snapDone ? '✓  SNAP Application Downloaded' : '↓  SNAP Food Assistance (PA-SNAP)'}
+                {generatingSnap ? t(lang, 'generating') : snapDone ? t(lang, 'dlSnapDone') : t(lang, 'dlSnap')}
               </button>
               {snapWarned && !snapDone && (
-                <p style={c.snapNote}>
-                  SNAP form filling is still in progress for this demo. Click again to download a partially filled form.
-                </p>
+                <p style={c.snapNote}>{t(lang, 'snapNote')}</p>
               )}
               {pdfError && <p style={{ fontSize: '12px', color: '#c0392b', margin: 0 }}>{pdfError}</p>}
-              <p style={c.privacyAttestation}>
-                🔒 This form was assembled locally on your device. We never saw your data.
-              </p>
+              <p style={c.privacyAttestation}>{t(lang, 'privacyAttestation')}</p>
             </div>
 
             <div style={c.actionDivider} />
 
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button onClick={onReturn} style={{ ...c.dlGhost, flex: 1 }}>← Continue adding details</button>
-              <button onClick={onReset} style={{ ...c.dlGhost, flex: 1 }}>Start new application</button>
+              <button onClick={onReturn} style={{ ...c.dlGhost, flex: 1 }}>{t(lang, 'continueBtn')}</button>
+              <button onClick={onReset} style={{ ...c.dlGhost, flex: 1 }}>{t(lang, 'resetBtn')}</button>
             </div>
           </motion.div>
 
           {/* Next steps */}
           <div style={c.nextSteps}>
-            <p style={c.nextStepsLabel}>NEXT STEPS</p>
+            <p style={c.nextStepsLabel}>{t(lang, 'nextStepsLabel')}</p>
             <div style={c.nextStepsList}>
-              {[
-                ['Submit online', 'compass.state.pa.us — fastest processing'],
-                ['Submit in person', 'Bring signed forms to your county DHS office'],
-                ['LIHEAP heating', 'Call 1-800-692-7462 · Deadline May 8, 2026'],
-                ['WIC nutrition', 'Call 1-800-WIC-WINS to locate your nearest clinic'],
-              ].map(([title, detail], i) => (
+              {t(lang, 'nextSteps').map(([title, detail], i) => (
                 <div key={i} style={c.nextStep}>
                   <span style={c.nextStepNum}>{String(i + 1).padStart(2, '0')}</span>
                   <div>
