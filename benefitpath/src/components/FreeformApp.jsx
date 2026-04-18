@@ -29,6 +29,7 @@ export default function FreeformApp({ onSwitchDesign }) {
 
   const [screen, setScreen] = useState('landing'); // landing | intake | document
   const [lang, setLang] = useState('en');
+  const isDemoMode = new URLSearchParams(window.location.search).has('demo');
 
   // Jump straight to document if session already has results
   useEffect(() => {
@@ -45,7 +46,16 @@ export default function FreeformApp({ onSwitchDesign }) {
   function handleReset() { resetSession(); setScreen('landing'); }
 
   return (
-    <div style={c.root}>
+    <div style={{ ...c.root, position: 'relative' }}>
+      {isDemoMode && (
+        <div style={{
+          position: 'fixed', top: '0.75rem', right: '50%', transform: 'translateX(50%)',
+          background: '#c0392b', color: '#fff', fontSize: '9px', fontWeight: 700,
+          letterSpacing: '0.18em', padding: '4px 12px', zIndex: 9999, pointerEvents: 'none',
+        }}>
+          LIVE DEMO
+        </div>
+      )}
       <AnimatePresence mode="wait">
         {screen === 'landing' && (
           <Landing key="landing" onBegin={handleBegin} lang={lang} setLang={setLang} />
@@ -62,6 +72,7 @@ export default function FreeformApp({ onSwitchDesign }) {
             persist={persist}
             onReview={handleReview}
             lang={lang}
+            isDemoMode={isDemoMode}
           />
         )}
         {screen === 'document' && (
@@ -164,14 +175,16 @@ const SYSTEM_SEED = {
   content: 'Tell us what\'s going on — in your own words, at your own pace. There\'s no wrong place to start.',
 };
 
+const DEMO_MARIA_MSG = "I'm Maria Santos. Single mom, two kids — my daughter Lily is 4 and Marco is 7. I just got laid off from my job at the grocery store. We live at 1234 Broad Street, Philadelphia. Rent is $900 a month. No health insurance.";
+
 function Intake({
   savedMessages, setMessages, extractedData, setExtractedData,
-  eligibilityResults, setEligibilityResults, persist, onReview, lang,
+  eligibilityResults, setEligibilityResults, persist, onReview, lang, isDemoMode,
 }) {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showPrivacyBanner, setShowPrivacyBanner] = useState(true);
-  const [splitView, setSplitView] = useState(false);
+  const [splitView, setSplitView] = useState(isDemoMode && window.innerWidth >= 900);
   const [sessionId] = useState(() => Math.random().toString(36).slice(2, 8).toUpperCase());
   const lastAiMsgId = useRef(null);
   const bottomRef = useRef(null);
@@ -182,6 +195,15 @@ function Intake({
     const t = setTimeout(() => setShowPrivacyBanner(false), 5000);
     return () => clearTimeout(t);
   }, []);
+
+  // Demo mode: auto-send Maria's story after a short delay
+  useEffect(() => {
+    if (!isDemoMode || savedMessages.length > 0) return;
+    const timer = setTimeout(() => {
+      sendMessage(DEMO_MARIA_MSG);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [isDemoMode]); // eslint-disable-line
 
   const messages = savedMessages.length > 0 ? savedMessages : [SYSTEM_SEED];
 
