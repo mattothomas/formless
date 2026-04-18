@@ -418,6 +418,14 @@ function Intake({
         </div>
       </div>
 
+      {/* Live form panel (split view) */}
+      {splitView && (
+        <div style={{ flex: '0 0 45%', overflowY: 'auto' }}>
+          <LiveFormPanel extractedData={extractedData} isListening={isListening} />
+        </div>
+      )}
+      </div>{/* end body wrapper */}
+
       {/* Input */}
       <div style={c.inputArea}>
         <div style={c.inputRow}>
