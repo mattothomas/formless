@@ -6,7 +6,8 @@ import { useSession } from './hooks/useSession.js';
 import { mergeExtractedData } from './utils/geminiClient.js';
 
 export default function App() {
-  const [design, setDesign] = useState('new'); // 'new' | 'old'
+  const forceClassic = new URLSearchParams(window.location.search).has('classic');
+  const [design, setDesign] = useState(forceClassic ? 'old' : 'new'); // 'new' | 'old'
 
   const {
     messages,

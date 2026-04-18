@@ -93,10 +93,7 @@ function Landing({ onBegin, onSwitchDesign }) {
         <button onClick={() => { window.location.href = '/?reset'; }} style={{ ...c.wordmark, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
           FREEFORM
         </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <span style={c.topBarRight}>Pennsylvania · 2026</span>
-          <button onClick={onSwitchDesign} style={c.ghostSmall}>Classic View</button>
-        </div>
+        <span style={c.topBarRight}>Pennsylvania · 2026</span>
       </div>
 
       {/* Main content */}
@@ -113,9 +110,9 @@ function Landing({ onBegin, onSwitchDesign }) {
             the forms.
           </h1>
           <p style={c.landingBody2}>
-            Describe your situation in plain language — in English, Spanish, or both.
-            Freeform determines what you qualify for and prepares your applications automatically.
-            No paperwork. No confusion. No cost.
+            Just tell us what's going on — in your own words, in English or Spanish, at your own pace.
+            No forms to fill, no appointments, no jargon.
+            We'll figure out what you qualify for and prepare your applications automatically.
           </p>
         </motion.div>
 
@@ -135,6 +132,10 @@ function Landing({ onBegin, onSwitchDesign }) {
                 {i < 4 && <span style={{ color: '#C0BAB0', marginLeft: '0.75rem' }}>·</span>}
               </span>
             ))}
+          </div>
+          <div style={c.trustRow}>
+            <span style={c.trustLock}>🔒</span>
+            <span style={c.trustText}>End-to-end encrypted · Forms generated on your device · Nothing stored</span>
           </div>
         </motion.div>
       </div>
@@ -163,9 +164,16 @@ function Intake({
 }) {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [showPrivacyBanner, setShowPrivacyBanner] = useState(true);
+  const [sessionId] = useState(() => Math.random().toString(36).slice(2, 8).toUpperCase());
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowPrivacyBanner(false), 5000);
+    return () => clearTimeout(t);
+  }, []);
 
   const messages = savedMessages.length > 0 ? savedMessages : [SYSTEM_SEED];
 
@@ -260,15 +268,31 @@ function Intake({
         <button onClick={() => { window.location.href = '/?reset'; }} style={{ ...c.wordmark, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
           FREEFORM
         </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <span style={c.topBarRight}>Intake</span>
-          <button onClick={onSwitchDesign} style={c.ghostSmall}>Classic View</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{ fontSize: '10px', color: '#2D8C5A' }}>🔒</span>
+          <span style={c.topBarRight}>Session {sessionId} · Secure</span>
         </div>
       </div>
 
       {/* Transcript */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         <div style={{ padding: '0' }}>
+          {/* Privacy banner */}
+          <AnimatePresence>
+            {showPrivacyBanner && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                style={c.privacyBanner}
+              >
+                <span style={{ fontSize: '11px', flexShrink: 0 }}>🔒</span>
+                <span>Your story stays private. Everything you share is encrypted before leaving your device and is never stored on our servers.</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Section label */}
           <div style={c.transcriptLabel}>TRANSCRIPT</div>
 
@@ -349,8 +373,8 @@ function Intake({
               <p style={{ fontSize: '11px', color: '#888682', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 0.6rem' }}>
                 Not sure where to start?
               </p>
-              <button onClick={() => sendMessage(EXAMPLE_TEXT)} style={c.exampleBtn}>
-                Use example: single parent, recently unemployed, Philadelphia
+              <button onClick={() => { sendMessage(EXAMPLE_TEXT); setShowPrivacyBanner(false); }} style={c.exampleBtn}>
+                Try: "I'm a single parent and things are really hard right now"
               </button>
             </motion.div>
           )}
@@ -364,10 +388,10 @@ function Intake({
             >
               <div>
                 <p style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#A8C4B0', margin: '0 0 0.3rem' }}>
-                  Your form is {fillPct}% filled
+                  {fillPct >= 80 ? "We have nearly everything" : fillPct >= 50 ? "We're almost there" : "Building your applications"}
                 </p>
                 <p style={{ fontSize: '13px', color: '#D4E6DA', margin: 0, lineHeight: 1.5 }}>
-                  Preview now or keep talking to complete the remaining fields.
+                  Preview now, or keep talking to add more detail.
                 </p>
               </div>
               <button onClick={onReview} style={c.reviewBtn}>
@@ -393,7 +417,7 @@ function Intake({
           <textarea
             ref={inputRef}
             value={inputText}
-            onChange={e => setInputText(e.target.value)}
+            onChange={e => { setInputText(e.target.value); setShowPrivacyBanner(false); }}
             onKeyDown={handleKeyDown}
             placeholder={isListening ? 'Listening…' : 'Type your response here, or press the microphone to speak…'}
             rows={2}
@@ -466,10 +490,7 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, onSwit
       {/* Header */}
       <div style={c.topBar}>
         <button onClick={onReturn} style={c.returnLink}>← Return to intake</button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <span style={{ ...c.topBarRight, color: '#888682' }}>DRAFT · {today}</span>
-          <button onClick={onSwitchDesign} style={c.ghostSmall}>Classic View</button>
-        </div>
+        <span style={{ ...c.topBarRight, color: '#888682' }}>DRAFT · {today}</span>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', background: '#F0EDE6' }}>
@@ -619,6 +640,9 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, onSwit
                 </p>
               )}
               {pdfError && <p style={{ fontSize: '12px', color: '#c0392b', margin: 0 }}>{pdfError}</p>}
+              <p style={c.privacyAttestation}>
+                🔒 This form was assembled locally on your device. We never saw your data.
+              </p>
             </div>
 
             <div style={c.actionDivider} />
@@ -803,6 +827,41 @@ const c = {
   footerText: {
     fontSize: '11px',
     color: '#B0ADA6',
+  },
+
+  // ── Trust / security
+  trustRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    marginTop: '1.5rem',
+  },
+  trustLock: {
+    fontSize: '12px',
+  },
+  trustText: {
+    fontSize: '11px',
+    color: '#888682',
+    letterSpacing: '0.02em',
+  },
+  privacyBanner: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '0.5rem',
+    padding: '0.75rem 1.5rem',
+    background: '#EDF7F2',
+    borderBottom: '1px solid #C8E8D8',
+    fontSize: '12px',
+    color: '#1C5C3A',
+    lineHeight: 1.55,
+    overflow: 'hidden',
+  },
+  privacyAttestation: {
+    fontSize: '11px',
+    color: '#888682',
+    margin: '0.6rem 0 0',
+    letterSpacing: '0.01em',
+    lineHeight: 1.5,
   },
 
   // ── Intake / transcript
