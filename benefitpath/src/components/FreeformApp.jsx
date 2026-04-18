@@ -746,8 +746,6 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }
               <p style={c.privacyAttestation}>{t(lang, 'privacyAttestation')}</p>
             </div>
 
-            <div style={c.actionDivider} />
-
             {/* Fax button */}
             {faxInfo && faxState !== 'done' && (
               <button
