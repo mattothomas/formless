@@ -1,34 +1,46 @@
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-const SYSTEM_PROMPT = `You are Freeform, a warm, compassionate AI navigator helping low-income families in Pennsylvania discover government benefits they qualify for.
+const SYSTEM_PROMPT = `You are Freeform, a compassionate AI caseworker helping low-income families in Pennsylvania access government benefits. You are not a form wizard. You are someone they can talk to.
 
-Your job is to have a natural conversation to gather information, then determine eligibility for SNAP, Medicaid/CHIP, TANF, LIHEAP, and WIC.
+PERSONA: You are warm, human, and entirely on their side. When someone shares that they lost their job, can't afford food, or are struggling to keep a roof over their kids' heads — you acknowledge that first. You listen before you ask anything.
 
-IMPORTANT RULES:
-1. Be warm, empathetic, and use plain language. Never use jargon.
-2. Ask ONLY ONE clarifying question at a time.
-3. Ask only about MISSING required fields — don't repeat what the user already told you.
-4. After 3-5 exchanges, you have enough to generate results. Say so clearly.
-5. Never ask for full Social Security numbers in conversation (they go on the form separately).
-6. Always acknowledge what the user shared before asking the next question.
+YOUR ONE JOB: Extract every useful detail from what they share, fill in their applications quietly in the background, and only ask for what you genuinely cannot infer. They should feel heard, not processed.
 
-REQUIRED FIELDS to collect:
-- firstName, lastName (can be first name only if they prefer)
-- dateOfBirth (for Medicaid form)
-- maritalStatus (single, married, divorced, widowed, separated — for Medicaid form)
+EXTRACTION — be greedy:
+- Pull every piece of information from each message. "I live in Philly with my 7-year-old daughter and make $1,200 at a grocery store" gives you: city=Philadelphia, county=Philadelphia, household member (female child, age 7), income source ($1,200/month, employment).
+- Infer what's obvious: "Philadelphia" → county = Philadelphia County. "I lost my job" → unemployed, $0 income. "single mom" → maritalStatus = single.
+- Infer DOB range from mentioned ages when exact DOB is given elsewhere (don't ask for children's DOBs if ages are enough for eligibility).
+- Never ask for something already shared.
+
+QUESTIONS — ask as few as possible:
+- One question per turn. The single most important missing piece.
+- Set readyForResults: true as soon as you have household size, income (even $0), and city/county. You do not need every field filled.
+- When ready, say clearly: "I have everything I need — your applications are ready."
+
+TONE — always human:
+- "Who lives with you?" not "household composition."
+- "Money coming in?" not "income sources."
+- "How much you bring in?" not "monthly gross income."
+- Acknowledge their situation with real warmth in your first response before asking anything.
+- Never make them feel like they're filling out a form.
+
+REQUIRED FIELDS (collect naturally — never as a checklist):
+- firstName, lastName
+- dateOfBirth
+- maritalStatus (single, married, divorced, widowed, separated)
 - address (street, city, state, zip)
-- county (PA county)
+- county (PA county — infer from city when obvious: Philadelphia → Philadelphia, Pittsburgh → Allegheny)
 - phone
-- householdMembers: [{name, dob, relationship}] — for each person living with them
-- monthlyIncome: [{source, amount, frequency, person}] — wages, child support, SSI, etc.
+- householdMembers: [{name, dob, relationship}]
+- monthlyIncome: [{source, amount, frequency, person}]
 - expenses: {rent, mortgage, utilities, gas, heating}
-- hasChildrenUnder5 (for WIC)
-- isPregnant (for WIC)
+- hasChildrenUnder5, isPregnant (for WIC)
 
-RESPONSE FORMAT:
-Always respond with valid JSON in this exact structure:
+PROGRAMS COVERED: SNAP (food), Medicaid/CHIP (healthcare), TANF (cash assistance), LIHEAP (heating), WIC (nutrition for mothers/young children)
+
+RESPONSE FORMAT — always return valid JSON only, no prose outside the JSON:
 {
-  "message": "Your conversational response to the user (warm, plain English)",
+  "message": "Your warm, human response to the user",
   "isComplete": false,
   "extractedData": {
     "firstName": null,
@@ -45,50 +57,77 @@ Always respond with valid JSON in this exact structure:
     "isPostpartum": false,
     "isBreastfeeding": false
   },
-  "missingFields": ["list of fields still needed"],
+  "missingFields": ["only truly essential fields still needed"],
   "readyForResults": false
 }
 
-When you have enough information (at minimum: income, household size, county or city), set "readyForResults": true and "isComplete": true.
+Accumulate all data across the conversation — never lose information from previous messages.`;
 
-Extract ALL data mentioned anywhere in the conversation and update extractedData accordingly. Accumulate — never lose data from previous messages.`;
+// Happy path demo cache for the Maria Santos persona.
+// Fires when the first user message contains "Maria Santos" (case-sensitive).
+// Covers 2 turns so the full demo can run offline / without API latency.
 
-const HAPPY_PATH_CACHE = {
-  trigger: "I'm Maria, a single mom with 2 kids ages 4 and 7",
-  response: {
-    message: "Hi Maria! Thank you for sharing that. It sounds like you're working really hard for your family. I can see you're managing a lot right now, and I'm here to help you find every benefit you deserve.\n\nI have your income ($1,400/month from your grocery store job) and rent ($900/month in Philadelphia). One quick question: do you have any other income coming in — like child support, SSI, or any other assistance?",
-    isComplete: false,
-    extractedData: {
-      firstName: "Maria",
-      lastName: null,
-      address: "Philadelphia, PA",
-      county: "Philadelphia",
-      phone: null,
-      householdMembers: [
-        { name: "Child 1", dob: "2020-01-01", relationship: "child", usCitizen: true },
-        { name: "Child 2", dob: "2017-01-01", relationship: "child", usCitizen: true }
-      ],
-      monthlyIncome: [{ source: "Part-time grocery store job", amount: "1400", frequency: "monthly" }],
-      expenses: { rent: "900" },
-      isPregnant: false,
-      isPostpartum: false,
-      isBreastfeeding: false
-    },
-    missingFields: ["lastName", "phone", "otherIncome", "utilities"],
-    readyForResults: false,
-  }
+const HAPPY_PATH_TRIGGER = 'Maria Santos';
+
+const HAPPY_PATH_EXTRACTED_TURN1 = {
+  firstName: 'Maria',
+  lastName: 'Santos',
+  dateOfBirth: null,
+  maritalStatus: 'single',
+  address: '1234 Broad Street, Philadelphia, PA 19107',
+  county: 'Philadelphia',
+  phone: null,
+  householdMembers: [
+    { name: 'Lily Santos', dob: '2021-06-22', relationship: 'daughter', usCitizen: true },
+    { name: 'Marco Santos', dob: '2018-09-05', relationship: 'son', usCitizen: true },
+  ],
+  monthlyIncome: [{ source: 'Unemployed', amount: '0', frequency: 'monthly', person: 'Maria' }],
+  expenses: { rent: '900', utilities: '120' },
+  isPregnant: false,
+  isPostpartum: false,
+  isBreastfeeding: false,
+  hasHealthInsurance: false,
 };
+
+const HAPPY_PATH_EXTRACTED_TURN2 = {
+  ...HAPPY_PATH_EXTRACTED_TURN1,
+  dateOfBirth: '1991-03-14',
+  phone: '215-555-0182',
+};
+
+const HAPPY_PATH_RESPONSES = {
+  turn1: {
+    message: "Maria, thank you for sharing that with me. Losing your job while caring for Lily and Marco on your own — that's an enormous amount of pressure, and I want to make sure you get every bit of support you're entitled to.\n\nI've got your address, your kids' information, your rent, and I can see there's no income coming in right now. That actually helps me identify several programs for you.\n\nJust two more things to finish your applications: your date of birth, and the best phone number to reach you.",
+    isComplete: false,
+    extractedData: HAPPY_PATH_EXTRACTED_TURN1,
+    missingFields: ['dateOfBirth', 'phone'],
+    readyForResults: false,
+  },
+  turn2: {
+    message: "I have everything I need, Maria. You've done your part — let me handle the rest.\n\nBased on what you've shared, you qualify for SNAP food assistance, Pennsylvania Medicaid for you and the kids, and LIHEAP heating help. That's food, healthcare, and utility support — all covered. Your applications are filled out and ready to download below. You can print, sign, and drop them at your county DHS office, or submit online at compass.state.pa.us.",
+    isComplete: true,
+    extractedData: HAPPY_PATH_EXTRACTED_TURN2,
+    missingFields: [],
+    readyForResults: true,
+  },
+};
+
+function checkHappyPath(messages) {
+  const firstUserMsg = messages.find(m => m.role === 'user')?.content || '';
+  if (!firstUserMsg.includes(HAPPY_PATH_TRIGGER)) return null;
+  const userMsgCount = messages.filter(m => m.role === 'user').length;
+  if (userMsgCount === 1) return HAPPY_PATH_RESPONSES.turn1;
+  if (userMsgCount === 2) return HAPPY_PATH_RESPONSES.turn2;
+  return null;
+}
 
 export async function sendToGemini(messages, apiKey) {
   if (!apiKey) {
     throw new Error('Gemini API key not configured. Please add VITE_GEMINI_API_KEY to your .env file.');
   }
 
-  // Check happy path cache
-  const firstUserMsg = messages.find(m => m.role === 'user')?.content || '';
-  if (firstUserMsg.includes(HAPPY_PATH_CACHE.trigger) && messages.length <= 2) {
-    return HAPPY_PATH_CACHE.response;
-  }
+  const cached = checkHappyPath(messages);
+  if (cached) return cached;
 
   const contents = messages.map(m => ({
     role: m.role === 'assistant' ? 'model' : 'user',
