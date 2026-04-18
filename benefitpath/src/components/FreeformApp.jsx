@@ -7,6 +7,7 @@ import { generateMedicaidPDF, generateSnapPDF, downloadPDF } from '../utils/pdfG
 import { useSpeech } from '../hooks/useSpeech.js';
 import { useSession } from '../hooks/useSession.js';
 import LiveFormPanel from './LiveFormPanel.jsx';
+import { t } from '../utils/i18n.js';
 
 const EXAMPLE_TEXT =
   "I just got laid off from my job last week. I have a 4-year-old daughter and I'm behind on rent — $950 a month in Philadelphia. She doesn't have health insurance and I don't know where to start.";
@@ -27,6 +28,7 @@ export default function FreeformApp({ onSwitchDesign }) {
   } = useSession();
 
   const [screen, setScreen] = useState('landing'); // landing | intake | document
+  const [lang, setLang] = useState('en');
 
   // Jump straight to document if session already has results
   useEffect(() => {
@@ -46,7 +48,7 @@ export default function FreeformApp({ onSwitchDesign }) {
     <div style={c.root}>
       <AnimatePresence mode="wait">
         {screen === 'landing' && (
-          <Landing key="landing" onBegin={handleBegin} onSwitchDesign={onSwitchDesign} />
+          <Landing key="landing" onBegin={handleBegin} lang={lang} setLang={setLang} />
         )}
         {screen === 'intake' && (
           <Intake
@@ -59,7 +61,7 @@ export default function FreeformApp({ onSwitchDesign }) {
             setEligibilityResults={setEligibilityResults}
             persist={persist}
             onReview={handleReview}
-            onSwitchDesign={onSwitchDesign}
+            lang={lang}
           />
         )}
         {screen === 'document' && (
@@ -69,7 +71,7 @@ export default function FreeformApp({ onSwitchDesign }) {
             eligibilityResults={eligibilityResults}
             onReturn={handleReturn}
             onReset={handleReset}
-            onSwitchDesign={onSwitchDesign}
+            lang={lang}
           />
         )}
       </AnimatePresence>

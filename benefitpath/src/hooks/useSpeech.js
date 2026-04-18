@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 
-export function useSpeech({ onTranscript }) {
+export function useSpeech({ onTranscript, lang = 'en' }) {
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const [interimText, setInterimText] = useState('');
@@ -24,7 +24,7 @@ export function useSpeech({ onTranscript }) {
 
     finalTextRef.current = '';
     const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
+    recognition.lang = lang === 'es' ? 'es-US' : 'en-US';
     recognition.interimResults = true;
     recognition.continuous = true;      // keep listening through pauses
     recognition.maxAlternatives = 1;
