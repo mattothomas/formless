@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mic, Square, Send } from 'lucide-react';
+import { Mic, Square, Send, Columns2, AlignLeft } from 'lucide-react';
 import { sendToGemini, mergeExtractedData } from '../utils/geminiClient.js';
 import { calculateEligibility } from '../utils/eligibility.js';
 import { generateMedicaidPDF, generateSnapPDF, downloadPDF } from '../utils/pdfGenerator.js';
 import { useSpeech } from '../hooks/useSpeech.js';
 import { useSession } from '../hooks/useSession.js';
+import LiveFormPanel from './LiveFormPanel.jsx';
 
 const EXAMPLE_TEXT =
   "I just got laid off from my job last week. I have a 4-year-old daughter and I'm behind on rent — $950 a month in Philadelphia. She doesn't have health insurance and I don't know where to start.";
@@ -165,6 +166,7 @@ function Intake({
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showPrivacyBanner, setShowPrivacyBanner] = useState(true);
+  const [splitView, setSplitView] = useState(false);
   const [sessionId] = useState(() => Math.random().toString(36).slice(2, 8).toUpperCase());
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
@@ -268,14 +270,26 @@ function Intake({
         <button onClick={() => { window.location.href = '/?reset'; }} style={{ ...c.wordmark, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
           FREEFORM
         </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '10px', color: '#2D8C5A' }}>🔒</span>
-          <span style={c.topBarRight}>Session {sessionId} · Secure</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <button
+            onClick={() => setSplitView(v => !v)}
+            title={splitView ? 'Single column view' : 'Live form view'}
+            style={{ ...c.ghostSmall, display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '3px 8px' }}
+          >
+            {splitView ? <AlignLeft size={11} /> : <Columns2 size={11} />}
+            <span style={{ fontSize: '10px' }}>{splitView ? 'Single' : 'Live Form'}</span>
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <span style={{ fontSize: '10px', color: '#2D8C5A' }}>🔒</span>
+            <span style={c.topBarRight}>Session {sessionId} · Secure</span>
+          </div>
         </div>
       </div>
 
+      {/* Body — single or split */}
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
       {/* Transcript */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={{ flex: splitView ? '0 0 55%' : '1 1 100%', overflowY: 'auto', borderRight: splitView ? '1px solid #D8D6CF' : 'none' }}>
         <div style={{ padding: '0' }}>
           {/* Privacy banner */}
           <AnimatePresence>
