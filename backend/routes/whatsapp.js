@@ -17,7 +17,7 @@ import { Router } from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { getOrCreate } from '../sessions.js';
+import { getOrCreate, saveToDisk } from '../sessions.js';
 import { sendToGemini, mergeExtractedData } from '../services/gemini.js';
 import { transcribe } from '../services/groq.js';
 import { downloadMedia, textReply, mediaReply } from '../services/twilio.js';
@@ -90,6 +90,7 @@ router.post('/', async (req, res) => {
 
     // Append assistant reply to history
     session.messages.push({ role: 'assistant', content: geminiResult.message });
+    saveToDisk();
 
     console.log(`[${from}] readyForResults=${geminiResult.readyForResults} isComplete=${geminiResult.isComplete}`);
 
@@ -103,6 +104,7 @@ router.post('/', async (req, res) => {
         const filled = await generateForms(session.extractedData, outputDir);
         session.generatedForms = filled;
         session.isComplete = true;
+        saveToDisk();
 
         const name = session.extractedData.firstName || 'there';
 

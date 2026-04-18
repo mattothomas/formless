@@ -144,6 +144,34 @@ export async function sendToGemini(messages, apiKey) {
       maxOutputTokens: 1024,
       responseMimeType: 'application/json',
       thinkingConfig: { thinkingBudget: 0 },
+      responseSchema: {
+        type: 'OBJECT',
+        properties: {
+          message: { type: 'STRING' },
+          isComplete: { type: 'BOOLEAN' },
+          extractedData: {
+            type: 'OBJECT',
+            properties: {
+              firstName: { type: 'STRING', nullable: true },
+              lastName: { type: 'STRING', nullable: true },
+              dateOfBirth: { type: 'STRING', nullable: true },
+              maritalStatus: { type: 'STRING', nullable: true },
+              address: { type: 'STRING', nullable: true },
+              county: { type: 'STRING', nullable: true },
+              phone: { type: 'STRING', nullable: true },
+              householdMembers: { type: 'ARRAY', items: { type: 'OBJECT' } },
+              monthlyIncome: { type: 'ARRAY', items: { type: 'OBJECT' } },
+              expenses: { type: 'OBJECT' },
+              isPregnant: { type: 'BOOLEAN' },
+              isPostpartum: { type: 'BOOLEAN' },
+              isBreastfeeding: { type: 'BOOLEAN' },
+            },
+          },
+          missingFields: { type: 'ARRAY', items: { type: 'STRING' } },
+          readyForResults: { type: 'BOOLEAN' },
+        },
+        required: ['message', 'isComplete', 'extractedData', 'readyForResults'],
+      },
     },
   };
 

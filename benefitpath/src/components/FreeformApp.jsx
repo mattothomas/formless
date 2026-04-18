@@ -156,6 +156,18 @@ function Landing({ onBegin, lang, setLang }) {
             <span style={c.trustLock}>🔒</span>
             <span style={c.trustText}>{t(lang, 'landingTrust')}</span>
           </div>
+          <div style={c.whatsappRow}>
+            <div style={c.whatsappQR}>
+              {/* Swap in actual QR SVG for your Twilio WhatsApp number */}
+              <div style={{ width: 48, height: 48, background: '#E8E6DF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
+                📱
+              </div>
+            </div>
+            <div>
+              <p style={c.whatsappLabel}>No smartphone? No problem.</p>
+              <p style={c.whatsappSub}>Text or voice message us on WhatsApp — same result, no app needed.</p>
+            </div>
+          </div>
         </motion.div>
       </div>
 
@@ -187,6 +199,7 @@ function Intake({
   const [splitView, setSplitView] = useState(isDemoMode && window.innerWidth >= 900);
   const [sessionId] = useState(() => Math.random().toString(36).slice(2, 8).toUpperCase());
   const lastAiMsgId = useRef(null);
+  const sendMessageRef = useRef(null);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -200,10 +213,10 @@ function Intake({
   useEffect(() => {
     if (!isDemoMode || savedMessages.length > 0) return;
     const timer = setTimeout(() => {
-      sendMessage(DEMO_MARIA_MSG);
+      sendMessageRef.current?.(DEMO_MARIA_MSG);
     }, 1500);
     return () => clearTimeout(timer);
-  }, [isDemoMode]); // eslint-disable-line
+  }, []); // eslint-disable-line
 
   const messages = savedMessages.length > 0 ? savedMessages : [SYSTEM_SEED];
 
@@ -260,6 +273,8 @@ function Intake({
       inputRef.current?.focus();
     }
   }
+
+  sendMessageRef.current = sendMessage;
 
   function handleKeyDown(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputText); }
@@ -562,9 +577,18 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }
                 <span style={c.eligHeaderLabel}>{t(lang, 'eligLabel')}</span>
                 <span style={c.eligHeaderSub}>{t(lang, 'eligConfirmed', eligible.length)} · {t(lang, 'eligVerify', maybe.length)}</span>
               </div>
-              <div style={c.eligGrid}>
+              <motion.div
+                style={c.eligGrid}
+                variants={{ show: { transition: { staggerChildren: 0.1 } } }}
+                initial="hidden"
+                animate="show"
+              >
                 {results.map(r => (
-                  <div key={r.program} style={{ ...c.eligItem, ...(r.eligible === 'yes' ? c.eligYes : r.eligible === 'maybe' ? c.eligMaybe : c.eligNo) }}>
+                  <motion.div
+                    key={r.program}
+                    variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}
+                    style={{ ...c.eligItem, ...(r.eligible === 'yes' ? c.eligYes : r.eligible === 'maybe' ? c.eligMaybe : c.eligNo) }}
+                  >
                     <div style={c.eligItemTop}>
                       <span style={c.eligIcon}>{r.icon}</span>
                       <span style={c.eligName}>{r.programName}</span>
@@ -572,12 +596,27 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }
                         {r.eligible === 'yes' ? t(lang, 'eligYes') : r.eligible === 'maybe' ? t(lang, 'eligMaybe') : t(lang, 'eligNo')}
                       </span>
                     </div>
+                    {r.confidence && (
+                      <div style={{ marginTop: '0.4rem' }}>
+                        <div style={{ height: 2, background: '#E8E6DF', borderRadius: 1 }}>
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${r.confidence}%` }}
+                            transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
+                            style={{ height: '100%', background: r.eligible === 'yes' ? '#1C3A2A' : r.eligible === 'maybe' ? '#92400E' : '#888682', borderRadius: 1 }}
+                          />
+                        </div>
+                        <span style={{ fontSize: '9px', color: '#888682', marginTop: '2px', display: 'block' }}>
+                          {r.confidence}% confidence
+                        </span>
+                      </div>
+                    )}
                     {r.urgent && (
                       <div style={c.urgentFlag}>{t(lang, 'urgentFlag')}</div>
                     )}
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             </motion.div>
           )}
 
@@ -909,6 +948,33 @@ const c = {
   footerText: {
     fontSize: '11px',
     color: '#B0ADA6',
+  },
+
+  // ── WhatsApp
+  whatsappRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.85rem',
+    marginTop: '1.75rem',
+    padding: '0.85rem 1rem',
+    background: '#F0EDE6',
+    border: '1px solid #D8D6CF',
+    maxWidth: '340px',
+  },
+  whatsappQR: {
+    flexShrink: 0,
+  },
+  whatsappLabel: {
+    fontSize: '12px',
+    fontWeight: 500,
+    color: '#111110',
+    margin: '0 0 2px',
+  },
+  whatsappSub: {
+    fontSize: '11px',
+    color: '#888682',
+    margin: 0,
+    lineHeight: 1.5,
   },
 
   // ── Trust / security
