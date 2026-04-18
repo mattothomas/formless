@@ -168,6 +168,7 @@ function Intake({
   const [showPrivacyBanner, setShowPrivacyBanner] = useState(true);
   const [splitView, setSplitView] = useState(false);
   const [sessionId] = useState(() => Math.random().toString(36).slice(2, 8).toUpperCase());
+  const lastAiMsgId = useRef(null);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -208,6 +209,7 @@ function Intake({
       }));
       const response = await sendToGemini(apiMessages, apiKey);
       const assistantMsg = { id: (Date.now() + 1).toString(), role: 'system', content: response.message };
+      lastAiMsgId.current = assistantMsg.id;
       const updated = [...nextMessages, assistantMsg];
       setMessages(updated);
 
@@ -332,7 +334,9 @@ function Intake({
                     {isUser ? 'YOU' : 'FREEFORM'}
                   </span>
                   <p style={{ ...c.transcriptText, ...(isUser ? c.transcriptTextUser : {}) }}>
-                    {msg.content}
+                    {!isUser && msg.id === lastAiMsgId.current
+                      ? <TypingText text={msg.content} />
+                      : msg.content}
                   </p>
                 </div>
               </motion.div>
@@ -703,6 +707,43 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, onSwit
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
+
+// Animates text typing in character by character on each new value
+function TypingText({ text }) {
+  const [displayed, setDisplayed] = useState('');
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    if (!text) { setDisplayed(''); setDone(true); return; }
+    setDisplayed('');
+    setDone(false);
+    let i = 0;
+    const timer = setInterval(() => {
+      i += 4;
+      if (i >= text.length) {
+        setDisplayed(text);
+        setDone(true);
+        clearInterval(timer);
+      } else {
+        setDisplayed(text.slice(0, i));
+      }
+    }, 16);
+    return () => clearInterval(timer);
+  }, [text]);
+
+  return (
+    <span>
+      {displayed}
+      {!done && (
+        <motion.span
+          animate={{ opacity: [1, 0, 1] }}
+          transition={{ duration: 0.8, repeat: Infinity }}
+          style={{ display: 'inline-block', width: '1px', height: '1em', background: '#888682', marginLeft: '1px', verticalAlign: 'text-bottom' }}
+        />
+      )}
+    </span>
+  );
+}
 
 function FormSection({ number, title, children, last = false }) {
   return (
