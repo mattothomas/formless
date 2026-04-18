@@ -8,6 +8,7 @@ import { useSpeech } from '../hooks/useSpeech.js';
 import { useSession } from '../hooks/useSession.js';
 import LiveFormPanel from './LiveFormPanel.jsx';
 import { t } from '../utils/i18n.js';
+import { resolveFax } from '../utils/countyFax.js';
 
 const EXAMPLE_TEXT =
   "I just got laid off from my job last week. I have a 4-year-old daughter and I'm behind on rent — $950 a month in Philadelphia. She doesn't have health insurance and I don't know where to start.";
@@ -518,6 +519,7 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }
   const [snapDone, setSnapDone] = useState(false);
   const [snapWarned, setSnapWarned] = useState(false);
   const [pdfError, setPdfError] = useState(null);
+  const [faxState, setFaxState] = useState('idle'); // idle | searching | sending | done
 
   const d = extractedData || {};
   const results = eligibilityResults || [];
@@ -528,6 +530,16 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }
 
   const eligible = results.filter(r => r.eligible === 'yes');
   const maybe = results.filter(r => r.eligible === 'maybe');
+  const faxInfo = resolveFax(d.county, d.zip || (d.address || '').match(/\d{5}/)?.[0]);
+
+  async function handleFax() {
+    if (faxState !== 'idle') return;
+    setFaxState('searching');
+    await new Promise(r => setTimeout(r, 1800));
+    setFaxState('sending');
+    await new Promise(r => setTimeout(r, 2600));
+    setFaxState('done');
+  }
 
   async function handleMedicaid() {
     setGeneratingMedicaid(true); setPdfError(null);
@@ -733,6 +745,90 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }
               {pdfError && <p style={{ fontSize: '12px', color: '#c0392b', margin: 0 }}>{pdfError}</p>}
               <p style={c.privacyAttestation}>{t(lang, 'privacyAttestation')}</p>
             </div>
+
+            <div style={c.actionDivider} />
+
+            {/* Fax button */}
+            {faxInfo && faxState !== 'done' && (
+              <button
+                onClick={handleFax}
+                disabled={faxState !== 'idle'}
+                style={{
+                  ...c.dlGhost,
+                  width: '100%',
+                  marginBottom: '0.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.6rem',
+                  padding: '0.75rem 1rem',
+                  color: faxState === 'idle' ? '#111110' : '#555250',
+                  borderColor: faxState === 'idle' ? '#D8D6CF' : '#E8E6DF',
+                }}
+              >
+                {faxState === 'idle' && (
+                  <>
+                    <span style={{ fontSize: '14px' }}>📠</span>
+                    <span style={{ fontSize: '12px' }}>
+                      Fax to {faxInfo.county} County DHS Office
+                    </span>
+                  </>
+                )}
+                {faxState === 'searching' && (
+                  <>
+                    <motion.span
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                      style={{ display: 'inline-block', fontSize: '13px' }}
+                    >
+                      ⟳
+                    </motion.span>
+                    <span style={{ fontSize: '12px' }}>
+                      Locating {faxInfo.county} County Assistance Office…
+                    </span>
+                  </>
+                )}
+                {faxState === 'sending' && (
+                  <>
+                    <motion.span
+                      animate={{ opacity: [1, 0.3, 1] }}
+                      transition={{ duration: 0.7, repeat: Infinity }}
+                      style={{ fontSize: '13px' }}
+                    >
+                      📠
+                    </motion.span>
+                    <span style={{ fontSize: '12px' }}>
+                      Faxing to {faxInfo.county} CAO · {faxInfo.fax}…
+                    </span>
+                  </>
+                )}
+              </button>
+            )}
+            {faxState === 'done' && (
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.6rem',
+                  padding: '0.75rem 1rem',
+                  background: '#F0F9F4',
+                  border: '1px solid #C8E8D8',
+                  marginBottom: '0.5rem',
+                }}
+              >
+                <span style={{ fontSize: '14px' }}>✓</span>
+                <div>
+                  <p style={{ fontSize: '12px', fontWeight: 500, color: '#1C3A2A', margin: 0 }}>
+                    Sent to {faxInfo.county} County Assistance Office
+                  </p>
+                  <p style={{ fontSize: '11px', color: '#888682', margin: '2px 0 0' }}>
+                    Fax · {faxInfo.fax} · Your documents are on their way.
+                  </p>
+                </div>
+              </motion.div>
+            )}
 
             <div style={c.actionDivider} />
 
