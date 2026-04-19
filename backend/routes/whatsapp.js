@@ -20,7 +20,7 @@ import { fileURLToPath } from 'url';
 import { getOrCreate, saveToDisk } from '../sessions.js';
 import { sendToGemini, mergeExtractedData } from '../services/gemini.js';
 import { transcribe } from '../services/groq.js';
-import { downloadMedia, textReply, mediaReply } from '../services/twilio.js';
+import { downloadMedia, textReply, multiMediaReply } from '../services/twilio.js';
 import { generateForms, hasEnoughData } from '../services/pdf.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -107,34 +107,25 @@ router.post('/', async (req, res) => {
         saveToDisk();
 
         const name = session.extractedData.firstName || 'there';
-
-        // Send one message per form (Twilio WhatsApp supports one <Media> per message)
-        // First form gets the greeting, subsequent forms get a brief label
-        for (let i = 0; i < filled.length; i++) {
-          const { name: formName, filename } = filled[i];
+        const items = filled.map(({ name: formName, filename }, i) => {
           const pdfUrl = `${PUBLIC_BASE_URL}/pdfs/${filename}`;
           console.log(`[${from}] ${formName} → ${pdfUrl}`);
-
-          const msg = i === 0
-            ? `Great news, ${name}! I've prepared your application(s). Here's your ${formName} — review it and bring it to your local CAO office. Reply "start over" to begin a new application.`
-            : `Here is your ${formName}:`;
-
-          res.write(mediaReply(msg, pdfUrl));
-        }
-
-        return res.end();
+          return {
+            message: i === 0
+              ? `Great news, ${name}! I've prepared your application(s). Here's your ${formName} — review it and bring it to your local CAO office. Reply "start over" to begin a new application.`
+              : `Here is your ${formName}:`,
+            mediaUrl: pdfUrl,
+          };
+        });
+        return res.send(multiMediaReply(items));
       } else {
         // Already generated — resend links
         const name = session.extractedData.firstName || 'there';
-        for (let i = 0; i < session.generatedForms.length; i++) {
-          const { name: formName, filename } = session.generatedForms[i];
-          const pdfUrl = `${PUBLIC_BASE_URL}/pdfs/${filename}`;
-          const msg = i === 0
-            ? `Here are your previously generated forms, ${name}:`
-            : `${formName}:`;
-          res.write(mediaReply(msg, pdfUrl));
-        }
-        return res.end();
+        const items = session.generatedForms.map(({ name: formName, filename }, i) => ({
+          message: i === 0 ? `Here are your previously generated forms, ${name}:` : `${formName}:`,
+          mediaUrl: `${PUBLIC_BASE_URL}/pdfs/${filename}`,
+        }));
+        return res.send(multiMediaReply(items));
       }
     }
 

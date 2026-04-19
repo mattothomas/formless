@@ -30,6 +30,15 @@ export function mediaReply(message, mediaUrl) {
 </Response>`;
 }
 
+/** Multiple text+media messages in one TwiML response */
+export function multiMediaReply(items) {
+  const messages = items.map(({ message, mediaUrl }) => `  <Message>
+    <Body>${escapeXml(message)}</Body>
+    <Media>${escapeXml(mediaUrl)}</Media>
+  </Message>`).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n${messages}\n</Response>`;
+}
+
 /**
  * Download a Twilio media URL.
  * Twilio requires HTTP Basic Auth (Account SID : Auth Token) to fetch media.
