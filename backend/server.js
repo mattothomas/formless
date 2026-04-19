@@ -32,7 +32,7 @@ app.use('/pdfs', express.static(tmpDir));
 
 // ── Routes ──────────────────────────────────────────────────────────────────
 
-app.post('/webhook/whatsapp', whatsappRoute);
+app.use('/webhook/whatsapp', whatsappRoute);
 
 // Health check — useful for ngrok / load balancer checks
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
