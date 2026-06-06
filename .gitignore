@@ -1,5 +1,5 @@
 claude.md
-.vscode/
+.vscode/settings.json
 .env
 __pycache__/
 *.py[cod]
@@ -17,3 +17,4 @@ backend/tmp/
 benefitpath/node_modules/
 benefitpath/dist/
 benefitpath/.firebase/
+formless_context.md
