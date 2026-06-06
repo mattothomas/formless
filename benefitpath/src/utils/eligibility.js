@@ -268,8 +268,7 @@ export function calculateEligibility(extractedData) {
   }
 
   // --- LIHEAP ---
-  const liheapLimit60Pct = Math.round(fpl * (60 / 100) * (54590 / 15060)); // ~60% state median (~$54,590 for family of 4)
-  // Simplified: roughly 200% FPL as LIHEAP proxy
+  // Simplified: roughly 200% FPL as LIHEAP proxy (actual = 60% state median income)
   const liheapLimit = Math.round(fpl * 2.0);
   const liheapExpires = 'May 8, 2026';
   if (totalMonthlyIncome === 0 || totalMonthlyIncome <= liheapLimit) {
@@ -281,6 +280,17 @@ export function calculateEligibility(extractedData) {
       reason: `LIHEAP is open NOW through ${liheapExpires}. It can pay $200–$1,000 toward your heating bill. Based on your income, you likely qualify. Apply immediately — funds run out!`,
       icon: '🔥',
       urgent: true,
+      explanation: {
+        rows: [
+          ['Your income', incomeStr],
+          ['LIHEAP limit (~200% FPL proxy)', `${fmt(liheapLimit)}/month`],
+          ['Benefit amount', '$200–$1,000 one-time heating credit'],
+        ],
+        source: 'PA LIHEAP 2025–2026 · COMPASS.state.pa.us · 42 U.S.C. § 8621',
+      },
+      estimatedMonthly: null,
+      estimatedAnnual: 600,
+      estimatedLabel: 'One-time heating credit ($200–$1,000)',
     });
   } else {
     results.push({
@@ -291,6 +301,14 @@ export function calculateEligibility(extractedData) {
       reason: `LIHEAP eligibility is based on 60% of state median income. Apply by ${liheapExpires} to find out — funds are limited.`,
       icon: '🔥',
       urgent: true,
+      explanation: {
+        rows: [
+          ['Your income', `${fmt(totalMonthlyIncome)}/month`],
+          ['LIHEAP limit (approx.)', `${fmt(liheapLimit)}/month`],
+          ['Note', 'Actual limit is 60% of PA state median income — apply to confirm'],
+        ],
+        source: 'PA LIHEAP 2025–2026 · COMPASS.state.pa.us · 42 U.S.C. § 8621',
+      },
     });
   }
 
