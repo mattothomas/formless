@@ -198,12 +198,22 @@ function Intake({
   const [isTyping, setIsTyping] = useState(false);
   const [showPrivacyBanner, setShowPrivacyBanner] = useState(true);
   const [splitView, setSplitView] = useState(isDemoMode && window.innerWidth >= 900);
+  const [speechEnabled, setSpeechEnabled] = useState(true);
   const [sessionId] = useState(() => Math.random().toString(36).slice(2, 8).toUpperCase());
   const lastAiMsgId = useRef(null);
   const sendMessageRef = useRef(null);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+  function speak(text) {
+    if (!speechEnabled || !window.speechSynthesis || !text) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 1.05;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }
 
   useEffect(() => {
     const t = setTimeout(() => setShowPrivacyBanner(false), 5000);
@@ -228,6 +238,11 @@ function Intake({
   const handleTranscript = useCallback((text) => {
     setInputText(prev => prev ? prev + ' ' + text : text);
   }, []);
+
+  function handleToggleMic() {
+    window.speechSynthesis?.cancel();
+    toggleListening();
+  }
 
   const { isListening, isSupported, interimText, toggleListening } = useSpeech({
     onTranscript: handleTranscript,
@@ -254,6 +269,7 @@ function Intake({
       lastAiMsgId.current = assistantMsg.id;
       const updated = [...nextMessages, assistantMsg];
       setMessages(updated);
+      speak(response.message);
 
       const merged = mergeExtractedData(extractedData, response.extractedData);
       setExtractedData(merged);
@@ -324,6 +340,13 @@ function Intake({
           >
             {splitView ? <AlignLeft size={11} /> : <Columns2 size={11} />}
             <span style={{ fontSize: '10px' }}>{splitView ? t(lang, 'intakeSingleToggle') : t(lang, 'intakeLiveFormToggle')}</span>
+          </button>
+          <button
+            onClick={() => { setSpeechEnabled(v => !v); window.speechSynthesis?.cancel(); }}
+            title={speechEnabled ? 'Mute AI voice' : 'Unmute AI voice'}
+            style={{ ...c.ghostSmall, padding: '3px 8px', fontSize: '12px', lineHeight: 1 }}
+          >
+            {speechEnabled ? '🔊' : '🔇'}
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <span style={{ fontSize: '10px', color: '#2D8C5A' }}>🔒</span>
@@ -478,7 +501,7 @@ function Intake({
       <div style={c.inputArea}>
         <div style={c.inputRow}>
           <button
-            onClick={isSupported ? toggleListening : undefined}
+            onClick={isSupported ? handleToggleMic : undefined}
             style={{ ...c.inputIconBtn, background: isListening ? '#c0392b' : '#1C3A2A', opacity: isSupported ? 1 : 0.35, cursor: isSupported ? 'pointer' : 'default' }}
             title={isListening ? 'Stop recording' : isSupported ? 'Speak' : 'Voice input not available in this browser'}
           >
@@ -863,6 +886,7 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }
 
 function EligibilityCard({ r, lang }) {
   const [expanded, setExpanded] = useState(false);
+  const accentColor = r.eligible === 'yes' ? '#1C3A2A' : r.eligible === 'maybe' ? '#92400E' : '#888682';
   return (
     <motion.div
       variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}
@@ -882,7 +906,7 @@ function EligibilityCard({ r, lang }) {
               initial={{ width: 0 }}
               animate={{ width: `${r.confidence}%` }}
               transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
-              style={{ height: '100%', background: r.eligible === 'yes' ? '#1C3A2A' : r.eligible === 'maybe' ? '#92400E' : '#888682', borderRadius: 1 }}
+              style={{ height: '100%', background: accentColor, borderRadius: 1 }}
             />
           </div>
           <span style={{ fontSize: '9px', color: '#888682', marginTop: '2px', display: 'block' }}>
@@ -891,7 +915,7 @@ function EligibilityCard({ r, lang }) {
         </div>
       )}
       {r.estimatedLabel && (
-        <p style={{ fontSize: '10px', color: r.eligible === 'yes' ? '#1C3A2A' : '#92400E', margin: '0.4rem 0 0', fontWeight: 600 }}>
+        <p style={{ fontSize: '10px', color: accentColor, margin: '0.4rem 0 0', fontWeight: 600, wordBreak: 'break-word' }}>
           {r.estimatedLabel}
         </p>
       )}
@@ -903,40 +927,31 @@ function EligibilityCard({ r, lang }) {
           <button
             onClick={() => setExpanded(v => !v)}
             style={{
-              background: 'none', border: 'none', padding: '0.35rem 0 0',
+              background: 'none', border: 'none', padding: '0.4rem 0 0',
               fontSize: '10px', color: '#888682', cursor: 'pointer',
               fontFamily: 'inherit', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', gap: '3px',
             }}
           >
             {expanded ? '▲' : '▼'} {expanded ? 'Hide details' : 'Why this result?'}
           </button>
-          <AnimatePresence>
-            {expanded && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                style={{ overflow: 'hidden' }}
-              >
-                <div style={{ marginTop: '0.5rem', padding: '0.6rem 0.75rem', background: 'rgba(0,0,0,0.04)', borderRadius: 2 }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
-                    <tbody>
-                      {r.explanation.rows.map(([label, value], i) => (
-                        <tr key={i}>
-                          <td style={{ color: '#888682', paddingBottom: '3px', paddingRight: '0.5rem', whiteSpace: 'nowrap', verticalAlign: 'top' }}>{label}</td>
-                          <td style={{ color: '#111110', fontWeight: 500, paddingBottom: '3px' }}>{value}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <p style={{ fontSize: '9px', color: '#AAAAAA', margin: '6px 0 0', letterSpacing: '0.02em' }}>
-                    Source: {r.explanation.source}
-                  </p>
+          {expanded && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
+              style={{ marginTop: '0.5rem', padding: '0.6rem 0.75rem', background: 'rgba(0,0,0,0.04)', borderRadius: 2 }}
+            >
+              {r.explanation.rows.map(([label, value], i) => (
+                <div key={i} style={{ marginBottom: i < r.explanation.rows.length - 1 ? '0.45rem' : 0 }}>
+                  <p style={{ fontSize: '9px', color: '#888682', margin: 0, letterSpacing: '0.03em' }}>{label}</p>
+                  <p style={{ fontSize: '10px', color: '#111110', fontWeight: 600, margin: '1px 0 0', wordBreak: 'break-word' }}>{value}</p>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              ))}
+              <p style={{ fontSize: '9px', color: '#BBBBBB', margin: '8px 0 0', letterSpacing: '0.01em', wordBreak: 'break-word' }}>
+                Source: {r.explanation.source}
+              </p>
+            </motion.div>
+          )}
         </>
       )}
     </motion.div>
@@ -1339,13 +1354,16 @@ const c = {
     color: '#888682',
   },
   eligGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+    display: 'flex',
+    flexWrap: 'wrap',
   },
   eligItem: {
     padding: '0.9rem 1.25rem',
     borderRight: '1px solid #E8E6DF',
     borderBottom: '1px solid #E8E6DF',
+    flex: '1 1 180px',
+    minWidth: 0,
+    boxSizing: 'border-box',
   },
   eligYes: {
     background: '#F0F9F4',
