@@ -861,6 +861,88 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
+function EligibilityCard({ r, lang }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <motion.div
+      variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}
+      style={{ ...c.eligItem, ...(r.eligible === 'yes' ? c.eligYes : r.eligible === 'maybe' ? c.eligMaybe : c.eligNo) }}
+    >
+      <div style={c.eligItemTop}>
+        <span style={c.eligIcon}>{r.icon}</span>
+        <span style={c.eligName}>{r.programName}</span>
+        <span style={c.eligStatus}>
+          {r.eligible === 'yes' ? t(lang, 'eligYes') : r.eligible === 'maybe' ? t(lang, 'eligMaybe') : t(lang, 'eligNo')}
+        </span>
+      </div>
+      {r.confidence && (
+        <div style={{ marginTop: '0.4rem' }}>
+          <div style={{ height: 2, background: '#E8E6DF', borderRadius: 1 }}>
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${r.confidence}%` }}
+              transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
+              style={{ height: '100%', background: r.eligible === 'yes' ? '#1C3A2A' : r.eligible === 'maybe' ? '#92400E' : '#888682', borderRadius: 1 }}
+            />
+          </div>
+          <span style={{ fontSize: '9px', color: '#888682', marginTop: '2px', display: 'block' }}>
+            {r.confidence}% confidence
+          </span>
+        </div>
+      )}
+      {r.estimatedLabel && (
+        <p style={{ fontSize: '10px', color: r.eligible === 'yes' ? '#1C3A2A' : '#92400E', margin: '0.4rem 0 0', fontWeight: 600 }}>
+          {r.estimatedLabel}
+        </p>
+      )}
+      {r.urgent && (
+        <div style={c.urgentFlag}>{t(lang, 'urgentFlag')}</div>
+      )}
+      {r.explanation && (
+        <>
+          <button
+            onClick={() => setExpanded(v => !v)}
+            style={{
+              background: 'none', border: 'none', padding: '0.35rem 0 0',
+              fontSize: '10px', color: '#888682', cursor: 'pointer',
+              fontFamily: 'inherit', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', gap: '3px',
+            }}
+          >
+            {expanded ? '▲' : '▼'} {expanded ? 'Hide details' : 'Why this result?'}
+          </button>
+          <AnimatePresence>
+            {expanded && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ overflow: 'hidden' }}
+              >
+                <div style={{ marginTop: '0.5rem', padding: '0.6rem 0.75rem', background: 'rgba(0,0,0,0.04)', borderRadius: 2 }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+                    <tbody>
+                      {r.explanation.rows.map(([label, value], i) => (
+                        <tr key={i}>
+                          <td style={{ color: '#888682', paddingBottom: '3px', paddingRight: '0.5rem', whiteSpace: 'nowrap', verticalAlign: 'top' }}>{label}</td>
+                          <td style={{ color: '#111110', fontWeight: 500, paddingBottom: '3px' }}>{value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p style={{ fontSize: '9px', color: '#AAAAAA', margin: '6px 0 0', letterSpacing: '0.02em' }}>
+                    Source: {r.explanation.source}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </>
+      )}
+    </motion.div>
+  );
+}
+
 // Animates text typing in character by character on each new value
 function TypingText({ text }) {
   const [displayed, setDisplayed] = useState('');
