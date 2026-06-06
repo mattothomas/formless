@@ -328,6 +328,21 @@ export function calculateEligibility(extractedData) {
           ? 'Since you qualify for SNAP, the WIC income test is waived. You qualify if you have a child under 5 or are pregnant/postpartum.'
           : `Your income is within 185% FPL ($${wicLimit185.toLocaleString()}/month). You qualify for WIC nutrition benefits.`,
         icon: '👶',
+        explanation: {
+          rows: alreadyOnSnap
+            ? [
+                ['SNAP categorical eligibility', 'Waives WIC income test'],
+                ['Benefit', 'Monthly food package for mother and each child under 5'],
+              ]
+            : [
+                ['Your income', `${fmt(totalMonthlyIncome > 0 ? totalMonthlyIncome : 0)}/month`],
+                ['WIC limit (185% FPL)', `${fmt(wicLimit185)}/month`],
+              ],
+          source: 'USDA WIC Program · 7 CFR Part 246 · PA WIC',
+        },
+        estimatedMonthly: 100,
+        estimatedAnnual: 1200,
+        estimatedLabel: 'Monthly nutrition benefits (~$100/month per eligible member)',
       });
     } else {
       results.push({
@@ -337,6 +352,13 @@ export function calculateEligibility(extractedData) {
         confidence: 55,
         reason: `WIC serves pregnant/postpartum women and children under 5 with income under 185% FPL ($${wicLimit185.toLocaleString()}/month). Apply to confirm.`,
         icon: '👶',
+        explanation: {
+          rows: [
+            ['Your income', `${fmt(totalMonthlyIncome)}/month`],
+            ['WIC limit (185% FPL)', `${fmt(wicLimit185)}/month`],
+          ],
+          source: 'USDA WIC Program · 7 CFR Part 246 · PA WIC',
+        },
       });
     }
   } else if (hasChildUnder5) {
@@ -347,6 +369,14 @@ export function calculateEligibility(extractedData) {
       confidence: 65,
       reason: 'You have a child under 5, which may qualify your household for WIC. Eligibility also includes the child\'s nutritional risk assessment.',
       icon: '👶',
+      explanation: {
+        rows: [
+          ['Child under 5 detected', 'Yes — meets categorical requirement'],
+          ['Income check', incomeStr],
+          ['WIC limit (185% FPL)', `${fmt(wicLimit185)}/month`],
+        ],
+        source: 'USDA WIC Program · 7 CFR Part 246 · PA WIC',
+      },
     });
   } else {
     results.push({
@@ -356,6 +386,13 @@ export function calculateEligibility(extractedData) {
       confidence: 75,
       reason: 'WIC serves pregnant/postpartum/breastfeeding women and children under 5. Based on your household info, you do not appear to qualify.',
       icon: '👶',
+      explanation: {
+        rows: [
+          ['Requirement', 'Pregnant, postpartum, breastfeeding women, or children under 5'],
+          ['Your household', 'No eligible members detected'],
+        ],
+        source: 'USDA WIC Program · 7 CFR Part 246 · PA WIC',
+      },
     });
   }
 
