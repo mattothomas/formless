@@ -589,6 +589,37 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }
                 <span style={c.eligHeaderLabel}>{t(lang, 'eligLabel')}</span>
                 <span style={c.eligHeaderSub}>{t(lang, 'eligConfirmed', eligible.length)} · {t(lang, 'eligVerify', maybe.length)}</span>
               </div>
+
+              {/* Impact banner — total estimated annual value */}
+              {(() => {
+                const totalAnnual = results.reduce((sum, r) => sum + (r.estimatedAnnual || 0), 0);
+                if (totalAnnual === 0) return null;
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    style={{
+                      background: '#1C3A2A',
+                      color: '#fff',
+                      padding: '1rem 1.25rem',
+                      marginBottom: '1rem',
+                      borderRadius: 2,
+                    }}
+                  >
+                    <p style={{ fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', margin: '0 0 4px', opacity: 0.7 }}>
+                      Estimated Annual Value
+                    </p>
+                    <p style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 2px', letterSpacing: '-0.02em' }}>
+                      Up to ${totalAnnual.toLocaleString()}/year
+                    </p>
+                    <p style={{ fontSize: '11px', opacity: 0.65, margin: 0 }}>
+                      in benefits you may be leaving on the table — based on your household information
+                    </p>
+                  </motion.div>
+                );
+              })()}
+
               <motion.div
                 style={c.eligGrid}
                 variants={{ show: { transition: { staggerChildren: 0.1 } } }}
@@ -596,37 +627,7 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }
                 animate="show"
               >
                 {results.map(r => (
-                  <motion.div
-                    key={r.program}
-                    variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}
-                    style={{ ...c.eligItem, ...(r.eligible === 'yes' ? c.eligYes : r.eligible === 'maybe' ? c.eligMaybe : c.eligNo) }}
-                  >
-                    <div style={c.eligItemTop}>
-                      <span style={c.eligIcon}>{r.icon}</span>
-                      <span style={c.eligName}>{r.programName}</span>
-                      <span style={c.eligStatus}>
-                        {r.eligible === 'yes' ? t(lang, 'eligYes') : r.eligible === 'maybe' ? t(lang, 'eligMaybe') : t(lang, 'eligNo')}
-                      </span>
-                    </div>
-                    {r.confidence && (
-                      <div style={{ marginTop: '0.4rem' }}>
-                        <div style={{ height: 2, background: '#E8E6DF', borderRadius: 1 }}>
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${r.confidence}%` }}
-                            transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
-                            style={{ height: '100%', background: r.eligible === 'yes' ? '#1C3A2A' : r.eligible === 'maybe' ? '#92400E' : '#888682', borderRadius: 1 }}
-                          />
-                        </div>
-                        <span style={{ fontSize: '9px', color: '#888682', marginTop: '2px', display: 'block' }}>
-                          {r.confidence}% confidence
-                        </span>
-                      </div>
-                    )}
-                    {r.urgent && (
-                      <div style={c.urgentFlag}>{t(lang, 'urgentFlag')}</div>
-                    )}
-                  </motion.div>
+                  <EligibilityCard key={r.program} r={r} lang={lang} />
                 ))}
               </motion.div>
             </motion.div>
