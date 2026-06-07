@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mic, Square, Send, Columns2, AlignLeft } from 'lucide-react';
-import { sendToGemini, mergeExtractedData } from '../utils/geminiClient.js';
+import { Mic, Square, Send, Columns2, AlignLeft, Paperclip } from 'lucide-react';
+import { sendToGemini, mergeExtractedData, extractFromDocument } from '../utils/geminiClient.js';
 import { calculateEligibility } from '../utils/eligibility.js';
 import { generateMedicaidPDF, generateSnapPDF, downloadPDF } from '../utils/pdfGenerator.js';
 import { useSpeech } from '../hooks/useSpeech.js';
@@ -212,10 +212,12 @@ function Intake({
   const [speechEnabled, setSpeechEnabled] = useState(true);
   const [voiceIndex, setVoiceIndex] = useState(0);
   const [sessionId] = useState(() => Math.random().toString(36).slice(2, 8).toUpperCase());
+  const [isReadingDoc, setIsReadingDoc] = useState(false);
   const lastAiMsgId = useRef(null);
   const sendMessageRef = useRef(null);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+  const fileInputRef = useRef(null);
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
   const ttsKey = import.meta.env.VITE_GOOGLE_TTS_KEY;
@@ -276,6 +278,80 @@ function Intake({
   const handleTranscript = useCallback((text) => {
     setInputText(prev => prev ? prev + ' ' + text : text);
   }, []);
+
+  async function handleDocUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const dataUrl = ev.target.result;
+      const base64 = dataUrl.split(',')[1];
+      const mimeType = file.type || 'image/jpeg';
+
+      // Show "reading doc" bubble in chat
+      const readingMsg = {
+        id: 'doc-reading',
+        role: 'assistant',
+        content: `📄 Reading your document...`,
+        isDocStatus: true,
+      };
+      setMessages(prev => {
+        const base = prev.filter(m => m.id !== 'seed');
+        return [...base, readingMsg];
+      });
+      setIsReadingDoc(true);
+
+      try {
+        const result = await extractFromDocument(base64, mimeType, apiKey);
+        const merged = mergeExtractedData(extractedData, result);
+        setExtractedData(merged);
+        setEligibilityResults(calculateEligibility(merged));
+
+        // Build a human summary of what was found
+        const found = [];
+        if (result.firstName || result.lastName) found.push(`name: ${[result.firstName, result.lastName].filter(Boolean).join(' ')}`);
+        if (result.dateOfBirth) found.push(`DOB: ${result.dateOfBirth}`);
+        if (result.address) found.push(`address: ${result.address}`);
+        if (result.employer) found.push(`employer: ${result.employer}`);
+        if ((result.monthlyIncome || []).length > 0) {
+          const inc = result.monthlyIncome[0];
+          found.push(`income: $${inc.amount}${inc.frequency ? `/${inc.frequency}` : ''}`);
+        }
+        if (result.expenses?.rent) found.push(`rent: $${result.expenses.rent}`);
+        if (result.expenses?.utilities) found.push(`utilities: $${result.expenses.utilities}`);
+
+        const summaryLine = found.length > 0
+          ? `Got it — I found ${found.join(', ')} from your ${result.docType || 'document'}. Those are already filled in. ${result.summary || 'Let me know if anything looks off.'}`
+          : `I could read the document but couldn't extract any specific information. Could you tell me what it shows?`;
+
+        const doneMsg = {
+          id: `doc-done-${Date.now()}`,
+          role: 'assistant',
+          content: summaryLine,
+        };
+        setMessages(prev => {
+          const filtered = prev.filter(m => m.id !== 'doc-reading');
+          return [...filtered, doneMsg];
+        });
+        speak(summaryLine);
+      } catch (err) {
+        const errMsg = {
+          id: `doc-err-${Date.now()}`,
+          role: 'assistant',
+          content: `I had trouble reading that document. Could you describe what it says, or try a clearer photo?`,
+        };
+        setMessages(prev => {
+          const filtered = prev.filter(m => m.id !== 'doc-reading');
+          return [...filtered, errMsg];
+        });
+      } finally {
+        setIsReadingDoc(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
 
   function handleToggleMic() {
     stopAudio();
@@ -585,6 +661,22 @@ function Intake({
             style={c.inputTextarea}
           />
           <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isReadingDoc || isTyping}
+            style={{ ...c.inputIconBtn, background: 'transparent', border: '1px solid #D8D6CF', opacity: isReadingDoc || isTyping ? 0.3 : 1 }}
+            title="Upload a document (pay stub, utility bill, ID)"
+          >
+            <Paperclip size={12} color="#1C3A2A" />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,application/pdf"
+            capture="environment"
+            onChange={handleDocUpload}
+            style={{ display: 'none' }}
+          />
+          <button
             onClick={() => sendMessage(inputText)}
             disabled={!inputText.trim() || isTyping}
             style={{ ...c.inputIconBtn, background: '#1C3A2A', opacity: !inputText.trim() || isTyping ? 0.3 : 1 }}
@@ -593,7 +685,7 @@ function Intake({
           </button>
         </div>
         <p style={c.inputHint}>
-          {isListening ? t(lang, 'intakeHintListening') : t(lang, 'intakeHint')}
+          {isReadingDoc ? '📄 Reading your document with AI...' : isListening ? t(lang, 'intakeHintListening') : t(lang, 'intakeHint')}
         </p>
       </div>
     </motion.div>
