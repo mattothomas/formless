@@ -41,10 +41,10 @@ const F = {
 
 const DEMO_TURNS = [
   {
-    ai: "Thank you for reaching out. I want you to know — I'm entirely on your side, and I'm going to find every bit of support your family is entitled to.\n\nTo start, can you tell me a little about your household? Who lives with you?",
+    ai: `Thank you for reaching out. I want you to know — I'm entirely on your side, and I'm going to find every bit of support your family is entitled to.\n\nTo start, can you tell me a little about your household? Who lives with you?`,
   },
   {
-    ai: "Got it — two kids. That already opens up several programs for you.\n\nAnd what's coming in each month right now? Work, benefits, anything at all? It's completely okay if the answer is nothing at the moment.",
+    ai: `Got it — two kids. That already opens up several programs for you.\n\nAnd what's coming in each month right now? Work, benefits, anything at all? It's completely okay if the answer is nothing at the moment.`,
   },
   {
     ai: "I have everything I need. Let me show you what I found for your family.",
@@ -494,8 +494,8 @@ function ThresholdScreen({ onStart }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const DEMO_USER_LINES = [
-  "I'm a single mom — two kids, Lily who's 4 and Marco who's 7. I just got laid off from my job at the grocery store last month.",
-  "About $300 a month from savings. Mostly zero. Rent is $900 and I can't make it.",
+  `I'm a single mom — two kids, Lily who's 4 and Marco who's 7. I just got laid off from my job at the grocery store last month.`,
+  `About $300 a month from savings. Mostly zero. Rent is $900 and I can't make it.`,
 ];
 
 function ConversationScreen({ initialText, onComplete }) {
@@ -1249,7 +1249,7 @@ const STEPS = [
     when: 'Today',
     urgent: false,
     title: 'Sign your 3 applications',
-    detail: "We've marked every signature line. Print, sign in blue or black ink.",
+    detail: `We've marked every signature line. Print, sign in blue or black ink.`,
     action: null,
     icon: '✍️',
   },
@@ -1281,7 +1281,7 @@ const STEPS = [
     when: 'July – August',
     urgent: false,
     title: 'Watch for approval letters',
-    detail: "SNAP: ~30 days. Medicaid: ~45 days. We'll remind you to follow up.",
+    detail: `SNAP: ~30 days. Medicaid: ~45 days. We'll remind you to follow up.`,
     action: null,
     icon: '📬',
   },
