@@ -8,6 +8,12 @@ const SNAP_LIMITS = {
   extraPerPerson: 1017,
 };
 
+// 2025 USDA SNAP maximum monthly allotments (before deductions)
+const SNAP_MAX_ALLOTMENT = {
+  1: 292, 2: 536, 3: 768, 4: 975, 5: 1158, 6: 1390, 7: 1536, 8: 1756,
+  extraPerPerson: 220,
+};
+
 const WIC_LIMITS_PCT_FPL = 185; // 185% FPL
 const FPL_BASE = {
   1: 1255,
@@ -28,6 +34,14 @@ function getSNAPLimit(size) {
   if (s <= 4) return SNAP_LIMITS[s];
   return SNAP_LIMITS[4] + (s - 4) * SNAP_LIMITS.extraPerPerson;
 }
+
+function getSNAPMaxAllotment(size) {
+  const s = Math.max(1, size);
+  if (s <= 8) return SNAP_MAX_ALLOTMENT[s];
+  return SNAP_MAX_ALLOTMENT[8] + (s - 8) * SNAP_MAX_ALLOTMENT.extraPerPerson;
+}
+
+function fmt(n) { return `$${Math.round(n).toLocaleString()}`; }
 
 export function calculateEligibility(extractedData) {
   const results = [];
@@ -61,6 +75,8 @@ export function calculateEligibility(extractedData) {
 
   // --- SNAP ---
   const snapLimit = getSNAPLimit(householdSize);
+  const snapMaxAllotment = getSNAPMaxAllotment(householdSize);
+  const incomeStr = totalMonthlyIncome > 0 ? `${fmt(totalMonthlyIncome)}/month` : 'Not yet provided';
   if (totalMonthlyIncome === 0) {
     results.push({
       program: 'SNAP',
@@ -69,6 +85,13 @@ export function calculateEligibility(extractedData) {
       confidence: 60,
       reason: `We need your income information to determine SNAP eligibility. The limit for a household of ${householdSize} is $${snapLimit.toLocaleString()}/month.`,
       icon: '🍎',
+      explanation: {
+        rows: [
+          ['Your income', incomeStr],
+          [`SNAP limit (household of ${householdSize})`, `${fmt(snapLimit)}/month`],
+        ],
+        source: 'USDA 2025–2026 Federal Poverty Level Guidelines · 7 CFR 273.9',
+      },
     });
   } else if (totalMonthlyIncome <= snapLimit) {
     const pct = Math.round((totalMonthlyIncome / snapLimit) * 100);
@@ -79,6 +102,17 @@ export function calculateEligibility(extractedData) {
       confidence: pct < 80 ? 92 : 78,
       reason: `Your estimated income of $${Math.round(totalMonthlyIncome).toLocaleString()}/month is within the PA SNAP limit of $${snapLimit.toLocaleString()}/month for a household of ${householdSize}. You likely qualify.`,
       icon: '🍎',
+      explanation: {
+        rows: [
+          ['Your income', `${fmt(totalMonthlyIncome)}/month`],
+          [`SNAP limit (household of ${householdSize})`, `${fmt(snapLimit)}/month`],
+          ['Income as % of limit', `${pct}% — below the threshold`],
+        ],
+        source: 'USDA 2025–2026 Federal Poverty Level Guidelines · 7 CFR 273.9',
+      },
+      estimatedMonthly: snapMaxAllotment,
+      estimatedAnnual: snapMaxAllotment * 12,
+      estimatedLabel: `Up to ${fmt(snapMaxAllotment)}/month in food benefits`,
     });
   } else {
     results.push({
@@ -88,11 +122,20 @@ export function calculateEligibility(extractedData) {
       confidence: 80,
       reason: `Your income appears to exceed the SNAP limit of $${snapLimit.toLocaleString()}/month for a household of ${householdSize}. You may still qualify with deductions — apply to find out.`,
       icon: '🍎',
+      explanation: {
+        rows: [
+          ['Your income', `${fmt(totalMonthlyIncome)}/month`],
+          [`SNAP limit (household of ${householdSize})`, `${fmt(snapLimit)}/month`],
+          ['Note', 'Deductions (rent, childcare, medical) may still qualify you'],
+        ],
+        source: 'USDA 2025–2026 Federal Poverty Level Guidelines · 7 CFR 273.9',
+      },
     });
   }
 
   // --- Medicaid / CHIP ---
   const medicaidLimit138 = Math.round(fpl * 1.38);
+  const chipLimit200 = Math.round(fpl * 2.0);
   if (totalMonthlyIncome === 0) {
     results.push({
       program: 'Medicaid',
@@ -101,6 +144,13 @@ export function calculateEligibility(extractedData) {
       confidence: 55,
       reason: 'Share your income and we can check Medicaid eligibility (138% FPL for adults, higher for children).',
       icon: '🏥',
+      explanation: {
+        rows: [
+          ['Your income', incomeStr],
+          ['Medicaid adult limit (138% FPL)', `${fmt(medicaidLimit138)}/month`],
+        ],
+        source: 'ACA Medicaid Expansion · 42 U.S.C. § 1396a · PA DHS',
+      },
     });
   } else if (totalMonthlyIncome <= medicaidLimit138) {
     results.push({
@@ -110,6 +160,17 @@ export function calculateEligibility(extractedData) {
       confidence: 90,
       reason: `Your income is at or below 138% of the Federal Poverty Level ($${medicaidLimit138.toLocaleString()}/month). You likely qualify for Medicaid.`,
       icon: '🏥',
+      explanation: {
+        rows: [
+          ['Your income', `${fmt(totalMonthlyIncome)}/month`],
+          ['Medicaid limit (138% FPL)', `${fmt(medicaidLimit138)}/month`],
+          ['Income as % of FPL', `${Math.round(fplPct)}% — below the threshold`],
+        ],
+        source: 'ACA Medicaid Expansion · 42 U.S.C. § 1396a · PA DHS',
+      },
+      estimatedMonthly: null,
+      estimatedAnnual: 6000,
+      estimatedLabel: 'Free or low-cost health coverage (avg. value ~$6,000/year)',
     });
   } else if (hasChildUnder18) {
     results.push({
@@ -119,6 +180,15 @@ export function calculateEligibility(extractedData) {
       confidence: 70,
       reason: `Your income may be above the Medicaid adult threshold, but children in your household may qualify for CHIP at higher income limits. Apply to check.`,
       icon: '🏥',
+      explanation: {
+        rows: [
+          ['Your income', `${fmt(totalMonthlyIncome)}/month`],
+          ['Medicaid adult limit (138% FPL)', `${fmt(medicaidLimit138)}/month`],
+          ['CHIP child limit (~200% FPL)', `${fmt(chipLimit200)}/month`],
+          ['Note', 'Your children may qualify even if adults do not'],
+        ],
+        source: 'ACA Medicaid Expansion · 42 U.S.C. § 1396a · PA DHS',
+      },
     });
   } else {
     results.push({
@@ -128,6 +198,13 @@ export function calculateEligibility(extractedData) {
       confidence: 65,
       reason: `Your income appears above the Medicaid limit of $${medicaidLimit138.toLocaleString()}/month. You may qualify for marketplace insurance with subsidies.`,
       icon: '🏥',
+      explanation: {
+        rows: [
+          ['Your income', `${fmt(totalMonthlyIncome)}/month`],
+          ['Medicaid limit (138% FPL)', `${fmt(medicaidLimit138)}/month`],
+        ],
+        source: 'ACA Medicaid Expansion · 42 U.S.C. § 1396a · PA DHS',
+      },
     });
   }
 
@@ -142,6 +219,17 @@ export function calculateEligibility(extractedData) {
         confidence: 65,
         reason: 'You have children under 18 and may qualify for monthly cash assistance through TANF. Eligibility depends on assets, work requirements, and citizenship — apply to find out.',
         icon: '💵',
+        explanation: {
+          rows: [
+            ['Your income', incomeStr],
+            ['TANF limit (approx. 50% FPL)', `${fmt(tanfLimit)}/month`],
+            ['Note', 'Exact amount depends on assets, work requirements, and family size'],
+          ],
+          source: 'PA TANF Program · 55 Pa. Code Ch. 141 · PA DHS',
+        },
+        estimatedMonthly: 300,
+        estimatedAnnual: 3600,
+        estimatedLabel: 'Monthly cash assistance (PA grant varies $205–$403/month)',
       });
     } else {
       results.push({
@@ -151,6 +239,14 @@ export function calculateEligibility(extractedData) {
         confidence: 60,
         reason: 'Your income may be above TANF thresholds, but other factors like assets and family composition matter. It\'s still worth applying.',
         icon: '💵',
+        explanation: {
+          rows: [
+            ['Your income', `${fmt(totalMonthlyIncome)}/month`],
+            ['TANF limit (approx. 50% FPL)', `${fmt(tanfLimit)}/month`],
+            ['Note', 'Deductions and family composition may still qualify you'],
+          ],
+          source: 'PA TANF Program · 55 Pa. Code Ch. 141 · PA DHS',
+        },
       });
     }
   } else {
@@ -161,12 +257,18 @@ export function calculateEligibility(extractedData) {
       confidence: 85,
       reason: 'TANF is for families with children under 18. Based on your household, you do not appear to be eligible.',
       icon: '💵',
+      explanation: {
+        rows: [
+          ['Requirement', 'Must have children under 18 in household'],
+          ['Your household', 'No children under 18 detected'],
+        ],
+        source: 'PA TANF Program · 55 Pa. Code Ch. 141 · PA DHS',
+      },
     });
   }
 
   // --- LIHEAP ---
-  const liheapLimit60Pct = Math.round(fpl * (60 / 100) * (54590 / 15060)); // ~60% state median (~$54,590 for family of 4)
-  // Simplified: roughly 200% FPL as LIHEAP proxy
+  // Simplified: roughly 200% FPL as LIHEAP proxy (actual = 60% state median income)
   const liheapLimit = Math.round(fpl * 2.0);
   const liheapExpires = 'May 8, 2026';
   if (totalMonthlyIncome === 0 || totalMonthlyIncome <= liheapLimit) {
@@ -178,6 +280,17 @@ export function calculateEligibility(extractedData) {
       reason: `LIHEAP is open NOW through ${liheapExpires}. It can pay $200–$1,000 toward your heating bill. Based on your income, you likely qualify. Apply immediately — funds run out!`,
       icon: '🔥',
       urgent: true,
+      explanation: {
+        rows: [
+          ['Your income', incomeStr],
+          ['LIHEAP limit (~200% FPL proxy)', `${fmt(liheapLimit)}/month`],
+          ['Benefit amount', '$200–$1,000 one-time heating credit'],
+        ],
+        source: 'PA LIHEAP 2025–2026 · COMPASS.state.pa.us · 42 U.S.C. § 8621',
+      },
+      estimatedMonthly: null,
+      estimatedAnnual: 600,
+      estimatedLabel: 'One-time heating credit ($200–$1,000)',
     });
   } else {
     results.push({
@@ -188,6 +301,14 @@ export function calculateEligibility(extractedData) {
       reason: `LIHEAP eligibility is based on 60% of state median income. Apply by ${liheapExpires} to find out — funds are limited.`,
       icon: '🔥',
       urgent: true,
+      explanation: {
+        rows: [
+          ['Your income', `${fmt(totalMonthlyIncome)}/month`],
+          ['LIHEAP limit (approx.)', `${fmt(liheapLimit)}/month`],
+          ['Note', 'Actual limit is 60% of PA state median income — apply to confirm'],
+        ],
+        source: 'PA LIHEAP 2025–2026 · COMPASS.state.pa.us · 42 U.S.C. § 8621',
+      },
     });
   }
 
@@ -207,6 +328,21 @@ export function calculateEligibility(extractedData) {
           ? 'Since you qualify for SNAP, the WIC income test is waived. You qualify if you have a child under 5 or are pregnant/postpartum.'
           : `Your income is within 185% FPL ($${wicLimit185.toLocaleString()}/month). You qualify for WIC nutrition benefits.`,
         icon: '👶',
+        explanation: {
+          rows: alreadyOnSnap
+            ? [
+                ['SNAP categorical eligibility', 'Waives WIC income test'],
+                ['Benefit', 'Monthly food package for mother and each child under 5'],
+              ]
+            : [
+                ['Your income', `${fmt(totalMonthlyIncome > 0 ? totalMonthlyIncome : 0)}/month`],
+                ['WIC limit (185% FPL)', `${fmt(wicLimit185)}/month`],
+              ],
+          source: 'USDA WIC Program · 7 CFR Part 246 · PA WIC',
+        },
+        estimatedMonthly: 100,
+        estimatedAnnual: 1200,
+        estimatedLabel: 'Monthly nutrition benefits (~$100/month per eligible member)',
       });
     } else {
       results.push({
@@ -216,6 +352,13 @@ export function calculateEligibility(extractedData) {
         confidence: 55,
         reason: `WIC serves pregnant/postpartum women and children under 5 with income under 185% FPL ($${wicLimit185.toLocaleString()}/month). Apply to confirm.`,
         icon: '👶',
+        explanation: {
+          rows: [
+            ['Your income', `${fmt(totalMonthlyIncome)}/month`],
+            ['WIC limit (185% FPL)', `${fmt(wicLimit185)}/month`],
+          ],
+          source: 'USDA WIC Program · 7 CFR Part 246 · PA WIC',
+        },
       });
     }
   } else if (hasChildUnder5) {
@@ -226,6 +369,14 @@ export function calculateEligibility(extractedData) {
       confidence: 65,
       reason: 'You have a child under 5, which may qualify your household for WIC. Eligibility also includes the child\'s nutritional risk assessment.',
       icon: '👶',
+      explanation: {
+        rows: [
+          ['Child under 5 detected', 'Yes — meets categorical requirement'],
+          ['Income check', incomeStr],
+          ['WIC limit (185% FPL)', `${fmt(wicLimit185)}/month`],
+        ],
+        source: 'USDA WIC Program · 7 CFR Part 246 · PA WIC',
+      },
     });
   } else {
     results.push({
@@ -235,6 +386,13 @@ export function calculateEligibility(extractedData) {
       confidence: 75,
       reason: 'WIC serves pregnant/postpartum/breastfeeding women and children under 5. Based on your household info, you do not appear to qualify.',
       icon: '👶',
+      explanation: {
+        rows: [
+          ['Requirement', 'Pregnant, postpartum, breastfeeding women, or children under 5'],
+          ['Your household', 'No eligible members detected'],
+        ],
+        source: 'USDA WIC Program · 7 CFR Part 246 · PA WIC',
+      },
     });
   }
 

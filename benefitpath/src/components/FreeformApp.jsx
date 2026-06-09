@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mic, Square, Send, Columns2, AlignLeft } from 'lucide-react';
-import { sendToGemini, mergeExtractedData } from '../utils/geminiClient.js';
+import { Mic, Square, Send, Columns2, AlignLeft, Paperclip } from 'lucide-react';
+import { sendToGemini, mergeExtractedData, extractFromDocument } from '../utils/geminiClient.js';
 import { calculateEligibility } from '../utils/eligibility.js';
 import { generateMedicaidPDF, generateSnapPDF, downloadPDF } from '../utils/pdfGenerator.js';
 import { useSpeech } from '../hooks/useSpeech.js';
@@ -80,7 +80,9 @@ export default function FreeformApp({ onSwitchDesign }) {
           <Document
             key="document"
             extractedData={extractedData}
+            setExtractedData={setExtractedData}
             eligibilityResults={eligibilityResults}
+            setEligibilityResults={setEligibilityResults}
             onReturn={handleReturn}
             onReset={handleReset}
             lang={lang}
@@ -190,20 +192,68 @@ const SYSTEM_SEED = {
 
 const DEMO_MARIA_MSG = "I'm Maria Santos. Single mom, two kids — my daughter Lily is 4 and Marco is 7. I just got laid off from my job at the grocery store. We live at 1234 Broad Street, Philadelphia. Rent is $900 a month. No health insurance.";
 
+const VOICES = [
+  { label: 'Nova',  name: 'en-US-Neural2-F', langCode: 'en-US' },
+  { label: 'Aria',  name: 'en-US-Neural2-C', langCode: 'en-US' },
+  { label: 'Maya',  name: 'en-US-Neural2-H', langCode: 'en-US' },
+  { label: 'Sage',  name: 'en-US-Journey-F', langCode: 'en-US' },
+  { label: 'River', name: 'en-US-Journey-O', langCode: 'en-US' },
+];
+
 function Intake({
   savedMessages, setMessages, extractedData, setExtractedData,
   eligibilityResults, setEligibilityResults, persist, onReview, lang, isDemoMode,
 }) {
+
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showPrivacyBanner, setShowPrivacyBanner] = useState(true);
   const [splitView, setSplitView] = useState(isDemoMode && window.innerWidth >= 900);
+  const [speechEnabled, setSpeechEnabled] = useState(true);
+  const [voiceIndex, setVoiceIndex] = useState(0);
   const [sessionId] = useState(() => Math.random().toString(36).slice(2, 8).toUpperCase());
+  const [isReadingDoc, setIsReadingDoc] = useState(false);
   const lastAiMsgId = useRef(null);
   const sendMessageRef = useRef(null);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+  const fileInputRef = useRef(null);
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+  const ttsKey = import.meta.env.VITE_GOOGLE_TTS_KEY;
+  const audioRef = useRef(null);
+
+  function stopAudio() {
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    window.speechSynthesis?.cancel();
+  }
+
+  async function speak(text, voiceOverride) {
+    if (!speechEnabled || !text) return;
+    stopAudio();
+    const voice = voiceOverride ?? VOICES[voiceIndex];
+    try {
+      const res = await fetch(
+        `https://texttospeech.googleapis.com/v1/text:synthesize?key=${ttsKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            input: { text },
+            voice: { languageCode: voice.langCode, name: voice.name },
+            audioConfig: { audioEncoding: 'MP3', speakingRate: 1.0, pitch: 0 },
+          }),
+        }
+      );
+      if (!res.ok) throw new Error(`TTS error ${res.status}`);
+      const { audioContent } = await res.json();
+      const audio = new Audio(`data:audio/mp3;base64,${audioContent}`);
+      audioRef.current = audio;
+      audio.play();
+    } catch (e) {
+      console.warn('Google TTS failed:', e.message);
+    }
+  }
 
   useEffect(() => {
     const t = setTimeout(() => setShowPrivacyBanner(false), 5000);
@@ -228,6 +278,85 @@ function Intake({
   const handleTranscript = useCallback((text) => {
     setInputText(prev => prev ? prev + ' ' + text : text);
   }, []);
+
+  async function handleDocUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const dataUrl = ev.target.result;
+      const base64 = dataUrl.split(',')[1];
+      const mimeType = file.type || 'image/jpeg';
+
+      // Show "reading doc" bubble in chat
+      const readingMsg = {
+        id: 'doc-reading',
+        role: 'assistant',
+        content: `📄 Reading your document...`,
+        isDocStatus: true,
+      };
+      setMessages(prev => {
+        const base = prev.filter(m => m.id !== 'seed');
+        return [...base, readingMsg];
+      });
+      setIsReadingDoc(true);
+
+      try {
+        const result = await extractFromDocument(base64, mimeType, apiKey);
+        const merged = mergeExtractedData(extractedData, result);
+        setExtractedData(merged);
+        setEligibilityResults(calculateEligibility(merged));
+
+        // Build a human summary of what was found
+        const found = [];
+        if (result.firstName || result.lastName) found.push(`name: ${[result.firstName, result.lastName].filter(Boolean).join(' ')}`);
+        if (result.dateOfBirth) found.push(`DOB: ${result.dateOfBirth}`);
+        if (result.address) found.push(`address: ${result.address}`);
+        if (result.employer) found.push(`employer: ${result.employer}`);
+        if ((result.monthlyIncome || []).length > 0) {
+          const inc = result.monthlyIncome[0];
+          found.push(`income: $${inc.amount}${inc.frequency ? `/${inc.frequency}` : ''}`);
+        }
+        if (result.expenses?.rent) found.push(`rent: $${result.expenses.rent}`);
+        if (result.expenses?.utilities) found.push(`utilities: $${result.expenses.utilities}`);
+
+        const summaryLine = found.length > 0
+          ? `Got it — I found ${found.join(', ')} from your ${result.docType || 'document'}. Those are already filled in. ${result.summary || 'Let me know if anything looks off.'}`
+          : `I could read the document but couldn't extract any specific information. Could you tell me what it shows?`;
+
+        const doneMsg = {
+          id: `doc-done-${Date.now()}`,
+          role: 'assistant',
+          content: summaryLine,
+        };
+        setMessages(prev => {
+          const filtered = prev.filter(m => m.id !== 'doc-reading');
+          return [...filtered, doneMsg];
+        });
+        speak(summaryLine);
+      } catch (err) {
+        const errMsg = {
+          id: `doc-err-${Date.now()}`,
+          role: 'assistant',
+          content: `I had trouble reading that document. Could you describe what it says, or try a clearer photo?`,
+        };
+        setMessages(prev => {
+          const filtered = prev.filter(m => m.id !== 'doc-reading');
+          return [...filtered, errMsg];
+        });
+      } finally {
+        setIsReadingDoc(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleToggleMic() {
+    stopAudio();
+    toggleListening();
+  }
 
   const { isListening, isSupported, interimText, toggleListening } = useSpeech({
     onTranscript: handleTranscript,
@@ -254,6 +383,7 @@ function Intake({
       lastAiMsgId.current = assistantMsg.id;
       const updated = [...nextMessages, assistantMsg];
       setMessages(updated);
+      speak(response.message);
 
       const merged = mergeExtractedData(extractedData, response.extractedData);
       setExtractedData(merged);
@@ -325,6 +455,42 @@ function Intake({
             {splitView ? <AlignLeft size={11} /> : <Columns2 size={11} />}
             <span style={{ fontSize: '10px' }}>{splitView ? t(lang, 'intakeSingleToggle') : t(lang, 'intakeLiveFormToggle')}</span>
           </button>
+          <button
+            onClick={() => { setSpeechEnabled(v => !v); stopAudio(); }}
+            title={speechEnabled ? 'Mute AI voice' : 'Unmute AI voice'}
+            style={{ ...c.ghostSmall, padding: '3px 8px', fontSize: '12px', lineHeight: 1 }}
+          >
+            {speechEnabled ? '🔊' : '🔇'}
+          </button>
+          {speechEnabled && (
+            <select
+              value={voiceIndex}
+              onChange={e => {
+                const i = Number(e.target.value);
+                setVoiceIndex(i);
+                speak('Hi — does this voice work for you?', VOICES[i]);
+              }}
+              style={{
+                ...c.ghostSmall,
+                padding: '3px 6px',
+                fontSize: '10px',
+                cursor: 'pointer',
+                background: '#F7F6F3',
+                border: '1px solid #D8D6CF',
+                fontFamily: 'inherit',
+                color: '#111110',
+                appearance: 'none',
+                paddingRight: '18px',
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888682'/%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 5px center',
+              }}
+            >
+              {VOICES.map((v, i) => (
+                <option key={v.name} value={i}>{v.label}</option>
+              ))}
+            </select>
+          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <span style={{ fontSize: '10px', color: '#2D8C5A' }}>🔒</span>
             <span style={c.topBarRight}>Session {sessionId} · {t(lang, 'sessionLabel')}</span>
@@ -478,7 +644,7 @@ function Intake({
       <div style={c.inputArea}>
         <div style={c.inputRow}>
           <button
-            onClick={isSupported ? toggleListening : undefined}
+            onClick={isSupported ? handleToggleMic : undefined}
             style={{ ...c.inputIconBtn, background: isListening ? '#c0392b' : '#1C3A2A', opacity: isSupported ? 1 : 0.35, cursor: isSupported ? 'pointer' : 'default' }}
             title={isListening ? 'Stop recording' : isSupported ? 'Speak' : 'Voice input not available in this browser'}
           >
@@ -495,6 +661,22 @@ function Intake({
             style={c.inputTextarea}
           />
           <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isReadingDoc || isTyping}
+            style={{ ...c.inputIconBtn, background: 'transparent', border: '1px solid #D8D6CF', opacity: isReadingDoc || isTyping ? 0.3 : 1 }}
+            title="Upload a document (pay stub, utility bill, ID)"
+          >
+            <Paperclip size={12} color="#1C3A2A" />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,application/pdf"
+            capture="environment"
+            onChange={handleDocUpload}
+            style={{ display: 'none' }}
+          />
+          <button
             onClick={() => sendMessage(inputText)}
             disabled={!inputText.trim() || isTyping}
             style={{ ...c.inputIconBtn, background: '#1C3A2A', opacity: !inputText.trim() || isTyping ? 0.3 : 1 }}
@@ -503,7 +685,7 @@ function Intake({
           </button>
         </div>
         <p style={c.inputHint}>
-          {isListening ? t(lang, 'intakeHintListening') : t(lang, 'intakeHint')}
+          {isReadingDoc ? '📄 Reading your document with AI...' : isListening ? t(lang, 'intakeHintListening') : t(lang, 'intakeHint')}
         </p>
       </div>
     </motion.div>
@@ -512,7 +694,7 @@ function Intake({
 
 // ── Document ─────────────────────────────────────────────────────────────────
 
-function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }) {
+function Document({ extractedData, setExtractedData, eligibilityResults, setEligibilityResults, onReturn, onReset, lang }) {
   const [generatingMedicaid, setGeneratingMedicaid] = useState(false);
   const [generatingSnap, setGeneratingSnap] = useState(false);
   const [medicaidDone, setMedicaidDone] = useState(false);
@@ -523,6 +705,26 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }
 
   const d = extractedData || {};
   const results = eligibilityResults || [];
+
+  // Update a top-level string field and re-run eligibility
+  function updateField(path, value) {
+    const next = { ...d };
+    if (path === 'monthlyIncomeTotal') {
+      // Flatten to a single income entry the eligibility engine can read
+      const amt = parseFloat(value.replace(/[^0-9.]/g, '')) || 0;
+      next.monthlyIncome = amt > 0 ? [{ source: 'Total income', amount: String(amt), frequency: 'monthly', person: next.firstName || 'Applicant' }] : [];
+    } else if (path === 'householdSizeTotal') {
+      const size = Math.max(1, parseInt(value) || 1);
+      const extra = size - 1;
+      const existing = (next.householdMembers || []).slice(0, extra);
+      while (existing.length < extra) existing.push({ name: `Member ${existing.length + 2}`, relationship: 'Household member', dob: null });
+      next.householdMembers = existing;
+    } else {
+      next[path] = value;
+    }
+    setExtractedData(next);
+    setEligibilityResults(calculateEligibility(next));
+  }
   const fullName = [d.firstName, d.lastName].filter(Boolean).join(' ') || '—';
   const totalIncome = (d.monthlyIncome || []).reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
   const householdSize = (d.householdMembers || []).length + 1;
@@ -589,6 +791,37 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }
                 <span style={c.eligHeaderLabel}>{t(lang, 'eligLabel')}</span>
                 <span style={c.eligHeaderSub}>{t(lang, 'eligConfirmed', eligible.length)} · {t(lang, 'eligVerify', maybe.length)}</span>
               </div>
+
+              {/* Impact banner — total estimated annual value */}
+              {(() => {
+                const totalAnnual = results.reduce((sum, r) => sum + (r.estimatedAnnual || 0), 0);
+                if (totalAnnual === 0) return null;
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    style={{
+                      background: '#1C3A2A',
+                      color: '#fff',
+                      padding: '1rem 1.25rem',
+                      marginBottom: '1rem',
+                      borderRadius: 2,
+                    }}
+                  >
+                    <p style={{ fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', margin: '0 0 4px', opacity: 0.7 }}>
+                      Estimated Annual Value
+                    </p>
+                    <p style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 2px', letterSpacing: '-0.02em' }}>
+                      Up to ${totalAnnual.toLocaleString()}/year
+                    </p>
+                    <p style={{ fontSize: '11px', opacity: 0.65, margin: 0 }}>
+                      in benefits you may be leaving on the table — based on your household information
+                    </p>
+                  </motion.div>
+                );
+              })()}
+
               <motion.div
                 style={c.eligGrid}
                 variants={{ show: { transition: { staggerChildren: 0.1 } } }}
@@ -596,37 +829,7 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }
                 animate="show"
               >
                 {results.map(r => (
-                  <motion.div
-                    key={r.program}
-                    variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}
-                    style={{ ...c.eligItem, ...(r.eligible === 'yes' ? c.eligYes : r.eligible === 'maybe' ? c.eligMaybe : c.eligNo) }}
-                  >
-                    <div style={c.eligItemTop}>
-                      <span style={c.eligIcon}>{r.icon}</span>
-                      <span style={c.eligName}>{r.programName}</span>
-                      <span style={c.eligStatus}>
-                        {r.eligible === 'yes' ? t(lang, 'eligYes') : r.eligible === 'maybe' ? t(lang, 'eligMaybe') : t(lang, 'eligNo')}
-                      </span>
-                    </div>
-                    {r.confidence && (
-                      <div style={{ marginTop: '0.4rem' }}>
-                        <div style={{ height: 2, background: '#E8E6DF', borderRadius: 1 }}>
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${r.confidence}%` }}
-                            transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
-                            style={{ height: '100%', background: r.eligible === 'yes' ? '#1C3A2A' : r.eligible === 'maybe' ? '#92400E' : '#888682', borderRadius: 1 }}
-                          />
-                        </div>
-                        <span style={{ fontSize: '9px', color: '#888682', marginTop: '2px', display: 'block' }}>
-                          {r.confidence}% confidence
-                        </span>
-                      </div>
-                    )}
-                    {r.urgent && (
-                      <div style={c.urgentFlag}>{t(lang, 'urgentFlag')}</div>
-                    )}
-                  </motion.div>
+                  <EligibilityCard key={r.program} r={r} lang={lang} />
                 ))}
               </motion.div>
             </motion.div>
@@ -655,21 +858,26 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }
             {/* Sections */}
             <div style={c.docBody}>
               <FormSection number="I" title={t(lang, 'sectionI')}>
-                <FieldRow label="Legal Name" value={fullName} />
-                <FieldRow label="Date of Birth" value={d.dateOfBirth || 'Not provided'} />
-                <FieldRow label="Marital Status" value={d.maritalStatus || 'Single'} />
-                <FieldRow label="Contact Phone" value={d.phone || 'Not provided'} />
+                <FieldRow label="Legal Name" value={fullName} onSave={v => { updateField('firstName', v.split(' ')[0]); updateField('lastName', v.split(' ').slice(1).join(' ')); }} />
+                <FieldRow label="Date of Birth" value={d.dateOfBirth || ''} placeholder="YYYY-MM-DD" onSave={v => updateField('dateOfBirth', v)} />
+                <FieldRow label="Marital Status" value={d.maritalStatus || ''} placeholder="e.g. Single" onSave={v => updateField('maritalStatus', v)} />
+                <FieldRow label="Contact Phone" value={d.phone || ''} placeholder="e.g. (215) 555-0100" onSave={v => updateField('phone', v)} />
               </FormSection>
 
               <FormSection number="II" title={t(lang, 'sectionII')}>
-                <FieldRow label="Current Address" value={d.address || 'Not provided'} span />
-                <FieldRow label="County" value={d.county || 'Not provided'} />
+                <FieldRow label="Current Address" value={d.address || ''} placeholder="Street, City, State, ZIP" onSave={v => updateField('address', v)} span />
+                <FieldRow label="County" value={d.county || ''} placeholder="e.g. Philadelphia" onSave={v => updateField('county', v)} />
                 <FieldRow label="Housing Status" value={(d.expenses || {}).rent ? 'Renting' : 'Not specified'} />
               </FormSection>
 
               <FormSection number="III" title={t(lang, 'sectionIII')}>
-                <FieldRow label="Total Members (incl. applicant)" value={String(householdSize)} />
-                <FieldRow label="Children Under 18" value={String((d.householdMembers || []).filter(m => m.relationship?.toLowerCase().includes('child') || m.relationship?.toLowerCase().includes('daughter') || m.relationship?.toLowerCase().includes('son')).length || '—')} />
+                <FieldRow
+                  label="Total Household Size (incl. you)"
+                  value={String(householdSize)}
+                  placeholder="e.g. 3"
+                  onSave={v => updateField('householdSizeTotal', v)}
+                  hint="Affects eligibility — update if wrong"
+                />
                 {(d.householdMembers || []).map((m, i) => (
                   <FieldRow
                     key={i}
@@ -681,8 +889,14 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }
               </FormSection>
 
               <FormSection number="IV" title={t(lang, 'sectionIV')}>
-                <FieldRow label="Employment Status" value={totalIncome === 0 ? 'Unemployed — No current income' : 'Employed'} />
-                <FieldRow label="Monthly Gross Income" value={totalIncome > 0 ? `$${totalIncome.toLocaleString()}/month` : '$0.00'} />
+                <FieldRow
+                  label="Monthly Gross Income"
+                  value={totalIncome > 0 ? `$${totalIncome.toLocaleString()}` : ''}
+                  placeholder="e.g. 1200"
+                  onSave={v => updateField('monthlyIncomeTotal', v)}
+                  hint="Affects eligibility — update if wrong"
+                  prefix="$"
+                />
                 {(d.monthlyIncome || []).length > 0
                   ? (d.monthlyIncome || []).map((inc, i) => (
                       <FieldRow
@@ -697,10 +911,10 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }
               </FormSection>
 
               <FormSection number="V" title={t(lang, 'sectionV')}>
-                <FieldRow label="Rent / Mortgage" value={(d.expenses || {}).rent ? `$${d.expenses.rent}/month` : '$0'} />
-                <FieldRow label="Utilities" value={(d.expenses || {}).utilities ? `$${d.expenses.utilities}/month` : '$0'} />
-                <FieldRow label="Heating" value={(d.expenses || {}).heating ? `$${d.expenses.heating}/month` : '$0'} />
-                <FieldRow label="Childcare" value={(d.expenses || {}).childcare ? `$${d.expenses.childcare}/month` : '$0'} />
+                <FieldRow label="Rent / Mortgage" value={(d.expenses || {}).rent ? `$${d.expenses.rent}/month` : ''} placeholder="e.g. 900" onSave={v => updateField('expenses', { ...(d.expenses || {}), rent: parseFloat(v) || 0 })} />
+                <FieldRow label="Utilities" value={(d.expenses || {}).utilities ? `$${d.expenses.utilities}/month` : ''} placeholder="e.g. 140" onSave={v => updateField('expenses', { ...(d.expenses || {}), utilities: parseFloat(v) || 0 })} />
+                <FieldRow label="Heating" value={(d.expenses || {}).heating ? `$${d.expenses.heating}/month` : ''} placeholder="e.g. 65" onSave={v => updateField('expenses', { ...(d.expenses || {}), heating: parseFloat(v) || 0 })} />
+                <FieldRow label="Childcare" value={(d.expenses || {}).childcare ? `$${d.expenses.childcare}/month` : ''} placeholder="e.g. 200" onSave={v => updateField('expenses', { ...(d.expenses || {}), childcare: parseFloat(v) || 0 })} />
               </FormSection>
 
               <FormSection number="VI" title={t(lang, 'sectionVI')}>
@@ -860,6 +1074,80 @@ function Document({ extractedData, eligibilityResults, onReturn, onReset, lang }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
+function EligibilityCard({ r, lang }) {
+  const [expanded, setExpanded] = useState(false);
+  const accentColor = r.eligible === 'yes' ? '#1C3A2A' : r.eligible === 'maybe' ? '#92400E' : '#888682';
+  return (
+    <motion.div
+      variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}
+      style={{ ...c.eligItem, ...(r.eligible === 'yes' ? c.eligYes : r.eligible === 'maybe' ? c.eligMaybe : c.eligNo) }}
+    >
+      <div style={c.eligItemTop}>
+        <span style={c.eligIcon}>{r.icon}</span>
+        <span style={c.eligName}>{r.programName}</span>
+        <span style={c.eligStatus}>
+          {r.eligible === 'yes' ? t(lang, 'eligYes') : r.eligible === 'maybe' ? t(lang, 'eligMaybe') : t(lang, 'eligNo')}
+        </span>
+      </div>
+      {r.confidence && (
+        <div style={{ marginTop: '0.4rem' }}>
+          <div style={{ height: 2, background: '#E8E6DF', borderRadius: 1 }}>
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${r.confidence}%` }}
+              transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
+              style={{ height: '100%', background: accentColor, borderRadius: 1 }}
+            />
+          </div>
+          <span style={{ fontSize: '9px', color: '#888682', marginTop: '2px', display: 'block' }}>
+            {r.confidence}% confidence
+          </span>
+        </div>
+      )}
+      {r.estimatedLabel && (
+        <p style={{ fontSize: '10px', color: accentColor, margin: '0.4rem 0 0', fontWeight: 600, wordBreak: 'break-word' }}>
+          {r.estimatedLabel}
+        </p>
+      )}
+      {r.urgent && (
+        <div style={c.urgentFlag}>{t(lang, 'urgentFlag')}</div>
+      )}
+      {r.explanation && (
+        <>
+          <button
+            onClick={() => setExpanded(v => !v)}
+            style={{
+              background: 'none', border: 'none', padding: '0.4rem 0 0',
+              fontSize: '10px', color: '#888682', cursor: 'pointer',
+              fontFamily: 'inherit', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', gap: '3px',
+            }}
+          >
+            {expanded ? '▲' : '▼'} {expanded ? 'Hide details' : 'Why this result?'}
+          </button>
+          {expanded && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
+              style={{ marginTop: '0.5rem', padding: '0.6rem 0.75rem', background: 'rgba(0,0,0,0.04)', borderRadius: 2 }}
+            >
+              {r.explanation.rows.map(([label, value], i) => (
+                <div key={i} style={{ marginBottom: i < r.explanation.rows.length - 1 ? '0.45rem' : 0 }}>
+                  <p style={{ fontSize: '9px', color: '#888682', margin: 0, letterSpacing: '0.03em' }}>{label}</p>
+                  <p style={{ fontSize: '10px', color: '#111110', fontWeight: 600, margin: '1px 0 0', wordBreak: 'break-word' }}>{value}</p>
+                </div>
+              ))}
+              <p style={{ fontSize: '9px', color: '#BBBBBB', margin: '8px 0 0', letterSpacing: '0.01em', wordBreak: 'break-word' }}>
+                Source: {r.explanation.source}
+              </p>
+            </motion.div>
+          )}
+        </>
+      )}
+    </motion.div>
+  );
+}
+
 // Animates text typing in character by character on each new value
 function TypingText({ text }) {
   const [displayed, setDisplayed] = useState('');
@@ -911,11 +1199,80 @@ function FormSection({ number, title, children, last = false }) {
   );
 }
 
-function FieldRow({ label, value, span = false }) {
+function FieldRow({ label, value, span = false, onSave, placeholder, hint, prefix }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const inputRef = useRef(null);
+
+  function startEdit() {
+    if (!onSave) return;
+    setDraft(value || '');
+    setEditing(true);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }
+
+  function commit() {
+    setEditing(false);
+    if (draft !== value) onSave(draft);
+  }
+
+  function onKey(e) {
+    if (e.key === 'Enter') commit();
+    if (e.key === 'Escape') setEditing(false);
+  }
+
+  const displayValue = value || (onSave ? '' : '—');
+  const isEmpty = !value;
+
   return (
-    <div style={{ gridColumn: span ? '1 / -1' : 'auto', borderBottom: '1px solid #F0EDE6', paddingBottom: '0.7rem', marginBottom: '0' }}>
-      <p style={c.fieldLabel}>{label}</p>
-      <p style={c.fieldValue}>{value}</p>
+    <div
+      style={{ gridColumn: span ? '1 / -1' : 'auto', borderBottom: '1px solid #F0EDE6', paddingBottom: '0.7rem', marginBottom: '0', position: 'relative' }}
+      onClick={!editing && onSave ? startEdit : undefined}
+    >
+      <p style={{ ...c.fieldLabel, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+        {label}
+        {onSave && !editing && (
+          <span style={{ fontSize: '0.6rem', color: '#A09F9A', fontWeight: 400, letterSpacing: 0 }}>✏</span>
+        )}
+      </p>
+      {editing ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+          {prefix && <span style={{ color: '#6B6A65', fontSize: '0.85rem' }}>{prefix}</span>}
+          <input
+            ref={inputRef}
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            onBlur={commit}
+            onKeyDown={onKey}
+            placeholder={placeholder || ''}
+            style={{
+              flex: 1,
+              border: 'none',
+              borderBottom: '2px solid #3D7A5F',
+              background: 'transparent',
+              fontSize: '0.85rem',
+              fontFamily: 'inherit',
+              color: '#111110',
+              outline: 'none',
+              padding: '2px 0',
+            }}
+          />
+        </div>
+      ) : (
+        <p
+          style={{
+            ...c.fieldValue,
+            color: isEmpty ? '#A09F9A' : undefined,
+            cursor: onSave ? 'text' : 'default',
+            minHeight: '1.1rem',
+          }}
+        >
+          {isEmpty ? (placeholder || '—') : (prefix && !value.startsWith('$') ? `${prefix}${displayValue}` : displayValue)}
+        </p>
+      )}
+      {hint && !editing && (
+        <p style={{ fontSize: '0.6rem', color: '#3D7A5F', marginTop: '0.15rem' }}>{hint}</p>
+      )}
     </div>
   );
 }
@@ -1256,13 +1613,16 @@ const c = {
     color: '#888682',
   },
   eligGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+    display: 'flex',
+    flexWrap: 'wrap',
   },
   eligItem: {
     padding: '0.9rem 1.25rem',
     borderRight: '1px solid #E8E6DF',
     borderBottom: '1px solid #E8E6DF',
+    flex: '1 1 180px',
+    minWidth: 0,
+    boxSizing: 'border-box',
   },
   eligYes: {
     background: '#F0F9F4',

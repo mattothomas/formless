@@ -220,6 +220,67 @@ export async function sendToGemini(messages, apiKey) {
   throw new Error('Could not parse Gemini response as JSON');
 }
 
+// ── Document extraction (separate one-shot call, never pollutes conversation) ─
+
+const DOC_SYSTEM_PROMPT = `You are a document reader for a government benefits caseworker system. Extract every piece of personally identifiable and financial information from the document image. Be thorough — pull any data that could help fill out SNAP, Medicaid, TANF, LIHEAP, or WIC applications.
+
+Return ONLY the fields you can see in the document. Leave everything else null or empty. Do not guess or infer.`;
+
+export async function extractFromDocument(base64, mimeType, apiKey) {
+  if (!apiKey) throw new Error('Gemini API key not configured.');
+
+  const body = {
+    system_instruction: { parts: [{ text: DOC_SYSTEM_PROMPT }] },
+    contents: [{
+      role: 'user',
+      parts: [
+        { text: 'Extract all relevant information from this document to help fill out a government benefits application.' },
+        { inlineData: { mimeType, data: base64 } },
+      ],
+    }],
+    generationConfig: {
+      temperature: 0.1,
+      maxOutputTokens: 512,
+      responseMimeType: 'application/json',
+      thinkingConfig: { thinkingBudget: 0 },
+      responseSchema: {
+        type: 'OBJECT',
+        properties: {
+          docType: { type: 'STRING', nullable: true },
+          summary: { type: 'STRING', nullable: true },
+          firstName: { type: 'STRING', nullable: true },
+          lastName: { type: 'STRING', nullable: true },
+          dateOfBirth: { type: 'STRING', nullable: true },
+          address: { type: 'STRING', nullable: true },
+          county: { type: 'STRING', nullable: true },
+          phone: { type: 'STRING', nullable: true },
+          employer: { type: 'STRING', nullable: true },
+          monthlyIncome: { type: 'ARRAY', items: { type: 'OBJECT' } },
+          expenses: { type: 'OBJECT' },
+        },
+      },
+    },
+  };
+
+  const res = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) throw new Error(`Gemini document extraction error ${res.status}`);
+
+  const data = await res.json();
+  const parts = data?.candidates?.[0]?.content?.parts || [];
+  const rawText = parts.find(p => !p.thought)?.text || parts[0]?.text;
+  if (!rawText) throw new Error('Empty response from document extraction');
+
+  try { return JSON.parse(rawText); } catch {}
+  const braceMatch = rawText.match(/\{[\s\S]*\}/);
+  if (braceMatch) try { return JSON.parse(braceMatch[0]); } catch {}
+  throw new Error('Could not parse document extraction response');
+}
+
 // Merge extracted data — accumulate, never overwrite with null
 export function mergeExtractedData(existing, incoming) {
   if (!incoming) return existing;
