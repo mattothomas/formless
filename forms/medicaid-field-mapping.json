@@ -1,0 +1,809 @@
+{
+  "version": "1.0",
+  "generatedAt": "2026-06-09",
+  "form": "PA 600 L (AS) 8/19 — Medical Assistance Financial Eligibility Application for Long Term Care, Supports and Services",
+  "templateFile": "benefitpath/public/medicaid-template.pdf",
+  "totalAcroFormFields": 479,
+  "currentlyMappedTextFields": 60,
+  "currentlyMappedCheckboxFields": 0,
+  "note": "Field IDs were probed manually (see tools/probe-coordinates.js, tools/map-fields.js). The AcroForm template has 479 total fields: ~60 text fields currently mapped, ~419 unmapped (mostly checkboxes for sex, marital status, race, citizenship, yes/no questions throughout). Checkbox field IDs are marked needsReview: true — they cannot be filled until probed.",
+
+  "textFields": {
+    "applicant.fullName": {
+      "pdfFieldId": "text_259tdjd",
+      "semanticKey": "applicant_name",
+      "derivedFrom": "applicant.firstName + ' ' + applicant.lastName",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "applicant.dateOfBirth": {
+      "pdfFieldId": "text_359xmpw",
+      "semanticKey": "birth_date",
+      "derivedFrom": "applicant.dateOfBirth",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "applicant.maritalStatus": {
+      "pdfFieldId": "text_360qyd",
+      "semanticKey": "marital_status",
+      "derivedFrom": "applicant.maritalStatus",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Written as text string. The corresponding MARRIED/SINGLE/etc. radio checkboxes are NOT being checked — see unmappedCheckboxGroups."
+    },
+    "applicant.separationDate": {
+      "pdfFieldId": "text_361nzys",
+      "semanticKey": "separation_date",
+      "derivedFrom": "applicant.separationDate",
+      "page": 2,
+      "currentlyPopulated": false,
+      "needsReview": false,
+      "note": "Only populated if maritalStatus == 'separated'. Currently empty string."
+    },
+    "applicant.spouseDeathDate": {
+      "pdfFieldId": "text_362vjx",
+      "semanticKey": "spouse_death_date",
+      "derivedFrom": "applicant.spouseDeathDate",
+      "page": 2,
+      "currentlyPopulated": false,
+      "needsReview": false
+    },
+    "applicant.spouseName": {
+      "pdfFieldId": "text_363uyia",
+      "semanticKey": "spouse_name",
+      "derivedFrom": "applicant.spouseName",
+      "page": 2,
+      "currentlyPopulated": false,
+      "needsReview": false
+    },
+    "applicant.race.otherText": {
+      "pdfFieldId": "text_364ngnc",
+      "semanticKey": "race_other",
+      "derivedFrom": "applicant.race (other free-text only)",
+      "page": 2,
+      "currentlyPopulated": false,
+      "needsReview": false,
+      "note": "Only applies if race includes 'other'. Race checkboxes not mapped — see unmappedCheckboxGroups."
+    },
+    "applicant.address.full": {
+      "pdfFieldId": "text_365jdw",
+      "semanticKey": "current_address",
+      "derivedFrom": "applicant.address (full string)",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "applicant.address.previousFull": {
+      "pdfFieldId": "text_366znec",
+      "semanticKey": "previous_address",
+      "derivedFrom": "applicant.address.previousAddress",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently filled with current address as placeholder. Wrong if applicant recently moved."
+    },
+    "applicant.address.township": {
+      "pdfFieldId": "text_367de",
+      "semanticKey": "township",
+      "derivedFrom": "city portion of address",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Derived from address city. Acceptable approximation."
+    },
+    "applicant.phone": {
+      "pdfFieldId": "text_368ejht",
+      "semanticKey": "phone_number",
+      "derivedFrom": "applicant.phone",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "applicant.address.schoolDistrict": {
+      "pdfFieldId": "text_369yzem",
+      "semanticKey": "school_district",
+      "derivedFrom": "'{county} School District'",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Derived default. May not be accurate for cities not co-located with county."
+    },
+
+    "previousBenefits.state": {
+      "pdfFieldId": "text_373mzzm",
+      "semanticKey": "benefits_state",
+      "derivedFrom": "previousBenefits.state",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently hardcoded to 'Pennsylvania'. Wrong if user had benefits in another state."
+    },
+    "previousBenefits.duration": {
+      "pdfFieldId": "text_374svap",
+      "semanticKey": "benefits_how_long",
+      "derivedFrom": "previousBenefits.duration",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently hardcoded to 'First application'. Wrong if user had prior benefits."
+    },
+    "previousBenefits.county": {
+      "pdfFieldId": "text_375oxyv",
+      "semanticKey": "benefits_county",
+      "derivedFrom": "previousBenefits.county",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently filled with applicant's current county."
+    },
+    "previousBenefits.recordNumber": {
+      "pdfFieldId": "text_376jerm",
+      "semanticKey": "benefits_record_number",
+      "derivedFrom": "previousBenefits.recordNumber",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently hardcoded to 'N/A — New Applicant'."
+    },
+    "previousBenefits.facilityName": {
+      "pdfFieldId": "text_377mqfj",
+      "semanticKey": "nursing_facility_name",
+      "derivedFrom": "previousBenefits.facilityName",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently hardcoded to 'N/A'."
+    },
+    "previousBenefits.facilityAddress": {
+      "pdfFieldId": "text_378mgbg",
+      "semanticKey": "nursing_facility_address",
+      "derivedFrom": "previousBenefits.facilityAddress",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently hardcoded to 'N/A'."
+    },
+    "previousBenefits.facilityDates": {
+      "pdfFieldId": "text_379uolt",
+      "semanticKey": "nursing_facility_dates",
+      "derivedFrom": "previousBenefits.facilityDates",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently hardcoded to 'N/A'."
+    },
+
+    "citizenship.immigrationDocType": {
+      "pdfFieldId": "text_380etjw",
+      "semanticKey": "immigration_doc_type",
+      "derivedFrom": "citizenship.immigrationDocType",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently hardcoded to 'U.S. Citizen — No documentation required'. WRONG for non-citizen applicants."
+    },
+    "citizenship.immigrationDocId": {
+      "pdfFieldId": "text_381svcn",
+      "semanticKey": "immigration_doc_id",
+      "derivedFrom": "citizenship.immigrationDocId",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently hardcoded to 'N/A'."
+    },
+    "citizenship.alienNumber": {
+      "pdfFieldId": "text_382uxtl",
+      "semanticKey": "alien_number",
+      "derivedFrom": "citizenship.alienNumber",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently hardcoded to 'N/A'."
+    },
+    "citizenship.countryOfOrigin": {
+      "pdfFieldId": "text_383szsh",
+      "semanticKey": "country_of_origin",
+      "derivedFrom": "citizenship.countryOfOrigin",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently hardcoded to 'United States'. WRONG for immigrant applicants."
+    },
+    "citizenship.sponsorNameAddress": {
+      "pdfFieldId": "text_384iiog",
+      "semanticKey": "sponsor_name_address",
+      "derivedFrom": "citizenship.sponsorName + citizenship.sponsorAddress",
+      "page": 2,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently hardcoded to 'N/A'."
+    },
+
+    "householdMembers[0].relationship": {
+      "pdfFieldId": "text_386nppv",
+      "semanticKey": "member1_relationship",
+      "derivedFrom": "householdMembers[0].relationship",
+      "page": 3,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "householdMembers[0].name": {
+      "pdfFieldId": "text_387aruf",
+      "semanticKey": "member1_name",
+      "derivedFrom": "householdMembers[0].name",
+      "page": 3,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "householdMembers[0].dateOfBirth": {
+      "pdfFieldId": "text_388pjqx",
+      "semanticKey": "member1_birth_date",
+      "derivedFrom": "householdMembers[0].dateOfBirth",
+      "page": 3,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "householdMembers[1].relationship": {
+      "pdfFieldId": "text_393cyct",
+      "semanticKey": "member2_relationship",
+      "derivedFrom": "householdMembers[1].relationship",
+      "page": 3,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "householdMembers[1].name": {
+      "pdfFieldId": "text_393trqp",
+      "semanticKey": "member2_name",
+      "derivedFrom": "householdMembers[1].name",
+      "page": 3,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "householdMembers[1].dateOfBirth": {
+      "pdfFieldId": "text_393ajdh",
+      "semanticKey": "member2_birth_date",
+      "derivedFrom": "householdMembers[1].dateOfBirth",
+      "page": 3,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "householdMembers[2].relationship": {
+      "pdfFieldId": "text_400fhjk",
+      "semanticKey": "member3_relationship",
+      "derivedFrom": "householdMembers[2].relationship",
+      "page": 3,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "householdMembers[2].name": {
+      "pdfFieldId": "text_400cbxw",
+      "semanticKey": "member3_name",
+      "derivedFrom": "householdMembers[2].name",
+      "page": 3,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "householdMembers[2].dateOfBirth": {
+      "pdfFieldId": "text_400knwh",
+      "semanticKey": "member3_birth_date",
+      "derivedFrom": "householdMembers[2].dateOfBirth",
+      "page": 3,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "householdMembers[3].relationship": {
+      "pdfFieldId": "text_407vjun",
+      "semanticKey": "member4_relationship",
+      "derivedFrom": "householdMembers[3].relationship",
+      "page": 3,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "householdMembers[3].name": {
+      "pdfFieldId": "text_407uee",
+      "semanticKey": "member4_name",
+      "derivedFrom": "householdMembers[3].name",
+      "page": 3,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "householdMembers[3].dateOfBirth": {
+      "pdfFieldId": "text_407irbb",
+      "semanticKey": "member4_birth_date",
+      "derivedFrom": "householdMembers[3].dateOfBirth",
+      "page": 3,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+
+    "military.branch": {
+      "pdfFieldId": "text_415sgbu",
+      "semanticKey": "military_branch",
+      "derivedFrom": "military.branch",
+      "page": 3,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently hardcoded to 'N/A'."
+    },
+    "military.dateEntered": {
+      "pdfFieldId": "text_416kawl",
+      "semanticKey": "military_date_entered",
+      "derivedFrom": "military.dateEntered",
+      "page": 3,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently hardcoded to 'N/A'."
+    },
+    "military.dateLeft": {
+      "pdfFieldId": "text_417kjhz",
+      "semanticKey": "military_date_left",
+      "derivedFrom": "military.dateLeft",
+      "page": 3,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently hardcoded to 'N/A'."
+    },
+    "military.claimNumber": {
+      "pdfFieldId": "text_418wyza",
+      "semanticKey": "military_claim_no",
+      "derivedFrom": "military.claimNumber",
+      "page": 3,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently hardcoded to 'N/A'."
+    },
+
+    "medicalInsurance[0].coveredPerson": {
+      "pdfFieldId": "text_44vnav",
+      "semanticKey": "insurance_1_covered",
+      "derivedFrom": "medicalInsurance[0].coveredPerson or applicant.fullName",
+      "page": 4,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently fills with applicant name and company as 'None — Currently Uninsured'. WRONG if applicant has insurance."
+    },
+    "medicalInsurance[0].company": {
+      "pdfFieldId": "text_45zaad",
+      "semanticKey": "insurance_1_company",
+      "derivedFrom": "medicalInsurance[0].company",
+      "page": 4,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "medicalInsurance[0].policyNumber": {
+      "pdfFieldId": "text_46dymd",
+      "semanticKey": "insurance_1_policy",
+      "derivedFrom": "medicalInsurance[0].policyNumber",
+      "page": 4,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "medicalInsurance[0].premium": {
+      "pdfFieldId": "text_56wxto",
+      "semanticKey": "insurance_1_premium",
+      "derivedFrom": "medicalInsurance[0].premiumAmount",
+      "page": 4,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "medicalInsurance[0].frequency": {
+      "pdfFieldId": "text_60mjrz",
+      "semanticKey": "insurance_1_frequency",
+      "derivedFrom": "medicalInsurance[0].premiumFrequency",
+      "page": 4,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+
+    "assets.realEstate[0].location": {
+      "pdfFieldId": "text_64fzvf",
+      "semanticKey": "real_estate_1_location",
+      "derivedFrom": "assets.realEstate[0].location",
+      "page": 4,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently hardcoded to 'Does not own real estate'. WRONG for homeowners."
+    },
+    "assets.realEstate[0].owner": {
+      "pdfFieldId": "text_65ekxn",
+      "semanticKey": "real_estate_1_owner",
+      "derivedFrom": "assets.realEstate[0].owner",
+      "page": 4,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "assets.realEstate[0].value": {
+      "pdfFieldId": "text_66jljx",
+      "semanticKey": "real_estate_1_value",
+      "derivedFrom": "assets.realEstate[0].estimatedValue",
+      "page": 4,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "assets.realEstate[0].whoLives": {
+      "pdfFieldId": "text_67dgae",
+      "semanticKey": "real_estate_1_who_lives",
+      "derivedFrom": "assets.realEstate[0].whoLives",
+      "page": 4,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "assets.realEstate[0].realtorInfo": {
+      "pdfFieldId": "text_68taab",
+      "semanticKey": "real_estate_1_realtor",
+      "derivedFrom": "assets.realEstate[0].realtorInfo",
+      "page": 4,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "assets.realEstate[0].dateListed": {
+      "pdfFieldId": "text_69aplz",
+      "semanticKey": "real_estate_1_date_listed",
+      "derivedFrom": "assets.realEstate[0].dateListed",
+      "page": 4,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+
+    "assets.mobileHome.location": {
+      "pdfFieldId": "text_447scvt",
+      "semanticKey": "mobile_home_location",
+      "derivedFrom": "assets.mobileHome.location",
+      "page": 4,
+      "currentlyPopulated": true,
+      "needsReview": true,
+      "note": "Field ID ends in shared prefix text_447 with multiple fields. Confirm correct targeting."
+    },
+    "assets.mobileHome.owner": {
+      "pdfFieldId": "text_447ypgl",
+      "semanticKey": "mobile_home_owner",
+      "derivedFrom": "assets.mobileHome.owner",
+      "page": 4,
+      "currentlyPopulated": true,
+      "needsReview": true
+    },
+    "assets.mobileHome.value": {
+      "pdfFieldId": "text_447mtri",
+      "semanticKey": "mobile_home_value",
+      "derivedFrom": "assets.mobileHome.value",
+      "page": 4,
+      "currentlyPopulated": true,
+      "needsReview": true
+    },
+    "assets.mobileHome.yearModel": {
+      "pdfFieldId": "text_447eoke",
+      "semanticKey": "mobile_home_year_model",
+      "derivedFrom": "assets.mobileHome.yearModel",
+      "page": 4,
+      "currentlyPopulated": true,
+      "needsReview": true
+    },
+    "assets.mobileHome.whoLives": {
+      "pdfFieldId": "text_463vacj",
+      "semanticKey": "mobile_home_who_lives",
+      "derivedFrom": "assets.mobileHome.whoLives",
+      "page": 4,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "assets.mobileHome.realtor": {
+      "pdfFieldId": "text_447npli",
+      "semanticKey": "mobile_home_realtor",
+      "derivedFrom": "assets.mobileHome.realtorInfo",
+      "page": 4,
+      "currentlyPopulated": true,
+      "needsReview": true
+    },
+    "assets.mobileHome.dateListed": {
+      "pdfFieldId": "text_447exvu",
+      "semanticKey": "mobile_home_date_listed",
+      "derivedFrom": "assets.mobileHome.dateListed",
+      "page": 4,
+      "currentlyPopulated": true,
+      "needsReview": true
+    },
+
+    "assets.burialArrangements[0].owner": {
+      "pdfFieldId": "text_469awxb",
+      "semanticKey": "burial_1_owner",
+      "derivedFrom": "assets.burialArrangements[0].owner",
+      "page": 5,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently hardcoded to 'N/A'."
+    },
+    "assets.burialArrangements[0].bank": {
+      "pdfFieldId": "text_470gxaa",
+      "semanticKey": "burial_1_bank",
+      "derivedFrom": "assets.burialArrangements[0].bankInsuranceCompany",
+      "page": 5,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "assets.burialArrangements[0].accountNumbers": {
+      "pdfFieldId": "text_471jmts",
+      "semanticKey": "burial_1_account",
+      "derivedFrom": "assets.burialArrangements[0].accountNumbers",
+      "page": 5,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "assets.burialArrangements[0].dateEstablished": {
+      "pdfFieldId": "text_472qnbj",
+      "semanticKey": "burial_1_date",
+      "derivedFrom": "assets.burialArrangements[0].dateEstablished",
+      "page": 5,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "assets.burialArrangements[0].burialSpacesCount": {
+      "pdfFieldId": "text_473tdcl",
+      "semanticKey": "burial_spaces_count",
+      "derivedFrom": "assets.burialArrangements[0].burialSpacesCount",
+      "page": 5,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "assets.burialArrangements[0].burialSpacesLocation": {
+      "pdfFieldId": "text_474rhwr",
+      "semanticKey": "burial_spaces_location",
+      "derivedFrom": "assets.burialArrangements[0].burialSpacesLocation",
+      "page": 5,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "assets.burialArrangements[0].value": {
+      "pdfFieldId": "text_475ywkl",
+      "semanticKey": "burial_1_value",
+      "derivedFrom": "assets.burialArrangements[0].value",
+      "page": 5,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+    "assets.burialArrangements[0].funeralHome": {
+      "pdfFieldId": "text_476qhqo",
+      "semanticKey": "burial_1_funeral_home",
+      "derivedFrom": "assets.burialArrangements[0].funeralHome",
+      "page": 5,
+      "currentlyPopulated": true,
+      "needsReview": false
+    },
+
+    "assets.lifeInsurance[0].owner": {
+      "pdfFieldId": "text_309dsic",
+      "semanticKey": "life_ins_1_owner",
+      "derivedFrom": "assets.lifeInsurance[0].owner",
+      "page": 5,
+      "currentlyPopulated": true,
+      "needsReview": false,
+      "note": "Currently filled with applicant name + company 'None'."
+    },
+    "assets.lifeInsurance[0].company": { "pdfFieldId": "text_311vweu", "semanticKey": "life_ins_1_company", "page": 5, "currentlyPopulated": true, "needsReview": false },
+    "assets.lifeInsurance[0].policyNumber": { "pdfFieldId": "text_312ywgc", "semanticKey": "life_ins_1_policy", "page": 5, "currentlyPopulated": true, "needsReview": false },
+    "assets.lifeInsurance[0].faceValue": { "pdfFieldId": "text_313zzvh", "semanticKey": "life_ins_1_face_value", "page": 5, "currentlyPopulated": true, "needsReview": false },
+    "assets.lifeInsurance[0].cashValue": { "pdfFieldId": "text_314iiox", "semanticKey": "life_ins_1_cash_value", "page": 5, "currentlyPopulated": true, "needsReview": false },
+    "assets.lifeInsurance[0].beneficiary": { "pdfFieldId": "text_315qojs", "semanticKey": "life_ins_1_beneficiary", "page": 5, "currentlyPopulated": true, "needsReview": false },
+
+    "assets.vehicles[0].owner": { "pdfFieldId": "text_262jwad", "semanticKey": "vehicle_1_owner", "page": 5, "currentlyPopulated": true, "needsReview": false, "note": "Currently filled with applicant name + 'No vehicle owned' comment." },
+    "assets.vehicles[0].yearMakeModel": { "pdfFieldId": "text_263vdol", "semanticKey": "vehicle_1_year_make_model", "page": 5, "currentlyPopulated": true, "needsReview": false },
+    "assets.vehicles[0].plateNumber": { "pdfFieldId": "text_264tzvm", "semanticKey": "vehicle_1_plate", "page": 5, "currentlyPopulated": true, "needsReview": false },
+    "assets.vehicles[0].amountOwed": { "pdfFieldId": "text_265kwqu", "semanticKey": "vehicle_1_amount_owed", "page": 5, "currentlyPopulated": true, "needsReview": false },
+    "assets.vehicles[0].percentOwned": { "pdfFieldId": "text_266yzma", "semanticKey": "vehicle_1_pct_owned", "page": 5, "currentlyPopulated": true, "needsReview": false },
+    "assets.vehicles[0].comments": { "pdfFieldId": "text_267ekud", "semanticKey": "vehicle_1_comments", "page": 5, "currentlyPopulated": true, "needsReview": false },
+
+    "assets.bankAccounts[0].owner": { "pdfFieldId": "text_211tqxs", "semanticKey": "resource_1_owner", "page": 6, "currentlyPopulated": true, "needsReview": false, "note": "Currently hardcoded to applicant name + 'Checking Account $0 Local Bank'." },
+    "assets.bankAccounts[0].type": { "pdfFieldId": "text_206mb", "semanticKey": "resource_1_type", "page": 6, "currentlyPopulated": true, "needsReview": false },
+    "assets.bankAccounts[0].currentValue": { "pdfFieldId": "text_209izkg", "semanticKey": "resource_1_value", "page": 6, "currentlyPopulated": true, "needsReview": false },
+    "assets.bankAccounts[0].bankName": { "pdfFieldId": "text_207gtac", "semanticKey": "resource_1_bank", "page": 6, "currentlyPopulated": true, "needsReview": false },
+    "assets.bankAccounts[0].percentOwned": { "pdfFieldId": "text_208ultz", "semanticKey": "resource_1_pct_owned", "page": 6, "currentlyPopulated": true, "needsReview": false },
+    "assets.bankAccounts[0].comments": { "pdfFieldId": "text_210urir", "semanticKey": "resource_1_comments", "page": 6, "currentlyPopulated": true, "needsReview": false },
+
+    "assets.transfers60Months.type": { "pdfFieldId": "text_199kfcw", "semanticKey": "transfer_type", "page": 6, "currentlyPopulated": true, "needsReview": false, "note": "Hardcoded 'None'." },
+    "assets.transfers60Months.marketValue": { "pdfFieldId": "text_464qypp", "semanticKey": "transfer_market_value", "page": 6, "currentlyPopulated": true, "needsReview": false },
+    "assets.transfers60Months.date": { "pdfFieldId": "text_465cvae", "semanticKey": "transfer_date", "page": 6, "currentlyPopulated": true, "needsReview": false },
+    "assets.transfers60Months.explanation": { "pdfFieldId": "textarea_204xpul", "semanticKey": "transfer_explanation", "page": 6, "currentlyPopulated": true, "needsReview": false },
+    "assets.expectedLumpSum.amount": { "pdfFieldId": "text_466swqi", "semanticKey": "lump_sum_amount", "page": 6, "currentlyPopulated": true, "needsReview": false },
+    "assets.expectedLumpSum.date": { "pdfFieldId": "text_467tktd", "semanticKey": "lump_sum_date", "page": 6, "currentlyPopulated": true, "needsReview": false },
+    "assets.expectedLumpSum.explanation": { "pdfFieldId": "textarea_173vaim", "semanticKey": "lump_sum_explanation", "page": 6, "currentlyPopulated": true, "needsReview": false },
+
+    "income[0].person": { "pdfFieldId": "text_157gwwk", "semanticKey": "income_row1_whose", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "income[0].source": { "pdfFieldId": "text_152jxxf", "semanticKey": "income_row1_source", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "income[0].frequency": { "pdfFieldId": "text_142uxvf", "semanticKey": "income_row1_frequency", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "income[0].grossAmount": { "pdfFieldId": "text_132aovz", "semanticKey": "income_row1_gross_amount", "page": 7, "currentlyPopulated": true, "needsReview": false },
+
+    "income[1].person": { "pdfFieldId": "text_158rpug", "semanticKey": "income_row2_whose", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "income[1].source": { "pdfFieldId": "text_153thfm", "semanticKey": "income_row2_source", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "income[1].frequency": { "pdfFieldId": "text_143mkfk", "semanticKey": "income_row2_frequency", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "income[1].grossAmount": { "pdfFieldId": "text_133fzek", "semanticKey": "income_row2_gross_amount", "page": 7, "currentlyPopulated": true, "needsReview": false },
+
+    "income[2].person": { "pdfFieldId": "text_159bb", "semanticKey": "income_row3_whose", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "income[2].source": { "pdfFieldId": "text_154fduf", "semanticKey": "income_row3_source", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "income[2].frequency": { "pdfFieldId": "text_144wgh", "semanticKey": "income_row3_frequency", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "income[2].grossAmount": { "pdfFieldId": "text_134ecil", "semanticKey": "income_row3_gross_amount", "page": 7, "currentlyPopulated": true, "needsReview": false },
+
+    "income[3].person": { "pdfFieldId": "text_160qnlh", "semanticKey": "income_row4_whose", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "income[3].source": { "pdfFieldId": "text_155yans", "semanticKey": "income_row4_source", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "income[3].frequency": { "pdfFieldId": "text_145mvfl", "semanticKey": "income_row4_frequency", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "income[3].grossAmount": { "pdfFieldId": "text_135zahm", "semanticKey": "income_row4_gross_amount", "page": 7, "currentlyPopulated": true, "needsReview": false },
+
+    "income[4].person": { "pdfFieldId": "text_161tjar", "semanticKey": "income_row5_whose", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "income[4].source": { "pdfFieldId": "text_156jeuv", "semanticKey": "income_row5_source", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "income[4].frequency": { "pdfFieldId": "text_146jvt", "semanticKey": "income_row5_frequency", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "income[4].grossAmount": { "pdfFieldId": "text_136zoeh", "semanticKey": "income_row5_gross_amount", "page": 7, "currentlyPopulated": true, "needsReview": false },
+
+    "expenses.housing.rent": { "pdfFieldId": "text_118kmle", "semanticKey": "shelter_rent", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "expenses.utilities.telephone_DOLLAR_AMOUNT": {
+      "pdfFieldId": "text_125dqpv",
+      "semanticKey": "shelter_telephone",
+      "page": 7,
+      "currentlyPopulated": true,
+      "needsReview": true,
+      "note": "BUG: pdfGenerator.js puts applicant phone number string here. Must be monthly telephone bill in dollars."
+    },
+    "expenses.utilities.gas": { "pdfFieldId": "text_126emib", "semanticKey": "shelter_gas", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "expenses.utilities.electric": { "pdfFieldId": "text_127uggq", "semanticKey": "shelter_electric", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "expenses.utilities.heating": { "pdfFieldId": "text_128ikez", "semanticKey": "shelter_heating", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "expenses.utilities.water": { "pdfFieldId": "text_129lkxt", "semanticKey": "shelter_water", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "expenses.utilities.sewer": { "pdfFieldId": "text_130nzvc", "semanticKey": "shelter_sewer", "page": 7, "currentlyPopulated": true, "needsReview": false },
+    "expenses.utilities.garbage": { "pdfFieldId": "text_131dtoq", "semanticKey": "shelter_garbage", "page": 7, "currentlyPopulated": true, "needsReview": false },
+
+    "repPayee.name": { "pdfFieldId": "text_167jvng", "semanticKey": "rep_payee_name", "page": 7, "currentlyPopulated": true, "needsReview": false, "note": "Currently filled with applicant name." },
+    "repPayee.address": { "pdfFieldId": "text_168dzaa", "semanticKey": "rep_payee_address", "page": 7, "currentlyPopulated": true, "needsReview": false },
+
+    "authorizedRepresentative.name": { "pdfFieldId": "text_106qgcb", "semanticKey": "authorized_rep_name", "page": 8, "currentlyPopulated": true, "needsReview": false, "note": "Currently filled with applicant name (self-applying)." },
+    "authorizedRepresentative.address": { "pdfFieldId": "text_107sbfj", "semanticKey": "authorized_rep_address", "page": 8, "currentlyPopulated": true, "needsReview": false },
+    "authorizedRepresentative.phone": { "pdfFieldId": "text_108mrvk", "semanticKey": "authorized_rep_phone", "page": 8, "currentlyPopulated": true, "needsReview": false },
+
+    "system.signatureDate": { "pdfFieldId": "text_109xuv", "semanticKey": "applicant_signature_date", "derivedFrom": "new Date().toLocaleDateString()", "page": 8, "currentlyPopulated": true, "needsReview": false },
+
+    "poa.name": { "pdfFieldId": "text_76usxc", "semanticKey": "poa_name", "page": 8, "currentlyPopulated": true, "needsReview": false, "note": "Hardcoded to 'None'." },
+    "poa.relationship": { "pdfFieldId": "text_79bwsp", "semanticKey": "poa_relationship", "page": 8, "currentlyPopulated": true, "needsReview": false },
+    "poa.address": { "pdfFieldId": "text_77rjij", "semanticKey": "poa_address", "page": 8, "currentlyPopulated": true, "needsReview": false },
+    "poa.city": { "pdfFieldId": "text_78ephy", "semanticKey": "poa_city", "page": 8, "currentlyPopulated": true, "needsReview": false },
+    "poa.state": { "pdfFieldId": "text_82gpsd", "semanticKey": "poa_state", "page": 8, "currentlyPopulated": true, "needsReview": false },
+    "poa.zip": { "pdfFieldId": "text_81zhqf", "semanticKey": "poa_zip", "page": 8, "currentlyPopulated": true, "needsReview": false },
+    "poa.phone": { "pdfFieldId": "text_80eufk", "semanticKey": "poa_phone", "page": 8, "currentlyPopulated": true, "needsReview": false }
+  },
+
+  "unmappedCheckboxGroups": {
+    "$comment": "These groups exist on the form and affect eligibility but have no field IDs in the current code. All needsReview: true. To map them, run tools/probe-coordinates.js or inspect tools/medicaid-probed.pdf visually.",
+
+    "applicant.sex": {
+      "page": 2,
+      "fields": { "male": { "pdfFieldId": null }, "female": { "pdfFieldId": null } },
+      "needsReview": true,
+      "note": "Form has MALE / FEMALE checkboxes. Not filled."
+    },
+    "applicant.maritalStatus.checkboxes": {
+      "page": 2,
+      "fields": {
+        "single": { "pdfFieldId": null },
+        "married": { "pdfFieldId": null },
+        "separated": { "pdfFieldId": null },
+        "divorced": { "pdfFieldId": null },
+        "widowed": { "pdfFieldId": null }
+      },
+      "needsReview": true,
+      "note": "maritalStatus is written to a text field (text_360qyd) but checkboxes not checked."
+    },
+    "applicant.race.checkboxes": {
+      "page": 2,
+      "fields": {
+        "black_or_african_american": { "pdfFieldId": null },
+        "asian": { "pdfFieldId": null },
+        "native_hawaiian_or_pacific_islander": { "pdfFieldId": null },
+        "american_indian_or_alaska_native": { "pdfFieldId": null },
+        "white": { "pdfFieldId": null },
+        "other": { "pdfFieldId": null }
+      },
+      "needsReview": true
+    },
+    "applicant.isUsCitizen": {
+      "page": 2,
+      "fields": { "yes": { "pdfFieldId": null }, "no": { "pdfFieldId": null } },
+      "needsReview": true,
+      "note": "Critical eligibility checkbox. Not filled."
+    },
+    "applicant.hasEligibleImmigrationStatus": {
+      "page": 2,
+      "fields": { "yes": { "pdfFieldId": null }, "no": { "pdfFieldId": null } },
+      "needsReview": true
+    },
+    "applicant.hadUsResidencyBefore1996": {
+      "page": 2,
+      "fields": { "yes": { "pdfFieldId": null }, "no": { "pdfFieldId": null } },
+      "needsReview": true
+    },
+    "applicant.languagePreference": {
+      "page": 2,
+      "fields": { "english": { "pdfFieldId": null }, "spanish": { "pdfFieldId": null }, "other": { "pdfFieldId": null } },
+      "needsReview": true
+    },
+    "applicant.interpreterNeeded": {
+      "page": 2,
+      "fields": { "yes": { "pdfFieldId": null }, "no": { "pdfFieldId": null } },
+      "needsReview": true
+    },
+    "applicant.hadPreviousBenefits": {
+      "page": 2,
+      "fields": { "yes": { "pdfFieldId": null }, "no": { "pdfFieldId": null } },
+      "needsReview": true
+    },
+    "applicant.hadNursingFacilityStay": {
+      "page": 2,
+      "fields": { "yes": { "pdfFieldId": null }, "no": { "pdfFieldId": null } },
+      "needsReview": true
+    },
+    "householdMembers.sex_per_member": {
+      "page": 3,
+      "note": "Each of the 4 household member rows has MALE/FEMALE checkboxes. IDs unprobed.",
+      "fields": {
+        "member1_male": { "pdfFieldId": null }, "member1_female": { "pdfFieldId": null },
+        "member2_male": { "pdfFieldId": null }, "member2_female": { "pdfFieldId": null },
+        "member3_male": { "pdfFieldId": null }, "member3_female": { "pdfFieldId": null },
+        "member4_male": { "pdfFieldId": null }, "member4_female": { "pdfFieldId": null }
+      },
+      "needsReview": true
+    },
+    "military.status": {
+      "page": 3,
+      "fields": {
+        "veteran": { "pdfFieldId": null },
+        "active_military": { "pdfFieldId": null },
+        "national_guard": { "pdfFieldId": null },
+        "reserves": { "pdfFieldId": null },
+        "widow_or_dependent": { "pdfFieldId": null }
+      },
+      "needsReview": true
+    },
+    "assets.realEstate.noneCheckbox": {
+      "page": 4,
+      "fields": { "none": { "pdfFieldId": null } },
+      "needsReview": true,
+      "note": "Form has a 'None' checkbox for real estate section. Not filled."
+    },
+    "assets.mobileHome.noneCheckbox": {
+      "page": 4,
+      "fields": { "none": { "pdfFieldId": null } },
+      "needsReview": true
+    },
+    "assets.burialArrangements.noneCheckbox": {
+      "page": 5,
+      "fields": { "none": { "pdfFieldId": null } },
+      "needsReview": true
+    },
+    "assets.lifeInsurance.noneCheckbox": {
+      "page": 5,
+      "fields": { "none": { "pdfFieldId": null } },
+      "needsReview": true
+    },
+    "assets.vehicles.noneCheckbox": {
+      "page": 5,
+      "fields": { "none": { "pdfFieldId": null } },
+      "needsReview": true
+    },
+    "assets.otherResources.noneCheckbox": {
+      "page": 6,
+      "fields": { "none": { "pdfFieldId": null } },
+      "needsReview": true
+    },
+    "assets.transfers60Months.hasTransferred": {
+      "page": 6,
+      "fields": { "yes": { "pdfFieldId": null }, "no": { "pdfFieldId": null } },
+      "needsReview": true
+    },
+    "assets.transfers60Months.hasTransferredToTrust": {
+      "page": 6,
+      "fields": { "yes": { "pdfFieldId": null }, "no": { "pdfFieldId": null } },
+      "needsReview": true
+    },
+    "income.paysHeatingAirSeparately": {
+      "page": 7,
+      "fields": { "yes": { "pdfFieldId": null }, "no": { "pdfFieldId": null } },
+      "needsReview": true
+    }
+  }
+}

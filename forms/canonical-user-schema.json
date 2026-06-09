@@ -1,0 +1,260 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0",
+  "description": "Canonical domain schema for PA benefits applicant data. Organized around the human, not around PDF field IDs. All three entry points (web UI, WhatsApp bot, Python CLI) should converge on this shape.",
+  "note": "valueSource codes: 'user' = must be explicitly provided, 'inferred' = model can derive from context, 'default' = safe static default when absent, 'system' = auto-generated (date, etc.)",
+
+  "applicant": {
+    "$comment": "Primary applicant — the person filling out the form",
+    "firstName":     { "type": "string",  "required": true,  "valueSource": "user" },
+    "lastName":      { "type": "string",  "required": true,  "valueSource": "user" },
+    "middleInitial": { "type": "string",  "required": false, "valueSource": "user",    "maxLength": 1 },
+    "dateOfBirth":   { "type": "string",  "required": true,  "valueSource": "user",    "format": "YYYY-MM-DD" },
+    "sex":           { "type": "string",  "required": true,  "valueSource": "user",    "allowedValues": ["male", "female"], "note": "Required by Medicaid form; not currently extracted" },
+    "ssn":           { "type": "string",  "required": true,  "valueSource": "user",    "format": "XXX-XX-XXXX", "sensitive": true, "note": "Required by Medicaid; required for each SNAP household member. Currently NOT collected." },
+    "maritalStatus": { "type": "string",  "required": true,  "valueSource": "user",    "allowedValues": ["single", "married", "separated", "divorced", "widowed"] },
+    "separationDate":    { "type": "string",  "required": false, "valueSource": "user", "format": "YYYY-MM-DD", "condition": "maritalStatus == 'separated'" },
+    "spouseDeathDate":   { "type": "string",  "required": false, "valueSource": "user", "format": "YYYY-MM-DD", "condition": "maritalStatus == 'widowed'" },
+    "spouseName":        { "type": "string",  "required": false, "valueSource": "user", "condition": "maritalStatus in ['married','separated','widowed']" },
+    "race":          { "type": "array",   "required": false, "valueSource": "user",    "items": { "allowedValues": ["black_or_african_american","asian","native_hawaiian_or_pacific_islander","american_indian_or_alaska_native","white","other"] }, "note": "Optional per form; won't affect benefits" },
+    "languagePreference": { "type": "string", "required": false, "valueSource": "inferred", "allowedValues": ["english", "spanish", "other"] },
+    "interpreterNeeded":  { "type": "boolean", "required": false, "valueSource": "inferred" }
+  },
+
+  "address": {
+    "$comment": "Current residential address — structured for precise form filling",
+    "street":        { "type": "string",  "required": true,  "valueSource": "user" },
+    "city":          { "type": "string",  "required": true,  "valueSource": "user" },
+    "state":         { "type": "string",  "required": true,  "valueSource": "default", "default": "PA" },
+    "zip":           { "type": "string",  "required": true,  "valueSource": "user",    "format": "XXXXX or XXXXX-XXXX" },
+    "county":        { "type": "string",  "required": true,  "valueSource": "inferred", "note": "Infer from city for major PA cities; otherwise ask" },
+    "township":      { "type": "string",  "required": false, "valueSource": "inferred", "note": "Medicaid form field; default to city" },
+    "schoolDistrict":{ "type": "string",  "required": false, "valueSource": "inferred", "note": "Medicaid form field; '{county} School District' is acceptable default" },
+    "dateMovedIn":   { "type": "string",  "required": false, "valueSource": "user",    "format": "YYYY-MM-DD", "note": "Medicaid asks for move-in date" },
+    "previousAddress":{ "type": "string", "required": false, "valueSource": "user",    "note": "Medicaid form asks if you recently moved" },
+    "phone":         { "type": "string",  "required": false, "valueSource": "user",    "format": "XXX-XXX-XXXX" }
+  },
+
+  "citizenship": {
+    "$comment": "Citizenship and immigration status — affects both eligibility and form sections",
+    "isUsCitizen":         { "type": "boolean", "required": true,  "valueSource": "user", "note": "CRITICAL: currently assumed true for all users" },
+    "countryOfOrigin":     { "type": "string",  "required": false, "valueSource": "user", "condition": "isUsCitizen == false" },
+    "hasEligibleImmigrationStatus": { "type": "boolean", "required": false, "valueSource": "user", "condition": "isUsCitizen == false" },
+    "immigrationDocType":  { "type": "string",  "required": false, "valueSource": "user", "condition": "isUsCitizen == false AND hasEligibleImmigrationStatus == true" },
+    "immigrationDocId":    { "type": "string",  "required": false, "valueSource": "user", "condition": "isUsCitizen == false AND hasEligibleImmigrationStatus == true", "sensitive": true },
+    "alienNumber":         { "type": "string",  "required": false, "valueSource": "user", "condition": "isUsCitizen == false", "sensitive": true },
+    "hadUsResidencyBefore1996": { "type": "boolean", "required": false, "valueSource": "user", "condition": "isUsCitizen == false" },
+    "sponsorName":         { "type": "string",  "required": false, "valueSource": "user", "condition": "isUsCitizen == false AND hasEligibleImmigrationStatus == true" },
+    "sponsorAddress":      { "type": "string",  "required": false, "valueSource": "user", "condition": "isUsCitizen == false AND hasEligibleImmigrationStatus == true" }
+  },
+
+  "householdMembers": {
+    "$comment": "Array — each person living in the household (excluding applicant). Max 8 for SNAP, 4 on Medicaid page 3 (spouse + dependents only).",
+    "type": "array",
+    "items": {
+      "name":           { "type": "string",  "required": true,  "valueSource": "user" },
+      "relationship":   { "type": "string",  "required": true,  "valueSource": "user",    "allowedValues": ["spouse", "child", "parent", "sibling", "grandchild", "grandparent", "other"] },
+      "dateOfBirth":    { "type": "string",  "required": true,  "valueSource": "user",    "format": "YYYY-MM-DD", "note": "Age at time of conversation is acceptable input; Gemini should convert to approximate DOB" },
+      "sex":            { "type": "string",  "required": false, "valueSource": "user",    "allowedValues": ["male", "female"], "note": "Required on Medicaid form; not currently in Gemini schema" },
+      "ssn":            { "type": "string",  "required": false, "valueSource": "user",    "format": "XXX-XX-XXXX", "sensitive": true, "note": "SNAP has SSN column for all members; Medicaid requires SSN for each person applying" },
+      "aliasMaidenName":{ "type": "string",  "required": false, "valueSource": "user" },
+      "race":           { "type": "array",   "required": false, "valueSource": "user",    "note": "Optional per form" },
+      "isUsCitizen":    { "type": "boolean", "required": false, "valueSource": "user",    "note": "Affects SNAP eligibility for non-citizens" },
+      "isApplyingForBenefits": { "type": "boolean", "required": false, "valueSource": "inferred", "default": true }
+    }
+  },
+
+  "income": {
+    "$comment": "Array — all income sources across all household members",
+    "type": "array",
+    "items": {
+      "person":      { "type": "string",  "required": true,  "valueSource": "user",    "note": "Name of the earner; must match a household member or applicant" },
+      "type":        { "type": "string",  "required": false, "valueSource": "inferred", "note": "Broad category: earned, unearned, self-employment, etc." },
+      "source":      { "type": "string",  "required": true,  "valueSource": "user",    "examples": ["wages", "Social Security", "unemployment", "pension", "child support", "self-employment"] },
+      "grossAmount": { "type": "number",  "required": true,  "valueSource": "user",    "note": "Before taxes. Gemini may capture net; prompt must specify gross." },
+      "frequency":   { "type": "string",  "required": true,  "valueSource": "user",    "allowedValues": ["weekly", "biweekly", "monthly", "yearly"] },
+      "hoursPerWeek":{ "type": "number",  "required": false, "valueSource": "user",    "note": "Medicaid page 7 column; not in SNAP form" },
+      "dateReceived":{ "type": "string",  "required": false, "valueSource": "system",   "note": "SNAP has column; default to application date" }
+    }
+  },
+
+  "expenses": {
+    "housing": {
+      "rent":                     { "type": "number",  "required": false, "valueSource": "user" },
+      "mortgage":                 { "type": "number",  "required": false, "valueSource": "user" },
+      "condoFees":                { "type": "number",  "required": false, "valueSource": "user" },
+      "propertyTaxesAnnual":      { "type": "number",  "required": false, "valueSource": "user", "note": "Medicaid asks annual amount" },
+      "homeownersInsuranceAnnual":{ "type": "number",  "required": false, "valueSource": "user", "note": "Medicaid asks annual amount" },
+      "lotRentMobileHome":        { "type": "number",  "required": false, "valueSource": "user" }
+    },
+    "utilities": {
+      "gas":       { "type": "number", "required": false, "valueSource": "user" },
+      "electric":  { "type": "number", "required": false, "valueSource": "user" },
+      "heating":   { "type": "number", "required": false, "valueSource": "user" },
+      "water":     { "type": "number", "required": false, "valueSource": "user" },
+      "sewer":     { "type": "number", "required": false, "valueSource": "user" },
+      "garbage":   { "type": "number", "required": false, "valueSource": "user" },
+      "telephone": { "type": "number", "required": false, "valueSource": "user",    "note": "Monthly bill amount — NOT the phone number string" }
+    },
+    "childcare":      { "type": "number", "required": false, "valueSource": "user", "note": "Monthly cost; SNAP deduction; who receives care also asked" },
+    "childcareRecipient": { "type": "string", "required": false, "valueSource": "user", "condition": "childcare > 0" },
+    "medicalExpenses":{ "type": "number", "required": false, "valueSource": "user", "note": "SNAP deduction for elderly/disabled households" }
+  },
+
+  "assets": {
+    "$comment": "Critical for Medicaid Long Term Care (PA 600 L) eligibility. Less relevant for SNAP. Currently all hardcoded to N/A in pdfGenerator.js — WRONG for real users.",
+    "ownsRealEstate": { "type": "boolean", "required": false, "valueSource": "user" },
+    "realEstate": {
+      "type": "array",
+      "items": {
+        "location":          { "type": "string",  "required": false, "valueSource": "user" },
+        "owner":             { "type": "string",  "required": false, "valueSource": "user" },
+        "estimatedValue":    { "type": "number",  "required": false, "valueSource": "user" },
+        "isIncomeProducing": { "type": "boolean", "required": false, "valueSource": "user" },
+        "isApplicantResident":{ "type": "boolean","required": false, "valueSource": "user" },
+        "whoLives":          { "type": "string",  "required": false, "valueSource": "user" },
+        "planningToReturn":  { "type": "boolean", "required": false, "valueSource": "user" },
+        "listedForSale":     { "type": "boolean", "required": false, "valueSource": "user" }
+      }
+    },
+    "ownsMobileHome": { "type": "boolean", "required": false, "valueSource": "user" },
+    "mobileHome": {
+      "location":    { "type": "string", "required": false, "valueSource": "user" },
+      "owner":       { "type": "string", "required": false, "valueSource": "user" },
+      "value":       { "type": "number", "required": false, "valueSource": "user" },
+      "yearModel":   { "type": "string", "required": false, "valueSource": "user" },
+      "whoLives":    { "type": "string", "required": false, "valueSource": "user" }
+    },
+    "vehicles": {
+      "type": "array",
+      "items": {
+        "owner":          { "type": "string", "required": false, "valueSource": "user" },
+        "yearMakeModel":  { "type": "string", "required": false, "valueSource": "user" },
+        "plateNumber":    { "type": "string", "required": false, "valueSource": "user" },
+        "amountOwed":     { "type": "number", "required": false, "valueSource": "user" },
+        "percentOwned":   { "type": "number", "required": false, "valueSource": "user" }
+      }
+    },
+    "bankAccounts": {
+      "type": "array",
+      "items": {
+        "owner":        { "type": "string", "required": false, "valueSource": "user" },
+        "type":         { "type": "string", "required": false, "valueSource": "user", "examples": ["checking", "savings", "CD", "IRA"] },
+        "currentValue": { "type": "number", "required": false, "valueSource": "user" },
+        "bankName":     { "type": "string", "required": false, "valueSource": "user" },
+        "percentOwned": { "type": "number", "required": false, "valueSource": "user" }
+      }
+    },
+    "lifeInsurance": {
+      "type": "array",
+      "items": {
+        "owner":         { "type": "string", "required": false, "valueSource": "user" },
+        "company":       { "type": "string", "required": false, "valueSource": "user" },
+        "policyNumber":  { "type": "string", "required": false, "valueSource": "user" },
+        "faceValue":     { "type": "number", "required": false, "valueSource": "user" },
+        "cashValue":     { "type": "number", "required": false, "valueSource": "user" },
+        "beneficiary":   { "type": "string", "required": false, "valueSource": "user" }
+      }
+    },
+    "burialArrangements": {
+      "type": "array",
+      "items": {
+        "owner":               { "type": "string", "required": false, "valueSource": "user" },
+        "bankInsuranceCompany":{ "type": "string", "required": false, "valueSource": "user" },
+        "accountNumbers":      { "type": "string", "required": false, "valueSource": "user" },
+        "funeralHome":         { "type": "string", "required": false, "valueSource": "user" },
+        "value":               { "type": "number", "required": false, "valueSource": "user" },
+        "dateEstablished":     { "type": "string", "required": false, "valueSource": "user" },
+        "burialSpacesCount":   { "type": "number", "required": false, "valueSource": "user" },
+        "burialSpacesLocation":{ "type": "string", "required": false, "valueSource": "user" }
+      }
+    },
+    "transfers60Months": {
+      "hasTransferredAssets": { "type": "boolean", "required": false, "valueSource": "user", "note": "Medicaid looks back 60 months for asset transfers" },
+      "transferType":         { "type": "string",  "required": false, "valueSource": "user", "condition": "hasTransferredAssets == true" },
+      "marketValueAtTransfer":{ "type": "number",  "required": false, "valueSource": "user", "condition": "hasTransferredAssets == true" },
+      "transferDate":         { "type": "string",  "required": false, "valueSource": "user", "condition": "hasTransferredAssets == true" },
+      "transferExplanation":  { "type": "string",  "required": false, "valueSource": "user", "condition": "hasTransferredAssets == true" }
+    },
+    "expectedLumpSum": {
+      "expecting": { "type": "boolean", "required": false, "valueSource": "user" },
+      "amount":    { "type": "number",  "required": false, "valueSource": "user", "condition": "expecting == true" },
+      "date":      { "type": "string",  "required": false, "valueSource": "user", "condition": "expecting == true" }
+    }
+  },
+
+  "medicalInsurance": {
+    "$comment": "Array — existing health insurance coverage for any household member",
+    "type": "array",
+    "items": {
+      "coveredPerson":  { "type": "string", "required": false, "valueSource": "user" },
+      "company":        { "type": "string", "required": false, "valueSource": "user" },
+      "policyNumber":   { "type": "string", "required": false, "valueSource": "user" },
+      "premiumAmount":  { "type": "number", "required": false, "valueSource": "user" },
+      "premiumFrequency":{ "type": "string","required": false, "valueSource": "user" }
+    }
+  },
+
+  "military": {
+    "$comment": "Military service — affects Medicaid eligibility and available VA benefits",
+    "hasService":    { "type": "boolean", "required": false, "valueSource": "user" },
+    "status":        { "type": "string",  "required": false, "valueSource": "user", "allowedValues": ["veteran", "active_military", "national_guard", "reserves", "widow_or_dependent_of_veteran"], "condition": "hasService == true" },
+    "branch":        { "type": "string",  "required": false, "valueSource": "user", "condition": "hasService == true" },
+    "dateEntered":   { "type": "string",  "required": false, "valueSource": "user", "condition": "hasService == true" },
+    "dateLeft":      { "type": "string",  "required": false, "valueSource": "user", "condition": "hasService == true" },
+    "claimNumber":   { "type": "string",  "required": false, "valueSource": "user", "condition": "hasService == true" }
+  },
+
+  "previousBenefits": {
+    "hadPreviousBenefits":  { "type": "boolean", "required": false, "valueSource": "user" },
+    "state":                { "type": "string",  "required": false, "valueSource": "user", "condition": "hadPreviousBenefits == true" },
+    "county":               { "type": "string",  "required": false, "valueSource": "user", "condition": "hadPreviousBenefits == true" },
+    "duration":             { "type": "string",  "required": false, "valueSource": "user", "condition": "hadPreviousBenefits == true" },
+    "recordNumber":         { "type": "string",  "required": false, "valueSource": "user", "condition": "hadPreviousBenefits == true" },
+    "hadNursingFacilityStay":{ "type": "boolean","required": false, "valueSource": "user" },
+    "facilityName":         { "type": "string",  "required": false, "valueSource": "user", "condition": "hadNursingFacilityStay == true" },
+    "facilityAddress":      { "type": "string",  "required": false, "valueSource": "user", "condition": "hadNursingFacilityStay == true" },
+    "facilityDates":        { "type": "string",  "required": false, "valueSource": "user", "condition": "hadNursingFacilityStay == true" }
+  },
+
+  "wic": {
+    "$comment": "WIC (Women, Infants, Children) eligibility flags — currently extracted by Gemini",
+    "isPregnant":        { "type": "boolean", "required": false, "valueSource": "user", "currentlyExtracted": true },
+    "isPostpartum":      { "type": "boolean", "required": false, "valueSource": "user", "currentlyExtracted": true },
+    "isBreastfeeding":   { "type": "boolean", "required": false, "valueSource": "user", "currentlyExtracted": true },
+    "hasChildrenUnder5": { "type": "boolean", "required": false, "valueSource": "inferred", "note": "Can be inferred from householdMembers DOB" }
+  },
+
+  "legalHistory": {
+    "$comment": "SNAP-specific disclosure questions. Default assumption is no — user should self-disclose.",
+    "isFleeingFelon":              { "type": "boolean", "required": false, "valueSource": "default", "default": false },
+    "hasWelfareFraudConviction":   { "type": "boolean", "required": false, "valueSource": "default", "default": false },
+    "hasSNAPDisqualification":     { "type": "boolean", "required": false, "valueSource": "default", "default": false }
+  },
+
+  "repPayee": {
+    "$comment": "Who receives checks on the applicant's behalf, if not the applicant",
+    "name":    { "type": "string", "required": false, "valueSource": "user" },
+    "address": { "type": "string", "required": false, "valueSource": "user" }
+  },
+
+  "authorizedRepresentative": {
+    "$comment": "Person authorized to act on applicant's behalf (not required if applicant applies themselves)",
+    "name":         { "type": "string", "required": false, "valueSource": "user" },
+    "address":      { "type": "string", "required": false, "valueSource": "user" },
+    "phone":        { "type": "string", "required": false, "valueSource": "user" },
+    "relationship": { "type": "string", "required": false, "valueSource": "user" }
+  },
+
+  "poa": {
+    "$comment": "Power of Attorney — if someone holds POA for the applicant",
+    "hasPOA":       { "type": "boolean", "required": false, "valueSource": "user" },
+    "name":         { "type": "string",  "required": false, "valueSource": "user", "condition": "hasPOA == true" },
+    "relationship": { "type": "string",  "required": false, "valueSource": "user", "condition": "hasPOA == true" },
+    "address":      { "type": "string",  "required": false, "valueSource": "user", "condition": "hasPOA == true" },
+    "city":         { "type": "string",  "required": false, "valueSource": "user", "condition": "hasPOA == true" },
+    "state":        { "type": "string",  "required": false, "valueSource": "user", "condition": "hasPOA == true" },
+    "zip":          { "type": "string",  "required": false, "valueSource": "user", "condition": "hasPOA == true" },
+    "phone":        { "type": "string",  "required": false, "valueSource": "user", "condition": "hasPOA == true" }
+  }
+}
