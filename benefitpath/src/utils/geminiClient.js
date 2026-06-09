@@ -27,13 +27,18 @@ TONE — always human:
 REQUIRED FIELDS (collect naturally — never as a checklist):
 - firstName, lastName
 - dateOfBirth
+- sex (male/female — needed for form, infer from context when possible)
 - maritalStatus (single, married, divorced, widowed, separated)
 - address (street, city, state, zip)
 - county (PA county — infer from city when obvious: Philadelphia → Philadelphia, Pittsburgh → Allegheny)
 - phone
-- householdMembers: [{name, dob, relationship}]
-- monthlyIncome: [{source, amount, frequency, person}]
-- expenses: {rent, mortgage, utilities, gas, heating}
+- isUsCitizen (true/false — default true; set false only if person mentions being an immigrant/non-citizen)
+- hasHealthInsurance (true/false — ask if unclear)
+- householdMembers: [{name, dob, relationship, sex}]
+- monthlyIncome: [{source, amount, frequency, person}] — amount should be GROSS (before taxes)
+- expenses: {rent, mortgage, utilities, gas, heating, childcare, telephone, propertyTaxes, homeownersInsurance}
+  - utilities = electric bill specifically; gas and heating are separate
+  - telephone = monthly phone bill dollar amount (not the phone number)
 - hasChildrenUnder5, isPregnant (for WIC)
 
 PROGRAMS COVERED: SNAP (food), Medicaid/CHIP (healthcare), TANF (cash assistance), LIHEAP (heating), WIC (nutrition for mothers/young children)
@@ -152,19 +157,22 @@ export async function sendToGemini(messages, apiKey) {
           extractedData: {
             type: 'OBJECT',
             properties: {
-              firstName: { type: 'STRING', nullable: true },
-              lastName: { type: 'STRING', nullable: true },
-              dateOfBirth: { type: 'STRING', nullable: true },
-              maritalStatus: { type: 'STRING', nullable: true },
-              address: { type: 'STRING', nullable: true },
-              county: { type: 'STRING', nullable: true },
-              phone: { type: 'STRING', nullable: true },
-              householdMembers: { type: 'ARRAY', items: { type: 'OBJECT' } },
-              monthlyIncome: { type: 'ARRAY', items: { type: 'OBJECT' } },
-              expenses: { type: 'OBJECT' },
-              isPregnant: { type: 'BOOLEAN' },
-              isPostpartum: { type: 'BOOLEAN' },
-              isBreastfeeding: { type: 'BOOLEAN' },
+              firstName:          { type: 'STRING',  nullable: true },
+              lastName:           { type: 'STRING',  nullable: true },
+              dateOfBirth:        { type: 'STRING',  nullable: true },
+              sex:                { type: 'STRING',  nullable: true },   // "male" | "female"
+              maritalStatus:      { type: 'STRING',  nullable: true },   // single|married|separated|divorced|widowed
+              address:            { type: 'STRING',  nullable: true },
+              county:             { type: 'STRING',  nullable: true },
+              phone:              { type: 'STRING',  nullable: true },
+              isUsCitizen:        { type: 'BOOLEAN', nullable: true },
+              hasHealthInsurance: { type: 'BOOLEAN', nullable: true },
+              householdMembers:   { type: 'ARRAY',   items: { type: 'OBJECT' } },
+              monthlyIncome:      { type: 'ARRAY',   items: { type: 'OBJECT' } },
+              expenses:           { type: 'OBJECT' },
+              isPregnant:         { type: 'BOOLEAN' },
+              isPostpartum:       { type: 'BOOLEAN' },
+              isBreastfeeding:    { type: 'BOOLEAN' },
             },
           },
           missingFields: { type: 'ARRAY', items: { type: 'STRING' } },
@@ -225,6 +233,7 @@ export function mergeExtractedData(existing, incoming) {
     } else if (typeof val === 'object') {
       merged[key] = { ...(merged[key] || {}), ...val };
     } else {
+      // Preserve false booleans — previously these were skipped because `false` is falsy
       merged[key] = val;
     }
   }

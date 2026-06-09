@@ -1,0 +1,188 @@
+{
+  "version": "1.0",
+  "generatedAt": "2026-06-10",
+  "method": "AcroForm field sequence (fields.json index order) correlated with page images and confirmed text-field anchors",
+  "templateFile": "benefitpath/public/medicaid-template.pdf",
+  "totalCheckboxFields": 180,
+  "note": "Field IDs are derived by matching the sequential position of each checkbox in the 479-field AcroForm array against its visual position on rendered page PNGs. Confidence = probability the ID maps to the stated semantic meaning. All fills are try/catched in pdfGenerator.js.",
+
+  "page1": {
+    "serviceType": [
+      { "canonicalPath": "serviceType.careInFacility",             "pdfFieldId": "checkbox_1gbkf",  "label": "Care in a facility",                     "confidence": 0.95, "needsReview": false },
+      { "canonicalPath": "serviceType.homeCommunityWaiver",        "pdfFieldId": "checkbox_2znlp",  "label": "Home and Community Waiver Services",      "confidence": 0.95, "needsReview": false },
+      { "canonicalPath": "serviceType.other",                      "pdfFieldId": "checkbox_3qnwr",  "label": "Other",                                  "confidence": 0.95, "needsReview": false }
+    ]
+  },
+
+  "page2": {
+    "languagePreference": [
+      { "canonicalPath": "applicant.languagePreference == english", "pdfFieldId": "checkbox_6ksza",  "label": "English/Inglés",                         "confidence": 0.92, "needsReview": false },
+      { "canonicalPath": "applicant.languagePreference == spanish", "pdfFieldId": "checkbox_7lvoj",  "label": "Spanish/Español",                        "confidence": 0.92, "needsReview": false },
+      { "canonicalPath": "applicant.languagePreference == other",   "pdfFieldId": "checkbox_8urpd",  "label": "Other/Otro",                             "confidence": 0.92, "needsReview": false }
+    ],
+    "interpreterNeeded": [
+      { "canonicalPath": "applicant.interpreterNeeded == true",     "pdfFieldId": "checkbox_9zgsn",  "label": "Yes/Sí",                                 "confidence": 0.92, "needsReview": false },
+      { "canonicalPath": "applicant.interpreterNeeded == false",    "pdfFieldId": "checkbox_10vtxm", "label": "No",                                     "confidence": 0.92, "needsReview": false }
+    ],
+    "sex": [
+      { "canonicalPath": "applicant.sex == male",                   "pdfFieldId": "checkbox_11wjqm", "label": "MALE",                                   "confidence": 0.92, "needsReview": false },
+      { "canonicalPath": "applicant.sex == female",                 "pdfFieldId": "checkbox_12crqm", "label": "FEMALE",                                 "confidence": 0.92, "needsReview": false }
+    ],
+    "maritalStatus": [
+      { "canonicalPath": "applicant.maritalStatus == single",       "pdfFieldId": "checkbox_13oobf", "label": "SINGLE",                                 "confidence": 0.92, "needsReview": false },
+      { "canonicalPath": "applicant.maritalStatus == separated",    "pdfFieldId": "checkbox_14vliy", "label": "SEPARATED",                              "confidence": 0.92, "needsReview": false },
+      { "canonicalPath": "applicant.maritalStatus == married",      "pdfFieldId": "checkbox_15rizs", "label": "MARRIED",                                "confidence": 0.92, "needsReview": false },
+      { "canonicalPath": "applicant.maritalStatus == divorced",     "pdfFieldId": "checkbox_16qgny", "label": "DIVORCED",                               "confidence": 0.92, "needsReview": false },
+      { "canonicalPath": "applicant.maritalStatus == widowed",      "pdfFieldId": "checkbox_17tlpj", "label": "WIDOWED",                                "confidence": 0.92, "needsReview": false }
+    ],
+    "race": [
+      { "canonicalPath": "applicant.race includes black",           "pdfFieldId": "checkbox_18cpwp", "label": "BLACK OR AFRICAN AMERICAN",              "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "applicant.race includes asian",           "pdfFieldId": "checkbox_19clfx", "label": "ASIAN",                                 "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "applicant.race includes native_hawaiian", "pdfFieldId": "checkbox_20fwme", "label": "NATIVE HAWAIIAN OR PACIFIC ISLANDER",    "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "applicant.race includes american_indian", "pdfFieldId": "checkbox_21gysx", "label": "AMERICAN INDIAN OR ALASKA NATIVE",       "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "applicant.race includes white",           "pdfFieldId": "checkbox_22jigk", "label": "WHITE",                                 "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "applicant.race includes other",           "pdfFieldId": "checkbox_23nowj", "label": "OTHER",                                 "confidence": 0.90, "needsReview": false }
+    ],
+    "previousBenefits": [
+      { "canonicalPath": "previousBenefits.hadPreviousBenefits == true",  "pdfFieldId": "checkbox_24svxk", "label": "YES (previous benefits)",          "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "previousBenefits.hadPreviousBenefits == false", "pdfFieldId": "checkbox_25ynr",  "label": "NO (previous benefits)",           "confidence": 0.90, "needsReview": false }
+    ],
+    "nursingFacility": [
+      { "canonicalPath": "previousBenefits.hadNursingFacilityStay == true",  "pdfFieldId": "checkbox_26okpw", "label": "YES (nursing facility)",        "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "previousBenefits.hadNursingFacilityStay == false", "pdfFieldId": "checkbox_27fopp", "label": "NO (nursing facility)",         "confidence": 0.90, "needsReview": false }
+    ],
+    "citizenship": [
+      { "canonicalPath": "citizenship.isUsCitizen == true",         "pdfFieldId": "checkbox_28ynbl", "label": "YES — US citizen or national",           "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "citizenship.isUsCitizen == false",        "pdfFieldId": "checkbox_29rrks", "label": "NO — US citizen or national",            "confidence": 0.90, "needsReview": false }
+    ],
+    "eligibleImmigrationStatus": [
+      { "canonicalPath": "citizenship.hasEligibleImmigrationStatus == true",  "pdfFieldId": "checkbox_30gfuc", "label": "YES — eligible immigration",   "confidence": 0.88, "needsReview": false },
+      { "canonicalPath": "citizenship.hasEligibleImmigrationStatus == false", "pdfFieldId": "checkbox_31wbzw", "label": "NO — eligible immigration",    "confidence": 0.88, "needsReview": false }
+    ],
+    "usResidencyBefore1996": [
+      { "canonicalPath": "citizenship.hadUsResidencyBefore1996 == true",  "pdfFieldId": "checkbox_32ubmd", "label": "YES — US before 1996",             "confidence": 0.88, "needsReview": false },
+      { "canonicalPath": "citizenship.hadUsResidencyBefore1996 == false", "pdfFieldId": "checkbox_33ddya", "label": "NO — US before 1996",              "confidence": 0.88, "needsReview": false }
+    ]
+  },
+
+  "page3": {
+    "militaryStatus": [
+      { "canonicalPath": "military.status includes veteran",        "pdfFieldId": "checkbox_34cmuj", "label": "VETERAN",                                "confidence": 0.85, "needsReview": false },
+      { "canonicalPath": "military.status includes active",         "pdfFieldId": "checkbox_35lyxn", "label": "ACTIVE MILITARY",                        "confidence": 0.85, "needsReview": false },
+      { "canonicalPath": "military.status includes national_guard", "pdfFieldId": "checkbox_36dnoa", "label": "NATIONAL GUARD",                         "confidence": 0.85, "needsReview": false },
+      { "canonicalPath": "military.status includes reserves",       "pdfFieldId": "checkbox_37jjpk", "label": "RESERVES",                               "confidence": 0.85, "needsReview": false },
+      { "canonicalPath": "military.status includes widow",          "pdfFieldId": "checkbox_38dkg",  "label": "WIDOW/SPOUSE OR DEPENDENT OF VETERAN",   "confidence": 0.85, "needsReview": false }
+    ]
+  },
+
+  "page3or4_boundary": {
+    "note": "Two checkboxes at field indices 101–102 sit between page 3 military text fields and page 4 insurance rows. Most likely: unpaid medical bills YES/NO (page 4). Alternatively: voter registration YES/NO (page 3). needsReview.",
+    "fields": [
+      { "canonicalPath": "assets.hasUnpaidMedicalBills == true",  "pdfFieldId": "checkbox_42ucjm", "label": "YES — unpaid medical bills (or voter reg YES)", "confidence": 0.75, "needsReview": true },
+      { "canonicalPath": "assets.hasUnpaidMedicalBills == false", "pdfFieldId": "checkbox_43zirr", "label": "NO — unpaid medical bills (or voter reg NO)",  "confidence": 0.75, "needsReview": true }
+    ]
+  },
+
+  "page4": {
+    "realEstate1": [
+      { "canonicalPath": "assets.realEstate[0].isIncomeProducing == true",   "pdfFieldId": "checkbox_419yosc", "label": "RE1 INCOME PRODUCING YES",  "confidence": 0.87, "needsReview": false },
+      { "canonicalPath": "assets.realEstate[0].isIncomeProducing == false",  "pdfFieldId": "checkbox_420ejak", "label": "RE1 INCOME PRODUCING NO",   "confidence": 0.87, "needsReview": false },
+      { "canonicalPath": "assets.realEstate[0].isApplicantResident == true", "pdfFieldId": "checkbox_421yqeb", "label": "RE1 RESIDENT YES",          "confidence": 0.87, "needsReview": false },
+      { "canonicalPath": "assets.realEstate[0].isApplicantResident == false","pdfFieldId": "checkbox_422ulhg", "label": "RE1 RESIDENT NO",           "confidence": 0.87, "needsReview": false },
+      { "canonicalPath": "assets.realEstate[0].planningToReturn == true",    "pdfFieldId": "checkbox_423qich", "label": "RE1 PLANNING TO RETURN YES","confidence": 0.87, "needsReview": false },
+      { "canonicalPath": "assets.realEstate[0].planningToReturn == false",   "pdfFieldId": "checkbox_424kmac", "label": "RE1 PLANNING TO RETURN NO", "confidence": 0.87, "needsReview": false },
+      { "canonicalPath": "assets.realEstate length > 1",                     "pdfFieldId": "checkbox_425vebv", "label": "RE1 OWNS OTHER YES",        "confidence": 0.87, "needsReview": false },
+      { "canonicalPath": "assets.realEstate length == 1",                    "pdfFieldId": "checkbox_426inlc", "label": "RE1 OWNS OTHER NO",         "confidence": 0.87, "needsReview": false },
+      { "canonicalPath": "assets.realEstate[0].listedForSale == true",       "pdfFieldId": "checkbox_427lmwh", "label": "RE1 LISTED FOR SALE YES",   "confidence": 0.87, "needsReview": false },
+      { "canonicalPath": "assets.realEstate[0].listedForSale == false",      "pdfFieldId": "checkbox_429ctgs", "label": "RE1 LISTED FOR SALE NO",    "confidence": 0.87, "needsReview": false }
+    ],
+    "realEstateNone": [
+      { "canonicalPath": "assets.ownsRealEstate == false",                   "pdfFieldId": "checkbox_430jmfr", "label": "Real Estate — None",         "confidence": 0.75, "needsReview": true }
+    ],
+    "mobileHomeNone": [
+      { "canonicalPath": "assets.ownsMobileHome == false",                   "pdfFieldId": "checkbox_447kcai", "label": "Mobile Home — None",         "confidence": 0.95, "needsReview": false }
+    ],
+    "mobileHome": [
+      { "canonicalPath": "assets.mobileHome.isIncomeProducing == true",  "pdfFieldId": "checkbox_447qnpw", "label": "Mobile INCOME PRODUCING YES",    "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "assets.mobileHome.isIncomeProducing == false", "pdfFieldId": "checkbox_447jpks", "label": "Mobile INCOME PRODUCING NO",     "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "assets.mobileHome.isResident == true",         "pdfFieldId": "checkbox_447stiu", "label": "Mobile RESIDENT YES",            "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "assets.mobileHome.isResident == false",        "pdfFieldId": "checkbox_447khoj", "label": "Mobile RESIDENT NO",             "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "assets.mobileHome.listedForSale == true",      "pdfFieldId": "checkbox_447zmsx", "label": "Mobile LISTED FOR SALE YES",     "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "assets.mobileHome.listedForSale == false",     "pdfFieldId": "checkbox_447qkqt", "label": "Mobile LISTED FOR SALE NO",      "confidence": 0.90, "needsReview": false }
+    ]
+  },
+
+  "page5": {
+    "vehiclesNone": [
+      { "canonicalPath": "assets.vehicles.length == 0",                      "pdfFieldId": "checkbox_260anqa", "label": "Vehicles — None",            "confidence": 0.75, "needsReview": true }
+    ],
+    "vehicleLicensed": [
+      { "canonicalPath": "assets.vehicles[0].licensed == true",  "pdfFieldId": "checkbox_261faoi", "label": "Vehicle 1 Licensed YES", "confidence": 0.72, "needsReview": true },
+      { "canonicalPath": "assets.vehicles[1].licensed == true",  "pdfFieldId": "checkbox_268mpp",  "label": "Vehicle 2 Licensed YES", "confidence": 0.82, "needsReview": true },
+      { "canonicalPath": "assets.vehicles[1].licensed == false", "pdfFieldId": "checkbox_268aren", "label": "Vehicle 2 Licensed NO",  "confidence": 0.82, "needsReview": true },
+      { "canonicalPath": "assets.vehicles[2].licensed == true",  "pdfFieldId": "checkbox_276szrh", "label": "Vehicle 3 Licensed YES", "confidence": 0.80, "needsReview": true },
+      { "canonicalPath": "assets.vehicles[2].licensed == false", "pdfFieldId": "checkbox_276tkkn", "label": "Vehicle 3 Licensed NO",  "confidence": 0.80, "needsReview": true }
+    ],
+    "burialNone": {
+      "note": "Checkboxes at indices 255-268 cover burial yes/no questions and section None. Exact ID per sub-question needsReview.",
+      "fields": [
+        { "canonicalPath": "assets.burialArrangements.length == 0",         "pdfFieldId": "checkbox_345dgdb", "label": "Burial — None",              "confidence": 0.70, "needsReview": true },
+        { "canonicalPath": "assets.burialArrangements[0].canWithdraw",      "pdfFieldId": "checkbox_346gxvm", "label": "Burial1 Can Withdraw YES",   "confidence": 0.70, "needsReview": true },
+        { "canonicalPath": "!assets.burialArrangements[0].canWithdraw",     "pdfFieldId": "checkbox_347kbbl", "label": "Burial1 Can Withdraw NO",    "confidence": 0.70, "needsReview": true }
+      ]
+    },
+    "lifeInsuranceNone": [
+      { "canonicalPath": "assets.lifeInsurance.length == 0",                 "pdfFieldId": "checkbox_358qesj", "label": "Life Insurance — None",      "confidence": 0.70, "needsReview": true }
+    ]
+  },
+
+  "page6": {
+    "transfers60Months": [
+      { "canonicalPath": "assets.transfers60Months.hasTransferredAssets == true",  "pdfFieldId": "checkbox_200hhoa", "label": "Transferred assets YES",    "confidence": 0.92, "needsReview": false },
+      { "canonicalPath": "assets.transfers60Months.hasTransferredAssets == false", "pdfFieldId": "checkbox_201jxfq", "label": "Transferred assets NO",     "confidence": 0.92, "needsReview": false },
+      { "canonicalPath": "assets.transfers60Months.transferredToTrust == true",    "pdfFieldId": "checkbox_202lilt", "label": "Transferred to trust YES",  "confidence": 0.92, "needsReview": false },
+      { "canonicalPath": "assets.transfers60Months.transferredToTrust == false",   "pdfFieldId": "checkbox_203sjgr", "label": "Transferred to trust NO",   "confidence": 0.92, "needsReview": false }
+    ]
+  },
+
+  "page7": {
+    "expectedLumpSum": [
+      { "canonicalPath": "assets.expectedLumpSum.expecting == true",  "pdfFieldId": "checkbox_169xdpv", "label": "Expected lump sum YES",               "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "assets.expectedLumpSum.expecting == false", "pdfFieldId": "checkbox_170yojk", "label": "Expected lump sum NO",                "confidence": 0.90, "needsReview": false }
+    ],
+    "heatingAirSeparate": [
+      { "canonicalPath": "expenses.utilities.heating > 0",            "pdfFieldId": "checkbox_116aklt", "label": "Heating/AC separate from rent YES",    "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "expenses.utilities.heating == 0",           "pdfFieldId": "checkbox_117bbos", "label": "Heating/AC separate from rent NO",     "confidence": 0.90, "needsReview": false }
+    ]
+  },
+
+  "page9": {
+    "renewalPeriod": [
+      { "canonicalPath": "renewal == 5 years",  "pdfFieldId": "checkbox_110tmrx", "label": "Five years (maximum)",   "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "renewal == 4 years",  "pdfFieldId": "checkbox_111tbjf", "label": "Four years",             "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "renewal == 3 years",  "pdfFieldId": "checkbox_112yshk", "label": "Three years",            "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "renewal == 2 years",  "pdfFieldId": "checkbox_113iub",  "label": "Two years",              "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "renewal == 1 year",   "pdfFieldId": "checkbox_114bznf", "label": "One year",               "confidence": 0.90, "needsReview": false },
+      { "canonicalPath": "renewal == no_tax",   "pdfFieldId": "checkbox_115ivaz", "label": "Do not use tax returns", "confidence": 0.90, "needsReview": false }
+    ]
+  },
+
+  "page10": {
+    "poaType": [
+      { "canonicalPath": "poa.type == representative",    "pdfFieldId": "checkbox_83kqbu", "label": "REPRESENTATIVE",    "confidence": 0.80, "needsReview": true },
+      { "canonicalPath": "poa.type == power_of_attorney", "pdfFieldId": "checkbox_84euej", "label": "POWER OF ATTORNEY", "confidence": 0.80, "needsReview": true }
+    ]
+  },
+
+  "unmapped": {
+    "note": "These checkbox groups were not mapped due to insufficient positional information. Use tools/probe-coordinates.js on benefitpath/public/medicaid-template.pdf to identify.",
+    "groups": [
+      "real_estate_2 yes/no pairs (income_producing, resident, planning_return, listed_for_sale)",
+      "voter registration YES/NO (page 3 — possibly at boundary fields 101-102 above)",
+      "household member sex per row (page 3 — members 1-4 have M/F checkboxes if not text)",
+      "burial 1 and 2 full yes/no sets (can withdraw, can interest, own spaces)",
+      "vehicle 4-6 licensed YES/NO",
+      "authorized/not-authorized reason (CAO-only, page 2 top)"
+    ]
+  }
+}
