@@ -276,7 +276,7 @@ function Intake({
   }, [messages, isTyping]);
 
   const handleTranscript = useCallback((text) => {
-    setInputText(prev => prev ? prev + ' ' + text : text);
+    sendMessageRef.current?.(text);
   }, []);
 
   async function handleDocUpload(e) {
@@ -358,7 +358,7 @@ function Intake({
     toggleListening();
   }
 
-  const { isListening, isSupported, interimText, toggleListening } = useSpeech({
+  const { isListening, isSupported, interimText, micError, toggleListening } = useSpeech({
     onTranscript: handleTranscript,
     lang,
   });
@@ -396,7 +396,8 @@ function Intake({
       } else {
         await persist(updated, merged, null);
       }
-    } catch {
+    } catch (err) {
+      console.error('[Gemini error]', err);
       const errMsg = { id: (Date.now() + 1).toString(), role: 'system', content: 'Something went wrong. Please try again.' };
       setMessages(prev => [...prev, errMsg]);
     } finally {
@@ -687,6 +688,9 @@ function Intake({
         <p style={c.inputHint}>
           {isReadingDoc ? '📄 Reading your document with AI...' : isListening ? t(lang, 'intakeHintListening') : t(lang, 'intakeHint')}
         </p>
+        {micError && (
+          <p style={{ fontSize: '12px', color: '#c0392b', margin: '4px 0 0' }}>{micError}</p>
+        )}
       </div>
     </motion.div>
   );

@@ -4,6 +4,7 @@ export function useSpeech({ onTranscript, lang = 'en' }) {
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const [interimText, setInterimText] = useState('');
+  const [micError, setMicError] = useState(null);
   const recognitionRef = useRef(null);
   const finalTextRef = useRef('');
   const silenceTimerRef = useRef(null);
@@ -21,6 +22,7 @@ export function useSpeech({ onTranscript, lang = 'en' }) {
   const startListening = useCallback(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
+    setMicError(null);
 
     finalTextRef.current = '';
     const recognition = new SpeechRecognition();
@@ -61,7 +63,11 @@ export function useSpeech({ onTranscript, lang = 'en' }) {
 
     recognition.onerror = (event) => {
       if (event.error === 'no-speech') return; // ignore — continuous mode fires this often
-      console.warn('Speech recognition error:', event.error);
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        setMicError('Microphone access was blocked. Click the lock icon in your browser address bar to allow it.');
+      } else {
+        setMicError(`Microphone error: ${event.error}`);
+      }
       setIsListening(false);
       setInterimText('');
     };
@@ -78,5 +84,5 @@ export function useSpeech({ onTranscript, lang = 'en' }) {
     }
   }, [isListening, startListening, stopListening]);
 
-  return { isListening, isSupported, interimText, toggleListening };
+  return { isListening, isSupported, interimText, micError, toggleListening };
 }
