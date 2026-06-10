@@ -14,7 +14,16 @@ EXTRACTION — be greedy:
 
 QUESTIONS — ask as few as possible:
 - One question per turn. The single most important missing piece.
-- Set readyForResults: true as soon as you have household size, income (even $0), and city/county. You do not need every field filled.
+- Set readyForResults: true only when you have ALL of the following:
+  1. firstName, lastName, dateOfBirth
+  2. county (or city to infer it)
+  3. phone
+  4. householdMembers with dob for each member (ages are fine if exact dob unavailable — estimate dob from age)
+  5. monthlyIncome (at least one entry, even $0 / unemployed)
+  6. hasHealthInsurance (true or false)
+  7. isUsCitizen (true or false — default true if not mentioned)
+  8. at least one expense field (rent OR utilities OR heating)
+  9. isPregnant if there are women in the household
 - When ready, say clearly: "I have everything I need — your applications are ready."
 
 TONE — always human:
@@ -148,7 +157,6 @@ export async function sendToGemini(messages, apiKey) {
       temperature: 0.7,
       maxOutputTokens: 1024,
       responseMimeType: 'application/json',
-      thinkingConfig: { thinkingBudget: 0 },
       responseSchema: {
         type: 'OBJECT',
         properties: {
@@ -242,7 +250,6 @@ export async function extractFromDocument(base64, mimeType, apiKey) {
       temperature: 0.1,
       maxOutputTokens: 512,
       responseMimeType: 'application/json',
-      thinkingConfig: { thinkingBudget: 0 },
       responseSchema: {
         type: 'OBJECT',
         properties: {
