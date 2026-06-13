@@ -8,6 +8,7 @@ export function useSpeech({ onTranscript, lang = 'en' }) {
   const recognitionRef = useRef(null);
   const finalTextRef = useRef('');
   const silenceTimerRef = useRef(null);
+  const networkRetryRef = useRef(0);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;

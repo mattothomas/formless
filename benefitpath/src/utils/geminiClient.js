@@ -135,7 +135,7 @@ function checkHappyPath(messages) {
   return null;
 }
 
-export async function sendToGemini(messages, apiKey) {
+export async function sendToGemini(messages, apiKey, _attempt = 0) {
   if (!apiKey) {
     throw new Error('Gemini API key not configured. Please add VITE_GEMINI_API_KEY to your .env file.');
   }
@@ -155,7 +155,7 @@ export async function sendToGemini(messages, apiKey) {
     contents,
     generationConfig: {
       temperature: 0.7,
-      maxOutputTokens: 1024,
+      maxOutputTokens: 2048,
       responseMimeType: 'application/json',
       responseSchema: {
         type: 'OBJECT',
@@ -199,18 +199,37 @@ export async function sendToGemini(messages, apiKey) {
 
   if (!res.ok) {
     const errText = await res.text();
+    // Retry on rate limit or server error (up to 2 retries, with backoff)
+    if (_attempt < 2 && (res.status === 429 || res.status >= 500)) {
+      await new Promise(r => setTimeout(r, ((_attempt + 1) * 1500)));
+      return sendToGemini(messages, apiKey, _attempt + 1);
+    }
     throw new Error(`Gemini API error ${res.status}: ${errText}`);
   }
 
   const data = await res.json();
+  const candidate = data?.candidates?.[0];
+  const finishReason = candidate?.finishReason;
 
-  // Gemini 2.5 thinking models return multiple parts; skip thought parts
-  const parts = data?.candidates?.[0]?.content?.parts || [];
+  if (finishReason && finishReason !== 'STOP' && finishReason !== 'MAX_TOKENS') {
+    console.warn('[Gemini finishReason]', finishReason, candidate);
+    if (_attempt < 2) {
+      await new Promise(r => setTimeout(r, 1000));
+      return sendToGemini(messages, apiKey, _attempt + 1);
+    }
+    throw new Error(`Gemini stopped with reason: ${finishReason}`);
+  }
+
+  const parts = candidate?.content?.parts || [];
   const rawText = parts.find(p => !p.thought)?.text || parts[0]?.text;
 
-  console.log('[Gemini raw]', rawText);
+  console.log('[Gemini finishReason]', finishReason, '[Gemini raw]', rawText);
 
   if (!rawText) {
+    if (_attempt < 2) {
+      await new Promise(r => setTimeout(r, 1000));
+      return sendToGemini(messages, apiKey, _attempt + 1);
+    }
     throw new Error('Empty response from Gemini');
   }
 
